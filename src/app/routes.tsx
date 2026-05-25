@@ -1,10 +1,22 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { RootLayout } from './layouts/RootLayout';
 import { HomePage } from './pages/HomePage';
 import { ListingPage } from './pages/ListingPage';
-import { PropertyDetailsPage } from "./pages/PropertyDetailsPage";
+import { PropertyDetailsPage } from './pages/PropertyDetailsPage';
+import { FavoritesPage } from './pages/FavoritesPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <HomePage /> },
-  {  path: "/property/:id",
-  element: <PropertyDetailsPage /> }
+  {
+    element: <RootLayout />,
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/properties', element: <ListingPage /> },
+      { path: '/property/:id', element: <PropertyDetailsPage /> },
+      { path: '/favorites', element: <FavoritesPage /> },
+      { path: '/profile', element: <ProfilePage /> },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
 ]);
