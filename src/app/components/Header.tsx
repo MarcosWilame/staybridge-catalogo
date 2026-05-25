@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, MessageCircle } from 'lucide-react';
 
 export function Header() {
@@ -26,6 +26,19 @@ export function Header() {
     window.open('https://wa.me/447000000000', '_blank');
   };
 
+  const navClass = (isActive: boolean) =>
+    `${
+      isScrolled
+        ? 'text-gray-700 hover:text-[var(--green-dark)]'
+        : 'text-white hover:text-[var(--yellow)]'
+    } font-semibold transition-colors ${
+      isActive
+        ? isScrolled
+          ? 'border-b-2 border-[var(--green-dark)] pb-0.5'
+          : 'border-b-2 border-[var(--yellow)] pb-0.5'
+        : ''
+    }`;
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -36,8 +49,9 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
+          
           {/* Logo */}
-          <Link
+          <NavLink
             to="/"
             className={`font-bold text-lg tracking-wider cursor-pointer transition-colors ${
               isScrolled ? 'text-[var(--green-dark)]' : 'text-white'
@@ -46,20 +60,26 @@ export function Header() {
             <span className="bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg">
               STAYBRIDGE
             </span>
-          </Link>
+          </NavLink>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link
+
+            <NavLink
               to="/properties"
-              className={`font-semibold transition-colors ${
-                isScrolled
-                  ? 'text-gray-700 hover:text-[var(--green-dark)]'
-                  : 'text-white hover:text-[var(--yellow)]'
-              }`}
+              className={({ isActive }) => navClass(isActive)}
             >
               Unidades
-            </Link>
+            </NavLink>
+
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Início
+            </NavLink>
+
             <button
               onClick={() => {
                 navigate('/');
@@ -73,6 +93,7 @@ export function Header() {
             >
               Benefícios
             </button>
+
             <button
               onClick={() => {
                 navigate('/');
@@ -86,6 +107,7 @@ export function Header() {
             >
               Depoimentos
             </button>
+
             <button
               onClick={handleWhatsApp}
               className="bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
@@ -110,13 +132,36 @@ export function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col gap-4">
-              <Link
+
+              <NavLink
                 to="/properties"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-left font-semibold text-gray-700 hover:text-[var(--green-dark)] transition-colors"
+                className={({ isActive }) =>
+                  `text-left font-semibold transition-colors ${
+                    isActive
+                      ? 'text-[var(--green-dark)]'
+                      : 'text-gray-700 hover:text-[var(--green-dark)]'
+                  }`
+                }
               >
                 Unidades
-              </Link>
+              </NavLink>
+
+              <NavLink
+                to="/"
+                end
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `text-left font-semibold transition-colors ${
+                    isActive
+                      ? 'text-[var(--green-dark)]'
+                      : 'text-gray-700 hover:text-[var(--green-dark)]'
+                  }`
+                }
+              >
+                Início
+              </NavLink>
+
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
@@ -127,6 +172,7 @@ export function Header() {
               >
                 Benefícios
               </button>
+
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
@@ -137,6 +183,7 @@ export function Header() {
               >
                 Depoimentos
               </button>
+
               <button
                 onClick={handleWhatsApp}
                 className="bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 justify-center"
