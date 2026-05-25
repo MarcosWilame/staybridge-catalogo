@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router-dom';
 import { PropertyCard } from '../components/PropertyCard';
 import { properties } from '../data/properties';
 import { SlidersHorizontal, X } from 'lucide-react';
@@ -14,6 +14,7 @@ interface FilterState {
 
 export function ListingPage() {
   const [searchParams] = useSearchParams();
+
   const [filters, setFilters] = useState<FilterState>({
     region: searchParams.get('region') || '',
     type: searchParams.get('type') || '',
@@ -21,17 +22,25 @@ export function ListingPage() {
     billsIncluded: false,
     availableNow: false,
   });
+
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Update filters when URL params change
   useEffect(() => {
-    const region = searchParams.get('region') || '';
-    const type = searchParams.get('type') || '';
-    setFilters(prev => ({ ...prev, region, type }));
+    setFilters((prev) => ({
+      ...prev,
+      region: searchParams.get('region') || '',
+      type: searchParams.get('type') || '',
+    }));
   }, [searchParams]);
 
-  const updateFilter = (key: keyof FilterState, value: string | boolean) => {
-    setFilters({ ...filters, [key]: value });
+  const updateFilter = <K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K]
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const clearFilters = () => {
@@ -44,6 +53,18 @@ export function ListingPage() {
     });
   };
 
+  const parsePriceRange = (range: string) => {
+    if (!range) return [0, Infinity] as const;
+
+    if (range.includes('+')) {
+      const min = Number(range.replace('+', ''));
+      return [min, Infinity] as const;
+    }
+
+    const [minStr, maxStr] = range.split('-');
+    return [Number(minStr), Number(maxStr)] as const;
+  };
+
   let filteredProperties = [...properties];
 
   if (filters.region) {
@@ -53,14 +74,17 @@ export function ListingPage() {
   }
 
   if (filters.type) {
-    filteredProperties = filteredProperties.filter((p) => p.category === filters.type);
+    filteredProperties = filteredProperties.filter(
+      (p) => p.category === filters.type
+    );
   }
 
   if (filters.priceRange) {
-    const [min, max] = filters.priceRange.split('-').map((v) => parseInt(v.replace('+', '')) || Infinity);
+    const [min, max] = parsePriceRange(filters.priceRange);
+
     filteredProperties = filteredProperties.filter((p) => {
-      if (max === Infinity) return p.price >= min;
-      return p.price >= min && p.price <= max;
+      const price = Number(p.price);
+      return price >= min && price <= max;
     });
   }
 
@@ -69,7 +93,9 @@ export function ListingPage() {
   }
 
   if (filters.availableNow) {
-    filteredProperties = filteredProperties.filter((p) => p.available && p.moveInDate === 'Imediata');
+    filteredProperties = filteredProperties.filter(
+      (p) => p.available && p.moveInDate === 'Imediata'
+    );
   }
 
   const FiltersPanel = () => (
@@ -79,222 +105,153 @@ export function ListingPage() {
           <SlidersHorizontal className="w-5 h-5" />
           Filtros
         </h3>
-        {(filters.region || filters.type || filters.priceRange || filters.billsIncluded || filters.availableNow) && (
+
+        {(filters.region ||
+          filters.type ||
+          filters.priceRange ||
+          filters.billsIncluded ||
+          filters.availableNow) && (
           <button
             onClick={clearFilters}
-            className="text-sm text-gray-600 hover:text-[var(--green-dark)] font-semibold transition-colors"
+            className="text-sm text-gray-600 hover:text-[var(--green-dark)] font-semibold"
           >
             Limpar
           </button>
         )}
       </div>
 
-      <div className="space-y-6">
-        {/* Region Filter */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-3">Região</label>
-          <div className="space-y-2">
-            {['north', 'south', 'east', 'west', 'central'].map((region) => (
-              <label key={region} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                <input
-                  type="radio"
-                  name="region"
-                  value={region}
-                  checked={filters.region === region}
-                  onChange={(e) => updateFilter('region', e.target.value)}
-                  className="w-4 h-4 accent-[var(--green-dark)]"
-                />
-                <span className="text-gray-700 capitalize">{region} London</span>
-              </label>
-            ))}
-            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-              <input
-                type="radio"
-                name="region"
-                value=""
-                checked={filters.region === ''}
-                onChange={(e) => updateFilter('region', e.target.value)}
-                className="w-4 h-4 accent-[var(--green-dark)]"
-              />
-              <span className="text-gray-700">Todas as regiões</span>
-            </label>
-          </div>
-        </div>
+      {/* REGION */}
+      <div className="space-y-2">
+        <label className="font-bold text-sm">Região</label>
 
-        {/* Type Filter */}
-        <div className="border-t border-gray-200 pt-6">
-          <label className="block text-sm font-bold text-gray-700 mb-3">Tipo de Acomodação</label>
-          <div className="space-y-2">
-            {[
-              { value: 'studio', label: 'Studio' },
-              { value: 'ensuite', label: 'Ensuite' },
-              { value: 'flat', label: 'Flat' },
-              { value: 'single', label: 'Single Room' },
-              { value: 'double', label: 'Double Room' },
-            ].map((type) => (
-              <label key={type.value} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                <input
-                  type="radio"
-                  name="type"
-                  value={type.value}
-                  checked={filters.type === type.value}
-                  onChange={(e) => updateFilter('type', e.target.value)}
-                  className="w-4 h-4 accent-[var(--green-dark)]"
-                />
-                <span className="text-gray-700">{type.label}</span>
-              </label>
-            ))}
-            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-              <input
-                type="radio"
-                name="type"
-                value=""
-                checked={filters.type === ''}
-                onChange={(e) => updateFilter('type', e.target.value)}
-                className="w-4 h-4 accent-[var(--green-dark)]"
-              />
-              <span className="text-gray-700">Todos os tipos</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Price Range Filter */}
-        <div className="border-t border-gray-200 pt-6">
-          <label className="block text-sm font-bold text-gray-700 mb-3">Preço por Semana</label>
-          <div className="space-y-2">
-            {[
-              { value: '0-150', label: '£0 - £150' },
-              { value: '150-250', label: '£150 - £250' },
-              { value: '250-350', label: '£250 - £350' },
-              { value: '350+', label: '£350+' },
-            ].map((range) => (
-              <label key={range.value} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                <input
-                  type="radio"
-                  name="price"
-                  value={range.value}
-                  checked={filters.priceRange === range.value}
-                  onChange={(e) => updateFilter('priceRange', e.target.value)}
-                  className="w-4 h-4 accent-[var(--green-dark)]"
-                />
-                <span className="text-gray-700">{range.label}</span>
-              </label>
-            ))}
-            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-              <input
-                type="radio"
-                name="price"
-                value=""
-                checked={filters.priceRange === ''}
-                onChange={(e) => updateFilter('priceRange', e.target.value)}
-                className="w-4 h-4 accent-[var(--green-dark)]"
-              />
-              <span className="text-gray-700">Qualquer preço</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Additional Filters */}
-        <div className="border-t border-gray-200 pt-6 space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors border-2 border-gray-200">
+        {['north', 'south', 'east', 'west', 'central'].map((region) => (
+          <label key={region} className="flex gap-2 items-center">
             <input
-              type="checkbox"
-              checked={filters.billsIncluded}
-              onChange={(e) => updateFilter('billsIncluded', e.target.checked)}
-              className="w-5 h-5 accent-[var(--green-dark)] rounded"
+              type="radio"
+              checked={filters.region === region}
+              onChange={() => updateFilter('region', region)}
             />
-            <span className="text-gray-700 font-semibold">Bills Inclusas</span>
+            {region}
           </label>
-          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors border-2 border-gray-200">
+        ))}
+
+        <label className="flex gap-2 items-center">
+          <input
+            type="radio"
+            checked={filters.region === ''}
+            onChange={() => updateFilter('region', '')}
+          />
+          Todas
+        </label>
+      </div>
+
+      {/* TYPE */}
+      <div className="mt-6">
+        <label className="font-bold text-sm">Tipo</label>
+
+        {['studio', 'ensuite', 'flat'].map((type) => (
+          <label key={type} className="flex gap-2 items-center">
             <input
-              type="checkbox"
-              checked={filters.availableNow}
-              onChange={(e) => updateFilter('availableNow', e.target.checked)}
-              className="w-5 h-5 accent-[var(--green-dark)] rounded"
+              type="radio"
+              checked={filters.type === type}
+              onChange={() => updateFilter('type', type)}
             />
-            <span className="text-gray-700 font-semibold">Entrada Imediata</span>
+            {type}
           </label>
-        </div>
+        ))}
+      </div>
+
+      {/* PRICE */}
+      <div className="mt-6">
+        <label className="font-bold text-sm">Preço</label>
+
+        {[
+          { value: '0-150', label: '£0 - £150' },
+          { value: '150-250', label: '£150 - £250' },
+          { value: '250-350', label: '£250 - £350' },
+          { value: '350+', label: '£350+' },
+        ].map((range) => (
+          <label key={range.value} className="flex gap-2 items-center">
+            <input
+              type="radio"
+              checked={filters.priceRange === range.value}
+              onChange={() => updateFilter('priceRange', range.value)}
+            />
+            {range.label}
+          </label>
+        ))}
+      </div>
+
+      {/* CHECKS */}
+      <div className="mt-6 space-y-2">
+        <label className="flex gap-2 items-center">
+          <input
+            type="checkbox"
+            checked={filters.billsIncluded}
+            onChange={(e) =>
+              updateFilter('billsIncluded', e.target.checked)
+            }
+          />
+          Bills inclusas
+        </label>
+
+        <label className="flex gap-2 items-center">
+          <input
+            type="checkbox"
+            checked={filters.availableNow}
+            onChange={(e) =>
+              updateFilter('availableNow', e.target.checked)
+            }
+          />
+          Entrada imediata
+        </label>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[var(--gray-light)] py-8 pt-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[var(--green-dark)] mb-2">
-            Todas as Propriedades
-          </h1>
-          <p className="text-gray-600 text-lg">
-            {filteredProperties.length} {filteredProperties.length === 1 ? 'propriedade encontrada' : 'propriedades encontradas'}
-          </p>
-        </div>
+    <div className="min-h-screen py-10 pt-28 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-2">Propriedades</h1>
+        <p className="mb-6">{filteredProperties.length} resultados</p>
 
-        {/* Mobile Filter Button */}
-        <button
-          onClick={() => setShowMobileFilters(true)}
-          className="md:hidden fixed bottom-20 right-4 z-40 bg-[var(--green-dark)] text-white p-4 rounded-full shadow-2xl hover:bg-[var(--green-medium)] transition-all duration-300 flex items-center gap-2"
-        >
-          <SlidersHorizontal className="w-6 h-6" />
-          <span className="font-semibold">Filtros</span>
-        </button>
-
-        {/* Mobile Filters Drawer */}
-        {showMobileFilters && (
-          <div className="md:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setShowMobileFilters(false)}>
-            <div
-              className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-[var(--green-dark)]">Filtros</h3>
-                  <button
-                    onClick={() => setShowMobileFilters(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-                <FiltersPanel />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Desktop Filters Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="hidden lg:block">
             <FiltersPanel />
           </div>
 
-          {/* Properties Grid */}
-          <div className="lg:col-span-3">
-            {filteredProperties.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredProperties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <p className="text-xl text-gray-600 mb-4">
-                  Nenhuma propriedade encontrada com os filtros selecionados.
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--green-medium)] transition-colors"
-                >
-                  Limpar Filtros
-                </button>
-              </div>
-            )}
+          <div className="lg:col-span-3 grid md:grid-cols-2 gap-4">
+            {filteredProperties.map((p) => (
+              <PropertyCard key={p.id} property={p} />
+            ))}
           </div>
         </div>
+
+        {filteredProperties.length === 0 && (
+          <div className="text-center mt-10">
+            Nenhum resultado encontrado
+          </div>
+        )}
       </div>
+
+      {/* MOBILE BUTTON */}
+      <button
+        onClick={() => setShowMobileFilters(true)}
+        className="lg:hidden fixed bottom-6 right-6 bg-black text-white p-4 rounded-full"
+      >
+        <SlidersHorizontal />
+      </button>
+
+      {showMobileFilters && (
+        <div className="fixed inset-0 bg-black/50 flex justify-end">
+          <div className="bg-white w-80 p-4">
+            <button onClick={() => setShowMobileFilters(false)}>
+              <X />
+            </button>
+            <FiltersPanel />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

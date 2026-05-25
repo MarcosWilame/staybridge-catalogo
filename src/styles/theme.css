@@ -131,8 +131,9 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-gray-200 outline-none;
   }
+}
 
   html {
     scroll-behavior: smooth;
@@ -192,4 +193,4 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
-}
+

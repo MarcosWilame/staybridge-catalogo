@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { PropertyCard } from './PropertyCard';
 import { properties } from '../data/properties';
 import { ArrowRight } from 'lucide-react';

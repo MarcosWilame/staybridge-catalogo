@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ArrowRight } from 'lucide-react';
 
 export function CTASection() {

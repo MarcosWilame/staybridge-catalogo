@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, MessageCircle } from 'lucide-react';
 
 export function Header() {
