@@ -40,12 +40,12 @@ export function Header() {
     `font-semibold transition-colors ${
       isTransparent
         ? 'text-white hover:text-[var(--yellow)]'
-        : 'text-gray-700 hover:text-[var(--green-dark)]'
+        : 'text-white hover:text-[var(--yellow)]'
     } ${
       isActive
         ? isTransparent
           ? 'border-b-2 border-[var(--yellow)] pb-0.5 text-[var(--yellow)]'
-          : 'border-b-2 border-[var(--green-dark)] pb-0.5 text-[var(--green-dark)]'
+          : 'border-b-2 border-[var(--yellow)] pb-0.5 text-[var(--yellow)]'
         : ''
     }`;
 
@@ -60,7 +60,7 @@ export function Header() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isTransparent
           ? 'bg-transparent'
-          : 'bg-white/95 backdrop-blur-lg shadow-lg'
+          : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
