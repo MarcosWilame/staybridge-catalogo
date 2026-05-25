@@ -9,8 +9,6 @@ export function Header() {
   const location = useLocation();
 
   const isHome = location.pathname === '/';
-
-  // Header transparente só na home sem scroll
   const isTransparent = isHome && !isScrolled;
 
   useEffect(() => {
@@ -21,7 +19,6 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Reseta scroll state ao mudar de página
   useEffect(() => {
     setIsScrolled(window.scrollY > 20);
   }, [location.pathname]);
@@ -37,40 +34,28 @@ export function Header() {
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `font-semibold transition-colors ${
-      isTransparent
-        ? 'text-white hover:text-[var(--yellow)]'
-        : 'text-white hover:text-[var(--yellow)]'
-    } ${
-      isActive
-        ? isTransparent
-          ? 'border-b-2 border-[var(--yellow)] pb-0.5 text-[var(--yellow)]'
-          : 'border-b-2 border-[var(--yellow)] pb-0.5 text-[var(--yellow)]'
-        : ''
+    `font-semibold transition-colors text-white hover:text-[var(--yellow)] ${
+      isActive ? 'border-b-2 border-[var(--yellow)] pb-0.5 text-[var(--yellow)]' : ''
     }`;
 
-  const buttonClass = `font-semibold transition-colors ${
-    isTransparent
-      ? 'text-white hover:text-[var(--yellow)]'
-      : 'text-gray-700 hover:text-[var(--green-dark)]'
-  }`;
+  const buttonClass = `font-semibold transition-colors text-white hover:text-[var(--yellow)]`;
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isTransparent
-          ? 'bg-transparent'
-          : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
+        isTransparent ? 'bg-transparent' : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <NavLink to="/" className="font-bold text-lg tracking-wider cursor-pointer transition-colors">
-            <span className="bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg">
-              STAYBRIDGE
-            </span>
+          <NavLink to="/" className="cursor-pointer">
+            <img
+              src="/img/logo-white.png"
+              alt="Staybridge London"
+              className="h-12 w-auto object-contain"
+            />
           </NavLink>
 
           {/* Desktop Navigation */}
@@ -109,9 +94,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 rounded-lg transition-colors ${
-              isTransparent ? 'text-white' : 'text-[var(--green-dark)]'
-            }`}
+            className="md:hidden p-2 rounded-lg transition-colors text-white"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -119,7 +102,7 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 bg-white">
+          <div className="md:hidden py-4 border-t border-green-700 bg-[#2d6a4f]">
             <nav className="flex flex-col gap-4">
               <NavLink
                 to="/"
@@ -127,7 +110,7 @@ export function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   `text-left font-semibold transition-colors ${
-                    isActive ? 'text-[var(--green-dark)]' : 'text-gray-700 hover:text-[var(--green-dark)]'
+                    isActive ? 'text-[var(--yellow)]' : 'text-white hover:text-[var(--yellow)]'
                   }`
                 }
               >
@@ -139,7 +122,7 @@ export function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   `text-left font-semibold transition-colors ${
-                    isActive ? 'text-[var(--green-dark)]' : 'text-gray-700 hover:text-[var(--green-dark)]'
+                    isActive ? 'text-[var(--yellow)]' : 'text-white hover:text-[var(--yellow)]'
                   }`
                 }
               >
@@ -148,14 +131,14 @@ export function Header() {
 
               <button
                 onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('benefits'), 100); }}
-                className="text-left font-semibold text-gray-700 hover:text-[var(--green-dark)] transition-colors"
+                className="text-left font-semibold text-white hover:text-[var(--yellow)] transition-colors"
               >
                 Benefícios
               </button>
 
               <button
                 onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('testimonials'), 100); }}
-                className="text-left font-semibold text-gray-700 hover:text-[var(--green-dark)] transition-colors"
+                className="text-left font-semibold text-white hover:text-[var(--yellow)] transition-colors"
               >
                 Depoimentos
               </button>
