@@ -51,39 +51,39 @@ export function PropertyCategories() {
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="bg-gray-50 py-12 md:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="text-center mb-14">
-          <h2 className="text-4xl md:text-5xl font-bold text-[var(--green-dark)] mb-4">
+        <div className="mb-10 text-center md:mb-14">
+          <h2 className="mb-3 text-3xl font-bold text-[var(--green-dark)] md:mb-4 md:text-5xl">
             Perfeito para você
           </h2>
 
-          <p className="text-xl text-gray-600">
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 md:text-xl">
             Escolha entre diferentes tipos de acomodação em toda Londres
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
           {categories.map((category) => {
             const Icon = category.icon;
 
             return (
               <div
                 key={category.name}
-                className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center flex flex-col"
+                className="flex flex-col rounded-2xl bg-white p-5 text-center shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl md:p-8 lg:rounded-3xl"
               >
                 <div
-                  className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-6`}
+                  className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${category.color} md:mb-6 md:h-16 md:w-16 md:rounded-2xl`}
                 >
-                  <Icon className="w-8 h-8 text-white" />
+                  <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                 </div>
 
-                <h3 className="text-2xl font-bold text-[var(--green-dark)] mb-3">
+                <h3 className="mb-2 text-xl font-bold text-[var(--green-dark)] md:mb-3 md:text-2xl">
                   {category.name}
                 </h3>
 
-                <p className="text-gray-600 mb-5 flex-1">
+                <p className="mb-4 flex-1 text-sm leading-relaxed text-gray-600 md:mb-5 md:text-base">
                   {category.description}
                 </p>
 

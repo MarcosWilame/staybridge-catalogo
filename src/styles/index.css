@@ -10,3 +10,10 @@
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
 }
+
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}

@@ -99,7 +99,7 @@ export function FeaturedProperties() {
   ];
 
   return (
-    <section className="py-28 bg-gradient-to-b from-white to-[var(--green-light)] relative overflow-hidden">
+    <section className="relative overflow-hidden bg-gradient-to-b from-white to-[var(--green-light)] py-14 md:py-28">
 
       {/* Background Decorative Elements */}
       <div className="absolute top-10 right-0 w-1/3 h-64 bg-[var(--yellow)]/10 transform skew-y-6 blur-3xl" />
@@ -108,13 +108,13 @@ export function FeaturedProperties() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="mb-10 text-center md:mb-16">
 
-          <div className="inline-flex items-center gap-2 bg-[var(--green-dark)] text-white px-5 py-2 rounded-full text-sm font-bold mb-5 shadow-lg">
+          <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full bg-[var(--green-dark)] px-4 py-2 text-xs font-bold text-white shadow-lg md:mb-5 md:px-5 md:text-sm">
             🇬🇧 PROPRIEDADES EM DESTAQUE
           </div>
 
-          <h2 className="text-5xl md:text-6xl font-extrabold text-[var(--green-dark)] leading-tight">
+          <h2 className="text-3xl font-extrabold leading-tight text-[var(--green-dark)] sm:text-4xl md:text-6xl">
             Sua Nova Vida
             <br />
             <span className="text-[var(--yellow)]">
@@ -122,7 +122,7 @@ export function FeaturedProperties() {
             </span>
           </h2>
 
-          <p className="text-xl text-gray-600 mt-6 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-gray-600 md:mt-6 md:text-xl">
             Studios, flats e ensuites disponíveis em diversas regiões de Londres
             com entrada imediata, bills inclusas e suporte completo para brasileiros.
           </p>
@@ -133,12 +133,12 @@ export function FeaturedProperties() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-3 mb-14">
+        <div className="mb-10 flex flex-wrap justify-center gap-2 md:mb-14 md:gap-3">
 
           {propertyTypes.map((type) => (
             <button
               key={type.label}
-              className="px-5 py-2 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-[var(--yellow)] hover:text-black hover:shadow-lg transition-all duration-300 font-medium"
+              className="rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-[var(--yellow)] hover:text-black hover:shadow-lg md:px-5"
             >
               {type.label}
             </button>
@@ -147,7 +147,7 @@ export function FeaturedProperties() {
         </div>
 
         {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="mb-10 grid grid-cols-1 gap-5 md:mb-16 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
 
           {visibleProperties.map((property) => (
 
@@ -162,10 +162,10 @@ export function FeaturedProperties() {
 
         </div>
 
-        <div className="flex justify-center mb-16">
+        <div className="mb-10 flex justify-center md:mb-16">
           <Link
             to="/properties"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 text-base md:text-lg shadow-lg hover:shadow-2xl"
+            className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[var(--yellow)] px-6 py-3.5 text-base font-bold text-black shadow-lg transition-all duration-300 hover:bg-[var(--yellow-dark)] hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
           >
             Ver mais unidades
             <ArrowRight className="w-5 h-5" />
@@ -173,25 +173,25 @@ export function FeaturedProperties() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-[var(--green-dark)] rounded-3xl p-10 md:p-14 text-center shadow-2xl relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-2xl bg-[var(--green-dark)] p-6 text-center shadow-2xl md:rounded-3xl md:p-14">
 
           {/* Decorative Glow */}
           <div className="absolute top-0 right-0 w-72 h-72 bg-[var(--yellow)]/10 rounded-full blur-3xl" />
 
           <div className="relative z-10">
 
-            <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h3 className="mb-4 text-2xl font-bold leading-tight text-white md:text-4xl">
               Ainda procurando a acomodação ideal?
             </h3>
 
-            <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-8">
+            <p className="mx-auto mb-6 max-w-2xl text-base leading-relaxed text-gray-200 md:mb-8 md:text-lg">
               Explore todas as nossas unidades disponíveis em Londres e encontre
               studios, flats e quartos perfeitos para você.
             </p>
 
             <Link
               to="/properties"
-              className="inline-flex items-center gap-3 bg-[var(--yellow)] hover:scale-105 hover:shadow-2xl text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 text-lg"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[var(--yellow)] px-5 py-3.5 text-base font-bold text-black transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
             >
               Ver Todas as Unidades Disponíveis
               <ArrowRight className="w-5 h-5" />

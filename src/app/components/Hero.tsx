@@ -15,7 +15,7 @@ export function Hero() {
   };
 
   return (
-    <div className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <div className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[90vh]">
 
       {/* BACKGROUND */}
       <div className="absolute inset-0">
@@ -30,7 +30,7 @@ export function Hero() {
       </div>
 
       {/* CONTENT */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-28 sm:px-6 md:py-16 lg:px-8">
 
         <div className="max-w-3xl">
 
@@ -39,7 +39,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)]"
+            className="mb-5 break-words text-4xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)] sm:text-6xl lg:text-7xl"
           >
             Sua Nova
             <br />
@@ -68,7 +68,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-block rounded-2xl bg-black/28 px-4 py-3 text-xl text-white mb-8 leading-relaxed shadow-lg backdrop-blur-[2px]"
+            className="mb-7 inline-block rounded-xl bg-black/35 px-4 py-3 text-base leading-relaxed text-white shadow-lg backdrop-blur-[2px] sm:text-xl"
           >
             Studios, ensuites e flats prontos para você morar.
             <br />
@@ -83,11 +83,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col gap-3 sm:flex-row sm:gap-4"
           >
             <button
               onClick={goToProperties}
-              className="group bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-8 py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all hover:scale-105"
+              className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-6 py-3.5 font-semibold text-black transition-all hover:bg-[var(--yellow-dark)] hover:scale-105 sm:w-auto sm:px-8 sm:py-4"
             >
               Ver Unidades
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -95,7 +95,7 @@ export function Hero() {
 
             <button
               onClick={handleWhatsApp}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-8 py-4 rounded-lg font-semibold flex items-center justify-center gap-2 backdrop-blur-sm transition-all"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 sm:w-auto sm:px-8 sm:py-4"
             >
               <MessageCircle className="w-5 h-5" />
               Falar no WhatsApp
@@ -107,7 +107,7 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-12 flex flex-wrap gap-3 text-sm text-white"
+            className="mt-8 flex flex-wrap gap-2 text-sm text-white sm:mt-12 sm:gap-3"
           >
             <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />

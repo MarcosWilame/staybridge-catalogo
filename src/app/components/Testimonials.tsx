@@ -26,17 +26,17 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-20 bg-white relative overflow-hidden">
+    <section className="relative overflow-hidden bg-white py-12 md:py-20">
       {/* Diagonal decorative element */}
       <div className="absolute bottom-0 right-0 w-2/3 h-96 bg-gradient-to-tl from-[var(--yellow)]/10 via-transparent to-transparent transform skew-y-2" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-block bg-[var(--green-dark)] text-white px-4 py-2 rounded-full text-sm font-bold mb-4">
+        <div className="mb-10 text-center md:mb-16">
+          <div className="mb-4 inline-block rounded-full bg-[var(--green-dark)] px-4 py-2 text-xs font-bold text-white md:text-sm">
             DEPOIMENTOS
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[var(--green-dark)] mb-4">
+          <h2 className="mb-4 text-3xl font-bold leading-tight text-[var(--green-dark)] md:text-5xl">
             O que nossos clientes
             <br />
             <span className="text-[var(--yellow)]">estão dizendo</span>
@@ -44,15 +44,15 @@ export function Testimonials() {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-8">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-gradient-to-br from-[var(--gray-light)] to-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 relative border-2 border-[var(--gray-medium)] hover:border-[var(--green-dark)]"
+              className="relative rounded-xl border-2 border-[var(--gray-medium)] bg-gradient-to-br from-[var(--gray-light)] to-white p-5 shadow-lg transition-all duration-300 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl md:p-8"
             >
               {/* Quote Icon */}
               <div className="absolute top-6 right-6 opacity-10">
-                <Quote className="w-16 h-16 text-[var(--green-dark)]" />
+                <Quote className="h-12 w-12 text-[var(--green-dark)] md:h-16 md:w-16" />
               </div>
 
               {/* Stars */}

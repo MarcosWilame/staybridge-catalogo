@@ -29,25 +29,25 @@ const stats = [
 
 export function QuickStats() {
   return (
-    <section className="py-16 bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] relative overflow-hidden">
+    <section className="relative overflow-hidden bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] py-10 md:py-16">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-[var(--yellow)]/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div
                 key={index}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/20 transition-all duration-300 border border-white/20"
+                className="rounded-xl border border-white/20 bg-white/10 p-4 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/20 md:rounded-2xl md:p-6"
               >
-                <div className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
-                  <Icon className="w-8 h-8 text-white" />
+                <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} md:mb-4 md:h-16 md:w-16 md:rounded-2xl`}>
+                  <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                 </div>
-                <div className="text-4xl font-bold text-white mb-2">{stat.value}</div>
-                <div className="text-sm text-white/90">{stat.label}</div>
+                <div className="mb-1 text-2xl font-bold text-white md:mb-2 md:text-4xl">{stat.value}</div>
+                <div className="text-xs leading-snug text-white/90 md:text-sm">{stat.label}</div>
               </div>
             );
           })}

@@ -3,11 +3,11 @@ import { Home, Search } from 'lucide-react';
 
 export function NotFoundPage() {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 pt-20">
-      <div className="text-center max-w-md">
+    <div className="flex min-h-[70vh] items-center justify-center px-4 pb-24 pt-24">
+      <div className="max-w-md text-center">
         <div className="mb-8">
-          <div className="text-9xl font-bold text-[var(--green-dark)]">404</div>
-          <h1 className="text-3xl font-bold text-gray-900 mt-4 mb-2">
+          <div className="text-7xl font-bold text-[var(--green-dark)] md:text-9xl">404</div>
+          <h1 className="mb-2 mt-4 text-2xl font-bold text-gray-900 md:text-3xl">
             Página não encontrada
           </h1>
           <p className="text-gray-600">
@@ -15,17 +15,17 @@ export function NotFoundPage() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
           <Link
             to="/"
-            className="inline-flex items-center justify-center gap-2 bg-[var(--green-dark)] hover:bg-[var(--green-medium)] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:px-6"
           >
             <Home className="w-5 h-5" />
             Voltar ao Início
           </Link>
           <Link
             to="/properties"
-            className="inline-flex items-center justify-center gap-2 bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-5 py-3 font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] md:px-6"
           >
             <Search className="w-5 h-5" />
             Ver Propriedades

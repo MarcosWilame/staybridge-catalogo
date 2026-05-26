@@ -41,9 +41,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <div className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-[var(--green-dark)] hover:-translate-y-1">
+    <div className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
       {/* Image Container */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-56 overflow-hidden sm:h-64">
         <Link to={`/property/${property.id}`} className="block h-full">
           <ImageWithFallback
             src={currentImage}
@@ -53,7 +53,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </Link>
 
         {/* Overlay Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute left-3 top-3 flex max-w-[calc(100%-7rem)] flex-col gap-2">
           {property.available && (
             <span className="bg-[var(--yellow)] text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse">✓ Disponível Agora</span>
           )}
@@ -66,9 +66,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Price Badge */}
         <div className="absolute bottom-3 right-3">
-          <div className="bg-[var(--green-dark)] text-white px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-sm">
+          <div className="rounded-xl bg-[var(--green-dark)] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
             <div className="text-xs opacity-90 font-medium">por semana</div>
-            <div className="text-2xl font-bold">{property.price}</div>
+            <div className="text-xl font-bold md:text-2xl">{property.price}</div>
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-5">
+      <div className="p-4 md:p-5">
         {/* Type and Region */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
@@ -150,14 +150,14 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <div className="flex gap-2">
           <Link
             to={`/property/${property.id}`}
-            className="flex-1 bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm hover:scale-105"
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[var(--yellow-dark)] md:px-4"
           >
-            Ver Detalhes
-            <ArrowRight className="w-4 h-4" />
+            <span className="truncate">Ver Detalhes</span>
+            <ArrowRight className="h-4 w-4 shrink-0" />
           </Link>
           <button
             onClick={handleWhatsApp}
-            className="bg-[var(--green-dark)] hover:bg-[var(--green-medium)] text-white py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105"
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2.5 font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[var(--green-medium)] md:px-4"
             title="Falar no WhatsApp"
           >
             <MessageCircle className="w-5 h-5" />

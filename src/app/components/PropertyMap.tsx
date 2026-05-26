@@ -40,16 +40,16 @@ export function PropertyMap({
   )}&z=13&output=embed`;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg md:rounded-2xl">
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 text-[var(--green-dark)] font-bold">
               <MapPin className="w-5 h-5" />
               Localização
             </div>
             {selectedProperty && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 break-words text-sm text-gray-600">
                 Área aproximada: {areaLabel}
               </p>
             )}
@@ -59,7 +59,7 @@ export function PropertyMap({
             href={getGoogleMapsUrl(selectedProperty)}
             target="_blank"
             rel="noreferrer"
-            className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--green-medium)] transition-colors"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--green-medium)]"
           >
             <ExternalLink className="w-4 h-4" />
             Abrir
@@ -67,7 +67,7 @@ export function PropertyMap({
         </div>
       </div>
 
-      <div className="relative h-80">
+      <div className="relative h-64 md:h-80">
         <iframe
           title={`Mapa - ${selectedProperty?.title || 'Staybridge'}`}
           src={mapUrl}
@@ -76,9 +76,9 @@ export function PropertyMap({
           referrerPolicy="no-referrer-when-downgrade"
         />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-40 w-40 rounded-full border-4 border-[var(--yellow)] bg-[var(--yellow)]/20 shadow-[0_0_0_999px_rgba(0,0,0,0.08)]" />
+          <div className="h-32 w-32 rounded-full border-4 border-[var(--yellow)] bg-[var(--yellow)]/20 shadow-[0_0_0_999px_rgba(0,0,0,0.08)] md:h-40 md:w-40" />
         </div>
-        <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[var(--green-dark)] shadow">
+        <div className="pointer-events-none absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[var(--green-dark)] shadow">
           Raio aproximado da área
         </div>
       </div>

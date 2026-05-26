@@ -42,36 +42,36 @@ export function RegionShowcase() {
     ).length;
 
   return (
-    <section className="py-20 bg-white relative overflow-hidden">
+    <section className="relative overflow-hidden bg-white py-12 md:py-20">
       {/* Diagonal background element */}
       <div className="absolute bottom-0 left-0 w-full h-96 bg-gradient-to-tr from-[var(--green-dark)]/5 to-transparent transform skew-y-2" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="mb-10 text-center md:mb-12">
           <div className="inline-block bg-[var(--green-dark)] text-white px-4 py-2 rounded-full text-sm font-bold mb-4">
             REGIÕES DE LONDRES
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[var(--green-dark)] mb-4">
+          <h2 className="mb-4 text-3xl font-bold leading-tight text-[var(--green-dark)] md:text-5xl">
             Explore Diferentes
             <br />
             <span className="text-[var(--yellow)]">Áreas de Londres</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 md:text-xl">
             Encontre a região perfeita para sua nova casa em Londres
           </p>
         </div>
 
         {/* Regions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
           {regions.map((region, index) => (
             <Link
               key={index}
               to={`/properties?region=${region.query}`}
-              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-[var(--green-dark)]"
+              className="group relative overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-lg transition-all duration-300 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl"
             >
               {/* Image */}
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-44 overflow-hidden md:h-48">
                 <img
                   src={region.image}
                   alt={region.name}
@@ -88,7 +88,7 @@ export function RegionShowcase() {
 
                 {/* Region Name */}
                 <div className="absolute bottom-4 left-4 right-4">
-                  <h3 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                  <h3 className="mb-1 flex items-center gap-2 text-xl font-bold text-white md:text-2xl">
                     <MapPin className="w-5 h-5" />
                     {region.name}
                   </h3>
@@ -96,8 +96,8 @@ export function RegionShowcase() {
               </div>
 
               {/* Content */}
-              <div className="p-6">
-                <p className="text-gray-700 mb-3 leading-relaxed">
+              <div className="p-5 md:p-6">
+                <p className="mb-3 text-sm leading-relaxed text-gray-700 md:text-base">
                   {region.description}
                 </p>
                 <p className="text-sm text-[var(--green-dark)] font-semibold mb-4">

@@ -161,7 +161,7 @@ export function PropertiesSection() {
   };
 
   return (
-    <section id="properties" className="py-20 bg-[var(--gray-light)] relative overflow-hidden">
+    <section id="properties" className="relative overflow-hidden bg-[var(--gray-light)] py-12 md:py-20">
       {/* Decorative brush stroke effect */}
       <div className="absolute top-10 right-0 w-1/3 h-64 bg-[var(--yellow)]/10 transform skew-y-6 blur-3xl" />
       <div className="absolute bottom-10 left-0 w-1/4 h-48 bg-[var(--green-dark)]/5 transform -skew-y-3 blur-2xl" />
@@ -171,30 +171,30 @@ export function PropertiesSection() {
         <SearchFilter onFilterChange={handleFilterChange} />
 
         {/* Section Header */}
-        <div className="text-center mb-12 mt-20">
+        <div className="mb-10 mt-10 text-center md:mb-12 md:mt-20">
           <div className="inline-block bg-[var(--green-dark)] text-white px-4 py-2 rounded-full text-sm font-bold mb-4">
             NOSSAS PROPRIEDADES
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[var(--green-dark)] mb-4">
+          <h2 className="mb-4 text-3xl font-bold leading-tight text-[var(--green-dark)] md:text-5xl">
             Encontre seu
             <br />
             <span className="text-[var(--yellow)]">Novo Lar</span>
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-base text-gray-600 md:text-xl">
             {filteredProperties.length} {filteredProperties.length === 1 ? 'propriedade disponível' : 'propriedades disponíveis'}
           </p>
         </div>
 
         {/* Properties Grid */}
         {filteredProperties.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
             {filteredProperties.map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <p className="text-xl text-gray-600 mb-4">Nenhuma propriedade encontrada com os filtros selecionados.</p>
+          <div className="py-12 text-center md:py-16">
+            <p className="mb-4 text-base text-gray-600 md:text-xl">Nenhuma propriedade encontrada com os filtros selecionados.</p>
             <button
               onClick={() => setFilteredProperties(properties)}
               className="bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--green-medium)] transition-colors"

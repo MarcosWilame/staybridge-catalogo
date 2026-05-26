@@ -3,40 +3,40 @@ import { User, MessageCircle, Home } from 'lucide-react';
 
 export function ProfilePage() {
   return (
-    <div className="min-h-screen bg-[var(--gray-light)] pt-28 pb-24 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 text-center">
-          <div className="w-20 h-20 bg-[var(--green-dark)]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <User className="w-10 h-10 text-[var(--green-dark)]" />
+    <div className="min-h-screen bg-[var(--gray-light)] px-4 pb-28 pt-28 md:pb-24">
+      <div className="mx-auto max-w-4xl">
+        <div className="rounded-2xl bg-white p-6 text-center shadow-lg md:p-12">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--green-dark)]/20 md:h-20 md:w-20">
+            <User className="h-8 w-8 text-[var(--green-dark)] md:h-10 md:w-10" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">
             Área do Cliente
           </h1>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="mx-auto mb-8 max-w-2xl text-sm leading-relaxed text-gray-600 md:text-base">
             Para acessar sua área pessoal, agendar visitas ou gerenciar suas reservas,
             entre em contato conosco via WhatsApp.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto">
+          <div className="mx-auto grid max-w-lg grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             <a
               href="https://wa.me/447000000000"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 bg-[var(--green-dark)] hover:bg-[var(--green-medium)] text-white px-6 py-4 rounded-lg font-semibold transition-all duration-300"
+              className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:px-6 md:py-4"
             >
               <MessageCircle className="w-5 h-5" />
               Falar no WhatsApp
             </a>
             <Link
               to="/"
-              className="flex items-center justify-center gap-2 bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-4 rounded-lg font-semibold transition-all duration-300"
+              className="flex items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-5 py-3.5 font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] md:px-6 md:py-4"
             >
               <Home className="w-5 h-5" />
               Voltar ao Início
             </Link>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="mt-10 border-t border-gray-200 pt-6 md:mt-12 md:pt-8">
             <h3 className="font-bold text-gray-900 mb-4">Serviços Disponíveis</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               <div className="bg-[var(--gray-light)] rounded-lg p-4">

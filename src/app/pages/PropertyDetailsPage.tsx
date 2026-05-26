@@ -291,8 +291,8 @@ export function PropertyDetailsPage() {
             </div>
 
             {/* DESCRIPTION */}
-            <div className="bg-[var(--gray-light)] rounded-2xl p-6">
-              <h2 className="text-2xl font-bold text-[var(--green-dark)] mb-4">
+            <div className="rounded-2xl bg-[var(--gray-light)] p-5 md:p-6">
+              <h2 className="mb-4 text-2xl font-bold text-[var(--green-dark)]">
                 Descrição
               </h2>
 
@@ -308,18 +308,18 @@ export function PropertyDetailsPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
 
-              <div className="bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] text-white rounded-2xl p-6">
+              <div className="rounded-2xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] p-5 text-white md:p-6">
 
                 <div className="text-sm mb-2">Preço por semana</div>
 
-                <div className="text-5xl font-bold mb-4 flex items-start">
-                  <PoundSterling className="w-8 h-8 mt-1" />
+                <div className="mb-4 flex items-start text-4xl font-bold md:text-5xl">
+                  <PoundSterling className="mt-1 h-7 w-7 md:h-8 md:w-8" />
                   {property.price}
                 </div>
 
                 <button
                   onClick={handleWhatsApp}
-                  className="w-full bg-[var(--yellow)] text-black py-4 rounded-xl font-bold flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] py-3.5 font-bold text-black md:py-4"
                 >
                   <MessageCircle className="w-6 h-6" />
                   Falar no WhatsApp
@@ -329,7 +329,7 @@ export function PropertyDetailsPage() {
                   href={getGoogleMapsUrl(property)}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-3 w-full bg-white/95 text-[var(--green-dark)] py-4 rounded-xl font-bold flex items-center justify-center gap-2"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/95 py-3.5 font-bold text-[var(--green-dark)] md:py-4"
                 >
                   <MapPin className="w-6 h-6" />
                   Abrir endereço no mapa

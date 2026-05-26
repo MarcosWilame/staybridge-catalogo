@@ -6,13 +6,13 @@ export function Footer() {
   const [language, setLanguage] = useState<'pt' | 'en'>('pt');
 
   return (
-    <footer className="bg-[var(--green-dark)] text-white mb-16 md:mb-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="mb-16 bg-[var(--green-dark)] text-white md:mb-0">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-12 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="bg-[var(--yellow)] text-black px-6 py-3 rounded-lg inline-block mb-4">
-              <span className="font-bold text-xl tracking-wider">STAYBRIDGE LONDON</span>
+            <div className="mb-4 inline-block rounded-lg bg-[var(--yellow)] px-4 py-3 text-black md:px-6">
+              <span className="text-base font-bold tracking-wider md:text-xl">STAYBRIDGE LONDON</span>
             </div>
             <p className="text-gray-300 mb-4 leading-relaxed">
               Conectando brasileiros às melhores acomodações em Londres.
@@ -86,11 +86,11 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-center md:flex-row md:text-left">
+          <p className="text-sm text-gray-400">
             © 2026 Staybridge London. Todos os direitos reservados.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
             {/* Language Switcher */}
             <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
               <Globe className="w-4 h-4 text-[var(--yellow)]" />

@@ -27,16 +27,16 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
   };
 
   return (
-    <div className="bg-white shadow-2xl rounded-2xl p-6 -mt-20 relative z-20 max-w-6xl mx-auto">
+    <div className="relative z-20 mx-auto max-w-6xl rounded-2xl bg-white p-4 shadow-2xl md:-mt-20 md:p-6">
       <div className="mb-4">
-        <h3 className="text-2xl font-bold text-[var(--green-dark)] flex items-center gap-2">
+        <h3 className="flex items-center gap-2 text-xl font-bold text-[var(--green-dark)] md:text-2xl">
           <Search className="w-6 h-6" />
           Encontre sua acomodação ideal
         </h3>
         <p className="text-gray-600 mt-1">Filtre por região, tipo e preço</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
         {/* Region Filter */}
         <div className="relative">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -46,7 +46,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
           <select
             value={filters.region}
             onChange={(e) => updateFilter('region', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[var(--green-dark)] focus:outline-none bg-white transition-colors"
+            className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 transition-colors focus:border-[var(--green-dark)] focus:outline-none"
           >
             <option value="">Todas as regiões</option>
             <option value="north">North London</option>
@@ -66,7 +66,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
           <select
             value={filters.type}
             onChange={(e) => updateFilter('type', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[var(--green-dark)] focus:outline-none bg-white transition-colors"
+            className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 transition-colors focus:border-[var(--green-dark)] focus:outline-none"
           >
             <option value="">Todos os tipos</option>
             <option value="studio">Studio</option>
@@ -86,7 +86,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
           <select
             value={filters.priceRange}
             onChange={(e) => updateFilter('priceRange', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[var(--green-dark)] focus:outline-none bg-white transition-colors"
+            className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 transition-colors focus:border-[var(--green-dark)] focus:outline-none"
           >
             <option value="">Qualquer preço</option>
             <option value="0-150">£0 - £150</option>
@@ -98,7 +98,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
 
         {/* Bills Included */}
         <div className="flex items-end">
-          <label className="flex items-center gap-3 cursor-pointer bg-[var(--gray-light)] hover:bg-gray-200 px-4 py-3 rounded-lg w-full transition-colors">
+          <label className="flex w-full cursor-pointer items-center gap-3 rounded-lg bg-[var(--gray-light)] px-4 py-3 transition-colors hover:bg-gray-200">
             <input
               type="checkbox"
               checked={filters.billsIncluded}
