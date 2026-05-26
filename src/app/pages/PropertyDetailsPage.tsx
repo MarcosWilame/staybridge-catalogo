@@ -19,12 +19,57 @@ import {
   Home,
   ChevronLeft,
   ChevronRight,
+  Play,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface PropertyAttribute {
   icon: LucideIcon;
   label: string;
+}
+
+type MediaItem =
+  | { type: 'image'; src: string }
+  | { type: 'video'; src: string; embedSrc: string };
+
+function getVideoEmbedUrl(url: string) {
+  const driveFileId =
+    url.match(/drive\.google\.com\/file\/d\/([^/]+)/)?.[1] ||
+    url.match(/drive\.google\.com\/uc\?[^#]*id=([^&#]+)/)?.[1] ||
+    url.match(/drive\.google\.com\/open\?[^#]*id=([^&#]+)/)?.[1] ||
+    '';
+
+  if (driveFileId) {
+    return `https://drive.google.com/file/d/${driveFileId}/preview`;
+  }
+
+  const youtubeId =
+    url.match(/youtube\.com\/watch\?[^#]*v=([^&#]+)/)?.[1] ||
+    url.match(/youtu\.be\/([^?&#]+)/)?.[1] ||
+    '';
+
+  if (youtubeId) {
+    return `https://www.youtube.com/embed/${youtubeId}`;
+  }
+
+  return url;
+}
+
+function getMediaItems(property: Property): MediaItem[] {
+  const imageItems = (property.images?.length ? property.images : [property.image])
+    .filter(Boolean)
+    .map((src) => ({ type: 'image' as const, src }));
+
+  if (!property.video) return imageItems;
+
+  return [
+    ...imageItems,
+    {
+      type: 'video' as const,
+      src: property.video,
+      embedSrc: getVideoEmbedUrl(property.video),
+    },
+  ];
 }
 
 function getLegacyPropertyAttributes(property: Property): PropertyAttribute[] {
@@ -69,6 +114,7 @@ export function PropertyDetailsPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentImageIndex(0);
   }, [id]);
 
   if (!property) {
@@ -104,15 +150,19 @@ export function PropertyDetailsPage() {
     );
   };
 
+  const mediaItems = getMediaItems(property);
+  const currentMedia = mediaItems[currentImageIndex] || mediaItems[0];
+  const videoThumbnail = property.image || property.images[0];
+
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
-      (prev + 1) % property.images.length
+      (prev + 1) % mediaItems.length
     );
   };
 
   const prevImage = () => {
     setCurrentImageIndex((prev) =>
-      (prev - 1 + property.images.length) % property.images.length
+      (prev - 1 + mediaItems.length) % mediaItems.length
     );
   };
 
@@ -162,14 +212,25 @@ export function PropertyDetailsPage() {
           <div className="relative mb-4 overflow-hidden rounded-xl shadow-xl md:rounded-2xl md:shadow-2xl">
 
             <div className="relative h-72 sm:h-96 md:h-[600px]">
-              <ImageWithFallback
-                src={property.images[currentImageIndex]}
-                alt={`${property.title} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover"
-              />
+              {currentMedia?.type === 'video' ? (
+                <iframe
+                  src={currentMedia.embedSrc}
+                  title={`${property.title} - Video`}
+                  className="h-full w-full border-0 bg-black"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              ) : (
+                <ImageWithFallback
+                  src={currentMedia?.src || property.image}
+                  alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              )}
 
               {/* NAV BUTTONS */}
-              {property.images.length > 1 && (
+              {mediaItems.length > 1 && (
                 <>
                   <button
                     onClick={prevImage}
@@ -189,7 +250,7 @@ export function PropertyDetailsPage() {
 
               {/* COUNTER */}
               <div className="absolute bottom-3 right-3 rounded-full bg-black/70 px-3 py-1.5 text-sm font-semibold text-white md:bottom-4 md:right-4 md:px-4 md:py-2">
-                {currentImageIndex + 1} / {property.images.length}
+                {currentImageIndex + 1} / {mediaItems.length}
               </div>
 
               {/* BADGES */}
@@ -211,7 +272,7 @@ export function PropertyDetailsPage() {
 
           {/* THUMBNAILS */}
           <div className="grid grid-cols-4 gap-2 md:gap-3">
-            {property.images.slice(0, 4).map((image, index) => (
+            {mediaItems.slice(0, 8).map((item, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
@@ -221,10 +282,22 @@ export function PropertyDetailsPage() {
                     : 'border-gray-200'
                 }`}
               >
-                <ImageWithFallback
-                  src={image}
-                  className="w-full h-full object-cover"
-                />
+                {item.type === 'video' ? (
+                  <div className="relative h-full w-full bg-black">
+                    <ImageWithFallback
+                      src={videoThumbnail}
+                      className="h-full w-full object-cover opacity-60"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center text-white">
+                      <Play className="h-7 w-7 fill-current" />
+                    </div>
+                  </div>
+                ) : (
+                  <ImageWithFallback
+                    src={item.src}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </button>
             ))}
           </div>
