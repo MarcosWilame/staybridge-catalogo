@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, MessageCircle } from 'lucide-react';
 
@@ -29,6 +29,19 @@ export function Header() {
     setIsMobileMenuOpen(false);
   };
 
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setIsMobileMenuOpen(false);
+
+    if (!isHome) {
+      navigate('/');
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleWhatsApp = () => {
     window.open('https://wa.me/447000000000', '_blank');
   };
@@ -52,11 +65,11 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <NavLink to="/" className="cursor-pointer">
+          <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
             <img
               src="/img/logo-white.png"
               alt="Staybridge London"
-              className="h-12 w-auto object-contain"
+              className="h-16 w-auto object-contain md:h-[68px]"
             />
           </NavLink>
 

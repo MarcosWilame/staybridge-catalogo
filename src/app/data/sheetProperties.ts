@@ -222,10 +222,20 @@ function getPropertyTitle(row: CsvRow) {
   const explicitTitle = get(row, ['title', 'titulo', 'nome']);
   if (explicitTitle) return explicitTitle;
 
+  const flat = get(row, ['flat']);
+  const flatNumber = get(row, ['flat_no']);
   const roomType = get(row, ['room_type']);
   const room = get(row, ['room']);
   const area = get(row, ['area', 'local_area', 'bairro']);
   const postcode = get(row, ['postcode', 'cep', 'codigo_postal']);
+
+  if (flat) {
+    const compactFlat = compactFlatType(flat);
+    return [flatNumber ? `${compactFlat} ${flatNumber}` : compactFlat, postcode, area]
+      .filter(Boolean)
+      .join(' - ')
+      .toUpperCase();
+  }
 
   if (roomType && room) {
     return [`${roomType} ${room}`, postcode, area]
@@ -235,6 +245,13 @@ function getPropertyTitle(row: CsvRow) {
   }
 
   return get(row, ['flat', 'flat_no', 'room_type', 'room']);
+}
+
+function compactFlatType(type: string) {
+  const bedroomMatch = type.match(/(\d+)\s*bed/i);
+  if (bedroomMatch?.[1]) return `${bedroomMatch[1]}-BedFlat`;
+
+  return type.replace(/\s+/g, '');
 }
 
 function getPropertyCategory(type: string, row: CsvRow) {
@@ -261,6 +278,11 @@ function getPropertyRegion(row: CsvRow) {
   }
 
   return get(row, ['bairro', 'area'], 'London');
+}
+
+function getPropertyType(row: CsvRow) {
+  const type = get(row, ['type', 'tipo', 'room_type', 'flat', 'room'], 'Room');
+  return get(row, ['flat']) ? compactFlatType(type) : type;
 }
 
 function normalizeImageUrl(url: string) {
@@ -301,7 +323,7 @@ function rowToProperty(row: CsvRow, index: number): Property | null {
   const generatedId = index + 1 + (row.__section === 'rooms' ? 1 : 0);
   const id = getNumber(row, ['id', 'codigo'], generatedId);
   const title = getPropertyTitle(row);
-  const type = get(row, ['type', 'tipo', 'room_type', 'flat', 'room'], 'Room');
+  const type = getPropertyType(row);
   const category = getPropertyCategory(type, row);
   const rawImage =
     get(row, [
