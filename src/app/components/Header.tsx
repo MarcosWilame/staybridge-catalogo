@@ -29,17 +29,29 @@ export function Header() {
     setIsMobileMenuOpen(false);
   };
 
+  const scrollToPageTop = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  };
+
   const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     setIsMobileMenuOpen(false);
 
     if (!isHome) {
       navigate('/');
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+      setTimeout(scrollToPageTop, 100);
       return;
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToPageTop();
   };
 
   const handleWhatsApp = () => {
@@ -58,7 +70,9 @@ export function Header() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isTransparent ? 'bg-transparent' : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
+        isTransparent
+          ? 'bg-[#2d6a4f] shadow-lg md:bg-transparent md:shadow-none'
+          : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -115,7 +129,7 @@ export function Header() {
               <NavLink
                 to="/"
                 end
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={handleLogoClick}
                 className={({ isActive }) =>
                   `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
                     isActive
