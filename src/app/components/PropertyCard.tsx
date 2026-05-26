@@ -41,7 +41,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <div className="group flex h-full min-h-[650px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl">
+    <div className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-[var(--green-dark)] hover:-translate-y-1">
       {/* Image Container */}
       <div className="relative h-64 overflow-hidden">
         <Link to={`/property/${property.id}`} className="block h-full">
@@ -104,14 +104,14 @@ export function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-5">
+      <div className="p-5">
         {/* Type and Region */}
-        <div className="mb-3 grid min-h-[32px] grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-[var(--green-dark)]/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[var(--green-dark)]">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
             <Bed className="w-3.5 h-3.5" />
             <span className="line-clamp-1 break-words">{property.type}</span>
           </span>
-          <span className="inline-flex max-w-[130px] items-center gap-1 text-sm font-medium text-gray-600">
+          <span className="inline-flex min-w-0 max-w-[45%] items-center gap-1 text-gray-600 text-sm font-medium">
             <MapPin className="w-4 h-4 text-gray-400" />
             <span className="line-clamp-1 break-words">{property.region}</span>
           </span>
@@ -119,25 +119,25 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Title */}
         <Link to={`/property/${property.id}`}>
-          <h3 className="mb-2 line-clamp-2 min-h-[56px] text-lg font-bold leading-tight text-gray-900 transition-colors hover:text-[var(--green-dark)]">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[var(--green-dark)] transition-colors leading-tight">
             {property.title}
           </h3>
         </Link>
 
         {/* Description */}
-        <p className="mb-4 min-h-[44px] text-sm leading-relaxed text-gray-600 line-clamp-2">
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
           {property.description}
         </p>
 
         {/* Features */}
-        <div className="mb-4 min-h-[94px] space-y-1.5">
+        <div className="mb-4 max-h-[48px] space-y-1 overflow-hidden">
           {getPropertyAttributes(property).slice(0, 4).map((attribute) => {
             const Icon = attribute.icon;
 
             return (
               <div
                 key={attribute.label}
-                className="flex min-h-[20px] items-start gap-2 text-sm leading-5 text-gray-600"
+                className="flex items-start gap-2 text-sm leading-5 text-gray-600"
               >
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-dark)]" />
                 <span className="line-clamp-1 break-words">{attribute.label}</span>
@@ -147,7 +147,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-auto flex gap-2">
+        <div className="flex gap-2">
           <Link
             to={`/property/${property.id}`}
             className="flex-1 bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm hover:scale-105"
