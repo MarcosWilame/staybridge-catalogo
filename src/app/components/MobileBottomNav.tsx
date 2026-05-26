@@ -9,6 +9,18 @@ export function MobileBottomNav() {
     { path: '/profile', icon: User, label: 'Perfil' },
   ];
 
+  const scrollToPageTop = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white shadow-2xl md:hidden">
       <div className="grid grid-cols-4 items-stretch pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
@@ -21,6 +33,11 @@ export function MobileBottomNav() {
               key={item.path}
               to={item.path}
               end={item.end}
+              onClick={() => {
+                if (item.path === '/') {
+                  setTimeout(scrollToPageTop, 0);
+                }
+              }}
               className={({ isActive }) =>
                 `min-w-0 px-1 py-1.5 text-center text-xs transition-colors ${
                   isActive

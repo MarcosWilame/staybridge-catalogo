@@ -13,14 +13,16 @@ export function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 4);
     };
+
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
-    setIsScrolled(window.scrollY > 20);
+    setIsScrolled(window.scrollY > 4);
   }, [location.pathname]);
 
   const scrollToSection = (id: string) => {
@@ -41,8 +43,7 @@ export function Header() {
     });
   };
 
-  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
+  const goHomeAndScrollTop = () => {
     setIsMobileMenuOpen(false);
 
     if (!isHome) {
@@ -52,6 +53,11 @@ export function Header() {
     }
 
     scrollToPageTop();
+  };
+
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    goHomeAndScrollTop();
   };
 
   const handleWhatsApp = () => {
@@ -91,7 +97,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <NavLink to="/" end className={navLinkClass}>
+            <NavLink to="/" end onClick={handleLogoClick} className={navLinkClass}>
               Início
             </NavLink>
 
