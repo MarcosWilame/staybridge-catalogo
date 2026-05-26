@@ -325,7 +325,7 @@ export function ListingPage() {
       <button
         type="button"
         onClick={() => setShowMobileFilters(true)}
-        className="fixed bottom-24 right-24 z-50 rounded-full bg-[var(--green-dark)] p-4 text-white shadow-2xl lg:hidden"
+        className="fixed bottom-44 right-6 z-50 rounded-full bg-[var(--green-dark)] p-4 text-white shadow-2xl lg:hidden"
         aria-label="Abrir filtros"
       >
         <SlidersHorizontal className="h-6 w-6" />
