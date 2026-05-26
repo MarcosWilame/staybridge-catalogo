@@ -121,19 +121,28 @@ export function ListingPage() {
     (property) => property.id === selectedProperty?.id
   );
 
-  const FiltersPanel = () => (
-    <div className="max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-lg lg:sticky lg:top-24">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-[var(--green-dark)] flex items-center gap-2">
+  const hasActiveFilters =
+    filters.region ||
+    filters.type ||
+    filters.priceRange ||
+    filters.billsIncluded ||
+    filters.availableNow;
+
+  const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div
+      className={`overflow-y-auto overscroll-contain bg-white ${
+        isMobile
+          ? 'h-full px-5 pb-8 pt-5'
+        : 'max-h-[calc(100vh-7rem)] rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
+      }`}
+    >
+      <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilters || !isMobile ? 'mb-6' : ''}`}>
+        <h3 className={`${isMobile ? 'sr-only' : 'text-xl font-bold text-[var(--green-dark)] flex items-center gap-2'}`}>
           <SlidersHorizontal className="w-5 h-5" />
           Filtros
         </h3>
 
-        {(filters.region ||
-          filters.type ||
-          filters.priceRange ||
-          filters.billsIncluded ||
-          filters.availableNow) && (
+        {hasActiveFilters && (
           <button
             onClick={clearFilters}
             className="text-sm text-gray-600 hover:text-[var(--green-dark)] font-semibold"
@@ -251,17 +260,31 @@ export function ListingPage() {
   );
 
   return (
-    <div className="min-h-screen py-10 pt-28 bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-28 pt-28 md:pb-10">
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-2">Propriedades</h1>
-        <p className="mb-6">
-          {isLoading ? 'Sincronizando planilha...' : `${filteredProperties.length} resultados`}
-          {source === 'fallback' && (
-            <span className="ml-2 text-sm text-amber-700">
-              usando dados locais
-            </span>
-          )}
-        </p>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Propriedades</h1>
+            <p>
+              {isLoading ? 'Sincronizando planilha...' : `${filteredProperties.length} resultados`}
+              {source === 'fallback' && (
+                <span className="ml-2 text-sm text-amber-700">
+                  usando dados locais
+                </span>
+              )}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-4 py-3 text-sm font-bold text-white shadow-md lg:hidden"
+            aria-label="Abrir filtros"
+          >
+            <SlidersHorizontal className="h-5 w-5" />
+            Filtrar propriedades
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="hidden lg:block">
@@ -300,19 +323,31 @@ export function ListingPage() {
 
       {/* MOBILE BUTTON */}
       <button
+        type="button"
         onClick={() => setShowMobileFilters(true)}
-        className="lg:hidden fixed bottom-6 right-6 bg-black text-white p-4 rounded-full"
+        className="fixed bottom-24 right-24 z-50 rounded-full bg-[var(--green-dark)] p-4 text-white shadow-2xl lg:hidden"
+        aria-label="Abrir filtros"
       >
-        <SlidersHorizontal />
+        <SlidersHorizontal className="h-6 w-6" />
       </button>
 
       {showMobileFilters && (
-        <div className="fixed inset-0 bg-black/50 flex justify-end">
-          <div className="max-h-screen w-80 overflow-y-auto bg-white p-4">
-            <button onClick={() => setShowMobileFilters(false)}>
-              <X />
-            </button>
-            <FiltersPanel />
+        <div className="fixed inset-0 z-[60] flex justify-end bg-black/50 lg:hidden">
+          <div className="flex h-full w-full max-w-sm flex-col bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+              <span className="text-lg font-bold text-[var(--green-dark)]">
+                Filtros
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(false)}
+                className="rounded-full bg-gray-100 p-2 text-gray-700"
+                aria-label="Fechar filtros"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <FiltersPanel isMobile />
           </div>
         </div>
       )}
