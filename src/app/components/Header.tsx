@@ -71,7 +71,7 @@ export function Header() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isTransparent
-          ? 'bg-[#2d6a4f] shadow-lg md:bg-transparent md:shadow-none'
+          ? 'bg-transparent'
           : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
       }`}
     >
@@ -83,7 +83,9 @@ export function Header() {
             <img
               src="/img/logo-white.png"
               alt="Staybridge London"
-              className="h-16 w-auto object-contain md:h-[68px]"
+              className={`h-16 w-auto object-contain md:h-[68px] ${
+                isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]' : ''
+              }`}
             />
           </NavLink>
 
@@ -116,7 +118,9 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg transition-colors text-white"
+            className={`md:hidden p-2 rounded-lg transition-colors text-white ${
+              isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.75)]' : ''
+            }`}
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
