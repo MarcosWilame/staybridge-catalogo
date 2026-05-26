@@ -9,14 +9,14 @@ export function WhatsAppButton() {
   return (
     <motion.button
       onClick={handleClick}
-      className="fixed bottom-6 right-6 md:bottom-6 md:right-6 bottom-24 z-50 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all duration-300 group"
+      className="group fixed bottom-24 right-4 z-50 rounded-full bg-[#25D366] p-3 text-white shadow-2xl transition-all duration-300 hover:bg-[#20BA5A] hover:shadow-3xl md:bottom-6 md:right-6 md:p-4"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
     >
-      <MessageCircle className="w-8 h-8 group-hover:rotate-12 transition-transform duration-300" />
+      <MessageCircle className="h-7 w-7 transition-transform duration-300 group-hover:rotate-12 md:h-8 md:w-8" />
 
       {/* Tooltip */}
       <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">

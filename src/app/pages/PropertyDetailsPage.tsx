@@ -117,7 +117,7 @@ export function PropertyDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24 md:pb-8 pt-20">
+    <div className="min-h-screen bg-white pb-32 pt-20 md:pb-8">
 
       {/* BREADCRUMB + BACK */}
       <div className="bg-[var(--gray-light)] py-4">
@@ -155,13 +155,13 @@ export function PropertyDetailsPage() {
       </div>
 
       {/* PAGE CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
 
         {/* IMAGE GALLERY */}
-        <div className="mb-8">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl mb-4">
+        <div className="mb-6 md:mb-8">
+          <div className="relative mb-4 overflow-hidden rounded-xl shadow-xl md:rounded-2xl md:shadow-2xl">
 
-            <div className="relative h-96 md:h-[600px]">
+            <div className="relative h-72 sm:h-96 md:h-[600px]">
               <ImageWithFallback
                 src={property.images[currentImageIndex]}
                 alt={`${property.title} - Image ${currentImageIndex + 1}`}
@@ -173,14 +173,14 @@ export function PropertyDetailsPage() {
                 <>
                   <button
                     onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:left-4 md:p-3"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
 
                   <button
                     onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:right-4 md:p-3"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -188,20 +188,20 @@ export function PropertyDetailsPage() {
               )}
 
               {/* COUNTER */}
-              <div className="absolute bottom-4 right-4 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-semibold">
+              <div className="absolute bottom-3 right-3 rounded-full bg-black/70 px-3 py-1.5 text-sm font-semibold text-white md:bottom-4 md:right-4 md:px-4 md:py-2">
                 {currentImageIndex + 1} / {property.images.length}
               </div>
 
               {/* BADGES */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <div className="absolute left-3 top-3 flex max-w-[calc(100%-6rem)] flex-col gap-2 md:left-4 md:top-4">
                 {property.available && (
-                  <span className="bg-[var(--yellow)] text-black px-4 py-2 rounded-full text-sm font-bold">
+                  <span className="rounded-full bg-[var(--yellow)] px-3 py-1.5 text-xs font-bold text-black md:px-4 md:py-2 md:text-sm">
                     Disponível Agora
                   </span>
                 )}
 
                 {property.billsIncluded && (
-                  <span className="bg-white/95 text-[var(--green-dark)] px-4 py-2 rounded-full text-sm font-bold">
+                  <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
                     Bills Inclusas
                   </span>
                 )}
@@ -210,12 +210,12 @@ export function PropertyDetailsPage() {
           </div>
 
           {/* THUMBNAILS */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2 md:gap-3">
             {property.images.slice(0, 4).map((image, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
-                className={`h-24 rounded-lg overflow-hidden border-2 transition-all ${
+                className={`aspect-square overflow-hidden rounded-lg border-2 transition-all md:h-24 md:aspect-auto ${
                   currentImageIndex === index
                     ? 'border-[var(--green-dark)] scale-105'
                     : 'border-gray-200'
@@ -238,29 +238,29 @@ export function PropertyDetailsPage() {
 
             {/* TITLE */}
             <div>
-              <div className="flex items-start justify-between mb-4">
+              <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="bg-[var(--green-dark)] text-white px-3 py-1 rounded-full text-sm font-bold">
+                <div className="min-w-0">
+                  <div className="mb-3 flex flex-wrap items-center gap-3">
+                    <span className="max-w-full rounded-full bg-[var(--green-dark)] px-3 py-1.5 text-sm font-bold leading-snug text-white">
                       {property.type}
                     </span>
 
-                    <span className="text-gray-600 flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {property.region}
+                    <span className="flex min-w-0 items-center gap-1 text-gray-600">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="break-words">{property.region}</span>
                     </span>
                   </div>
 
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                  <h1 className="break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl md:text-4xl">
                     {property.title}
                   </h1>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex shrink-0 gap-2">
                   <button
                     onClick={() => setIsFavorite(!isFavorite)}
-                    className={`p-3 rounded-full border-2 ${
+                    className={`rounded-full border-2 p-3 ${
                       isFavorite
                         ? 'bg-red-50 border-red-500 text-red-500'
                         : 'border-gray-200 text-gray-600'
@@ -269,21 +269,21 @@ export function PropertyDetailsPage() {
                     <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
                   </button>
 
-                  <button className="p-3 rounded-full border-2 border-gray-200 text-gray-600">
+                  <button className="rounded-full border-2 border-gray-200 p-3 text-gray-600">
                     <Share2 className="w-6 h-6" />
                   </button>
                 </div>
               </div>
 
               {/* INFO */}
-              <div className="flex flex-wrap gap-4 text-gray-700">
+              <div className="flex flex-wrap gap-x-5 gap-y-3 text-gray-700">
                 {getPropertyAttributes(property).map((attribute) => {
                   const Icon = attribute.icon;
 
                   return (
-                    <div key={attribute.label} className="flex items-center gap-2">
-                      <Icon className="w-5 h-5 text-[var(--green-dark)]" />
-                      <span>{attribute.label}</span>
+                    <div key={attribute.label} className="flex min-w-0 items-center gap-2">
+                      <Icon className="h-5 w-5 shrink-0 text-[var(--green-dark)]" />
+                      <span className="break-words">{attribute.label}</span>
                     </div>
                   );
                 })}
@@ -341,17 +341,6 @@ export function PropertyDetailsPage() {
           </div>
 
         </div>
-      </div>
-
-      {/* MOBILE CTA */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4">
-        <button
-          onClick={handleWhatsApp}
-          className="w-full bg-[var(--green-dark)] text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2"
-        >
-          <MessageCircle className="w-5 h-5" />
-          WhatsApp
-        </button>
       </div>
 
     </div>

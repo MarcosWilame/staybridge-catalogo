@@ -9,7 +9,7 @@ export function Header() {
   const location = useLocation();
 
   const isHome = location.pathname === '/';
-  const isTransparent = isHome && !isScrolled;
+  const isTransparent = isHome && !isScrolled && !isMobileMenuOpen;
 
   useEffect(() => {
     const handleScroll = () => {
