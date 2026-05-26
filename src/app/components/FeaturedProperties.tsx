@@ -1,14 +1,63 @@
 import { Link } from 'react-router-dom';
 import { PropertyCard } from './PropertyCard';
-import { properties } from '../data/properties';
+import { useProperties } from '../data/sheetProperties';
 import { ArrowRight } from 'lucide-react';
+import type { Property } from '../data/properties';
+
+function pickFirstUnused(
+  properties: Property[],
+  categories: string[],
+  selectedIds: Set<number>
+) {
+  for (const category of categories) {
+    const property = properties.find(
+      (item) => item.category === category && !selectedIds.has(item.id)
+    );
+
+    if (property) return property;
+  }
+
+  return undefined;
+}
+
+function pickFeaturedProperties(properties: Property[]) {
+  const selectedIds = new Set<number>();
+  const selected: Property[] = [];
+
+  const addProperty = (categories: string[]) => {
+    const property = pickFirstUnused(properties, categories, selectedIds);
+    if (!property) return;
+
+    selected.push(property);
+    selectedIds.add(property.id);
+  };
+
+  addProperty(['flat']);
+  addProperty(['flat']);
+  addProperty(['studio']);
+  addProperty(['ensuite', 'studio']);
+  addProperty(['double', 'ensuite', 'studio']);
+  addProperty(['single', 'ensuite', 'studio']);
+
+  for (const property of properties) {
+    if (selected.length >= 6) break;
+    if (selectedIds.has(property.id)) continue;
+
+    selected.push(property);
+    selectedIds.add(property.id);
+  }
+
+  return selected;
+}
 
 export function FeaturedProperties() {
+  const { properties } = useProperties();
 
   // MOSTRA TODOS OS IMÓVEIS DISPONÍVEIS
   const featuredProperties = properties.filter(
     (p) => p.available
   );
+  const visibleProperties = pickFeaturedProperties(featuredProperties);
 
   // CONTADORES AUTOMÁTICOS
   const studios = properties.filter(
@@ -100,7 +149,7 @@ export function FeaturedProperties() {
         {/* Properties Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
 
-          {featuredProperties.map((property) => (
+          {visibleProperties.map((property) => (
 
             <div
               key={property.id}
@@ -111,6 +160,16 @@ export function FeaturedProperties() {
 
           ))}
 
+        </div>
+
+        <div className="flex justify-center mb-16">
+          <Link
+            to="/properties"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 text-base md:text-lg shadow-lg hover:shadow-2xl"
+          >
+            Ver mais unidades
+            <ArrowRight className="w-5 h-5" />
+          </Link>
         </div>
 
         {/* CTA Section */}

@@ -9,6 +9,7 @@ import { ScrollToTop } from '../components/ScrollToTop'
 export function RootLayout() {
   return (
     <div className="min-h-screen bg-white">
+      <ScrollToTop />
       <Header />
       <main>
         <Outlet />
@@ -16,16 +17,6 @@ export function RootLayout() {
       <Footer />
       <WhatsAppButton />
       <MobileBottomNav />
-      <>
-        <ScrollToTop />
-        <Header />
-        <main>
-          <Outlet />
-        </main>
-        <Footer />
-        <WhatsAppButton />
-        <MobileBottomNav />
-      </>
     </div>
   );
 }

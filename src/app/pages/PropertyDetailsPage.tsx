@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { properties } from '../data/properties';
+import { useProperties } from '../data/sheetProperties';
+import type { Property } from '../data/properties';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { getGoogleMapsUrl, PropertyMap } from '../components/PropertyMap';
+import { getPropertyAttributes } from '../utils/propertyAttributes';
 
 import {
   ArrowLeft,
@@ -17,10 +20,47 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+interface PropertyAttribute {
+  icon: LucideIcon;
+  label: string;
+}
+
+function getLegacyPropertyAttributes(property: Property): PropertyAttribute[] {
+  const category = property.category.toLowerCase();
+  const type = property.type.toLowerCase();
+  const isRoom = ['single', 'double', 'ensuite', 'studio'].some(
+    (roomType) => category.includes(roomType) || type.includes(roomType)
+  );
+
+  if (!isRoom) {
+    return [
+      property.bedrooms
+        ? { icon: Bed, label: `${property.bedrooms} quartos` }
+        : null,
+      { icon: Home, label: property.furnishing },
+      { icon: Calendar, label: `Entrada: ${property.moveInDate}` },
+    ].filter(Boolean) as PropertyAttribute[];
+  }
+
+  const attributes: PropertyAttribute[] = [{ icon: Home, label: 'Mobiliado' }];
+
+  if (category.includes('studio') || type.includes('studio')) {
+    attributes.push({ icon: CheckCircle, label: 'Bancada, Pia e Armário' });
+    attributes.push({ icon: CheckCircle, label: 'Banheiro privativo' });
+  } else if (category.includes('ensuite') || type.includes('ensuite')) {
+    attributes.push({ icon: CheckCircle, label: 'Banheiro privativo' });
+  }
+
+  attributes.push({ icon: Calendar, label: 'Disponível Now' });
+  return attributes;
+}
 
 export function PropertyDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { properties, isLoading } = useProperties();
 
   const property = properties.find((p) => p.id === Number(id));
 
@@ -36,16 +76,18 @@ export function PropertyDetailsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Propriedade não encontrada
+            {isLoading ? 'Carregando propriedade...' : 'Propriedade não encontrada'}
           </h1>
 
-          <Link
-            to="/properties"
-            className="inline-flex items-center gap-2 bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--green-medium)] transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Voltar para Propriedades
-          </Link>
+          {!isLoading && (
+            <Link
+              to="/properties"
+              className="inline-flex items-center gap-2 bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--green-medium)] transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Voltar para Propriedades
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -235,22 +277,16 @@ export function PropertyDetailsPage() {
 
               {/* INFO */}
               <div className="flex flex-wrap gap-4 text-gray-700">
-                {property.bedrooms && (
-                  <div className="flex items-center gap-2">
-                    <Bed className="w-5 h-5 text-[var(--green-dark)]" />
-                    <span>{property.bedrooms} quartos</span>
-                  </div>
-                )}
+                {getPropertyAttributes(property).map((attribute) => {
+                  const Icon = attribute.icon;
 
-                <div className="flex items-center gap-2">
-                  <Home className="w-5 h-5 text-[var(--green-dark)]" />
-                  <span>{property.furnishing}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-[var(--green-dark)]" />
-                  <span>Entrada: {property.moveInDate}</span>
-                </div>
+                  return (
+                    <div key={attribute.label} className="flex items-center gap-2">
+                      <Icon className="w-5 h-5 text-[var(--green-dark)]" />
+                      <span>{attribute.label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -264,6 +300,8 @@ export function PropertyDetailsPage() {
                 {property.longDescription}
               </p>
             </div>
+
+            <PropertyMap property={property} />
           </div>
 
           {/* SIDEBAR */}
@@ -286,6 +324,16 @@ export function PropertyDetailsPage() {
                   <MessageCircle className="w-6 h-6" />
                   Falar no WhatsApp
                 </button>
+
+                <a
+                  href={getGoogleMapsUrl(property)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 w-full bg-white/95 text-[var(--green-dark)] py-4 rounded-xl font-bold flex items-center justify-center gap-2"
+                >
+                  <MapPin className="w-6 h-6" />
+                  Abrir endereço no mapa
+                </a>
 
               </div>
 

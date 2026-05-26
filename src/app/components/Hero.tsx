@@ -20,13 +20,13 @@ export function Hero() {
       {/* BACKGROUND */}
       <div className="absolute inset-0">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1519773483179-fa089c182a4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920"
-          alt="London city"
+          src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=1920&q=85"
+          alt="Vista clara e aconchegante de Londres durante o dia"
           className="w-full h-full object-cover"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/95 via-[#0a0a0a]/85 to-[#0a0a0a]/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#07140f]/86 via-[#173627]/48 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/40 via-transparent to-transparent" />
       </div>
 
       {/* CONTENT */}
@@ -39,7 +39,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)]"
           >
             Sua Nova
             <br />
@@ -68,7 +68,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-gray-300 mb-8 leading-relaxed"
+            className="inline-block rounded-2xl bg-black/28 px-4 py-3 text-xl text-white mb-8 leading-relaxed shadow-lg backdrop-blur-[2px]"
           >
             Studios, ensuites e flats prontos para você morar.
             <br />
@@ -107,19 +107,19 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-12 flex flex-wrap gap-6 text-sm text-gray-300"
+            className="mt-12 flex flex-wrap gap-3 text-sm text-white"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Contratos seguros</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Bills inclusas</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Entrada imediata</span>
             </div>

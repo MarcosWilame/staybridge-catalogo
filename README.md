@@ -1,5 +1,7 @@
 # Staybridge London - Premium Accommodation Platform
 
+<!-- Project version: STAYBRIDGE CATALOGO.v1 -->
+
 A modern, responsive real estate catalog platform for connecting Brazilian customers with quality accommodation in London.
 
 ## 🎨 Design System

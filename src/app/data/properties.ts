@@ -6,12 +6,14 @@ export interface Property {
   type: string;
   title: string;
   region: string;
+  localArea?: string;
   price: string;
   description: string;
   longDescription: string;
   available: boolean;
   billsIncluded: boolean;
   bedrooms?: number;
+  bathrooms?: number;
   category: string;
   amenities: string[];
   deposit: number;

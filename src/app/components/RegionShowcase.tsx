@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { MapPin, ArrowRight } from 'lucide-react';
+import { useProperties } from '../data/sheetProperties';
 
 const regions = [
   {
     name: 'North London',
     description: 'Áreas residenciais tranquilas com excelente transporte',
-    properties: 2,
     image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
     highlight: 'Camden, Islington, Finsbury Park',
     query: 'north',
@@ -13,7 +13,6 @@ const regions = [
   {
     name: 'South London',
     description: 'Regiões modernas com vida noturna vibrante',
-    properties: 2,
     image: 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=800',
     highlight: 'Clapham, Brixton, Stockwell',
     query: 'south',
@@ -21,7 +20,6 @@ const regions = [
   {
     name: 'East London',
     description: 'Área jovem e criativa, próximo a Stratford',
-    properties: 2,
     image: 'https://images.unsplash.com/photo-1520986606214-8b456906c813?w=800',
     highlight: 'Stratford, Mile End, Bethnal Green',
     query: 'east',
@@ -29,7 +27,6 @@ const regions = [
   {
     name: 'West London',
     description: 'Zonas tranquilas com parques e áreas verdes',
-    properties: 2,
     image: 'https://images.unsplash.com/photo-1529074963764-98f45c47344b?w=800',
     highlight: 'Acton, Shepherd\'s Bush, White City',
     query: 'west',
@@ -37,6 +34,13 @@ const regions = [
 ];
 
 export function RegionShowcase() {
+  const { properties } = useProperties();
+
+  const countByRegion = (query: string) =>
+    properties.filter((property) =>
+      property.region.toLowerCase().includes(query)
+    ).length;
+
   return (
     <section className="py-20 bg-white relative overflow-hidden">
       {/* Diagonal background element */}
@@ -78,7 +82,7 @@ export function RegionShowcase() {
                 {/* Property Count Badge */}
                 <div className="absolute top-4 right-4">
                   <span className="bg-[var(--yellow)] text-black px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                    {region.properties} {region.properties === 1 ? 'propriedade' : 'propriedades'}
+                    {countByRegion(region.query)} {countByRegion(region.query) === 1 ? 'propriedade' : 'propriedades'}
                   </span>
                 </div>
 

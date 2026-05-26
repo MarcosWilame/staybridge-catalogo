@@ -1,70 +1,55 @@
 import { Home, Bed, Building2, User, Users } from 'lucide-react';
-import { properties } from '../data/properties';
-
-const studios = properties.filter(
-  (p) => p.category === 'studio'
-).length;
-
-const ensuites = properties.filter(
-  (p) => p.category === 'ensuite'
-).length;
-
-const flats = properties.filter(
-  (p) => p.category === 'flat'
-).length;
-
-const singles = properties.filter(
-  (p) => p.category === 'single'
-).length;
-
-const doubles = properties.filter(
-  (p) => p.category === 'double'
-).length;
-
-const categories = [
-  {
-    name: 'Studios',
-    icon: Home,
-    description: 'Espaços independentes completos',
-    count: studios,
-    color: 'from-blue-500 to-blue-600',
-    category: 'studio',
-  },
-  {
-    name: 'Ensuites',
-    icon: Bed,
-    description: 'Quartos com banheiro privativo',
-    count: ensuites,
-    color: 'from-purple-500 to-purple-600',
-    category: 'ensuite',
-  },
-  {
-    name: 'Flats',
-    icon: Building2,
-    description: 'Apartamentos completos',
-    count: flats,
-    color: 'from-green-500 to-green-600',
-    category: 'flat',
-  },
-  {
-    name: 'Single Rooms',
-    icon: User,
-    description: 'Quartos individuais',
-    count: singles,
-    color: 'from-orange-500 to-orange-600',
-    category: 'single',
-  },
-  {
-    name: 'Double Rooms',
-    icon: Users,
-    description: 'Quartos para casais',
-    count: doubles,
-    color: 'from-pink-500 to-pink-600',
-    category: 'double',
-  },
-];
+import { useProperties } from '../data/sheetProperties';
 
 export function PropertyCategories() {
+  const { properties } = useProperties();
+
+  const countByCategory = (category: string) =>
+    properties.filter((property) => property.category === category).length;
+
+  const categories = [
+    {
+      name: 'Studios',
+      icon: Home,
+      description: 'Espaços independentes completos',
+      count: countByCategory('studio'),
+      color: 'from-blue-500 to-blue-600',
+      category: 'studio',
+    },
+    {
+      name: 'Ensuites',
+      icon: Bed,
+      description: 'Quartos com banheiro privativo',
+      count: countByCategory('ensuite'),
+      color: 'from-purple-500 to-purple-600',
+      category: 'ensuite',
+    },
+    {
+      name: 'Flats',
+      icon: Building2,
+      description: 'Apartamentos completos',
+      count: countByCategory('flat'),
+      color: 'from-green-500 to-green-600',
+      category: 'flat',
+    },
+    {
+      name: 'Single Rooms',
+      icon: User,
+      description: 'Quartos individuais',
+      count: countByCategory('single'),
+      color: 'from-orange-500 to-orange-600',
+      category: 'single',
+    },
+    {
+      name: 'Double Rooms',
+      icon: Users,
+      description: 'Quartos para casais',
+      count: countByCategory('double'),
+      color: 'from-pink-500 to-pink-600',
+      category: 'double',
+    },
+  ];
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

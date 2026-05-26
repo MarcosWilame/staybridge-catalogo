@@ -34,11 +34,13 @@ export function Header() {
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `font-semibold transition-colors text-white hover:text-[var(--yellow)] ${
-      isActive ? 'border-b-2 border-[var(--yellow)] pb-0.5 text-[var(--yellow)]' : ''
+    `font-semibold transition-all duration-300 rounded-xl px-4 py-2 text-white hover:text-[var(--yellow)] ${
+      isActive
+        ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
+        : ''
     }`;
 
-  const buttonClass = `font-semibold transition-colors text-white hover:text-[var(--yellow)]`;
+  const buttonClass = `font-semibold transition-all duration-300 rounded-xl px-4 py-2 text-white hover:bg-white/10 hover:text-[var(--yellow)]`;
 
   return (
     <header
@@ -76,13 +78,6 @@ export function Header() {
             </button>
 
             <button
-              onClick={() => { navigate('/'); setTimeout(() => scrollToSection('testimonials'), 100); }}
-              className={buttonClass}
-            >
-              Depoimentos
-            </button>
-
-            <button
               onClick={handleWhatsApp}
               className="bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
             >
@@ -109,8 +104,10 @@ export function Header() {
                 end
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `text-left font-semibold transition-colors ${
-                    isActive ? 'text-[var(--yellow)]' : 'text-white hover:text-[var(--yellow)]'
+                  `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
+                    isActive
+                      ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
+                      : 'text-white hover:bg-white/10 hover:text-[var(--yellow)]'
                   }`
                 }
               >
@@ -121,8 +118,10 @@ export function Header() {
                 to="/properties"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `text-left font-semibold transition-colors ${
-                    isActive ? 'text-[var(--yellow)]' : 'text-white hover:text-[var(--yellow)]'
+                  `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
+                    isActive
+                      ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
+                      : 'text-white hover:bg-white/10 hover:text-[var(--yellow)]'
                   }`
                 }
               >
@@ -131,16 +130,9 @@ export function Header() {
 
               <button
                 onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('benefits'), 100); }}
-                className="text-left font-semibold text-white hover:text-[var(--yellow)] transition-colors"
+                className="text-left font-semibold text-white hover:bg-white/10 hover:text-[var(--yellow)] transition-all duration-300 rounded-xl px-4 py-3"
               >
                 Benefícios
-              </button>
-
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('testimonials'), 100); }}
-                className="text-left font-semibold text-white hover:text-[var(--yellow)] transition-colors"
-              >
-                Depoimentos
               </button>
 
               <button
