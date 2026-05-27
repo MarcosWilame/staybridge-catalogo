@@ -15,7 +15,7 @@ export function Hero() {
   };
 
   return (
-    <div className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[90vh]">
+    <div id="hero" className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[90vh]">
 
       {/* BACKGROUND */}
       <div className="absolute inset-0">
@@ -24,14 +24,12 @@ export function Hero() {
           alt="Vista clara e aconchegante de Londres durante o dia"
           className="w-full h-full object-cover"
         />
-
         <div className="absolute inset-0 bg-gradient-to-r from-[#07140f]/86 via-[#173627]/48 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/40 via-transparent to-transparent" />
       </div>
 
       {/* CONTENT */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-28 sm:px-6 md:py-16 lg:px-8">
-
         <div className="max-w-3xl">
 
           {/* TITLE */}
@@ -113,12 +111,10 @@ export function Hero() {
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Contratos seguros</span>
             </div>
-
             <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Bills inclusas</span>
             </div>
-
             <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Entrada imediata</span>

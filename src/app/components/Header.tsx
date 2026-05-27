@@ -12,18 +12,38 @@ export function Header() {
   const isTransparent = isHome && !isScrolled && !isMobileMenuOpen;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 4);
+    if (!isHome) {
+      setIsScrolled(true);
+      return;
+    }
+
+    setIsScrolled(false);
+
+    const tryObserve = () => {
+      const hero = document.getElementById('hero');
+      if (!hero) return false;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setIsScrolled(!entry.isIntersecting);
+        },
+        { threshold: 0.1 }
+      );
+
+      observer.observe(hero);
+      return () => observer.disconnect();
     };
 
-    handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // Tenta imediatamente, se hero ainda não montou aguarda um frame
+    const cleanup = tryObserve();
+    if (cleanup) return cleanup;
 
-  useEffect(() => {
-    setIsScrolled(window.scrollY > 4);
-  }, [location.pathname]);
+    const raf = requestAnimationFrame(() => {
+      tryObserve();
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [isHome]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -31,33 +51,14 @@ export function Header() {
     setIsMobileMenuOpen(false);
   };
 
-  const scrollToPageTop = () => {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    });
-  };
-
-  const goHomeAndScrollTop = () => {
-    setIsMobileMenuOpen(false);
-
-    if (!isHome) {
-      navigate('/');
-      setTimeout(scrollToPageTop, 100);
-      return;
-    }
-
-    scrollToPageTop();
-  };
-
   const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    goHomeAndScrollTop();
+    setIsMobileMenuOpen(false);
+    if (!isHome) {
+      navigate('/');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleWhatsApp = () => {
@@ -75,7 +76,7 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isTransparent
           ? 'bg-transparent'
           : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
@@ -89,9 +90,8 @@ export function Header() {
             <img
               src="/img/logo-white.png"
               alt="Staybridge London"
-              className={`h-16 w-auto object-contain md:h-[68px] ${
-                isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]' : ''
-              }`}
+              className="h-16 w-auto object-contain md:h-[68px]"
+              style={{ mixBlendMode: 'screen' }}
             />
           </NavLink>
 
@@ -106,7 +106,7 @@ export function Header() {
             </NavLink>
 
             <button
-              onClick={() => { navigate('/'); setTimeout(() => scrollToSection('benefits'), 100); }}
+              onClick={() => { navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
               className={buttonClass}
             >
               Benefícios
@@ -124,9 +124,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 rounded-lg transition-colors text-white ${
-              isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.75)]' : ''
-            }`}
+            className="md:hidden p-2 rounded-lg transition-colors text-white"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -166,7 +164,7 @@ export function Header() {
               </NavLink>
 
               <button
-                onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('benefits'), 100); }}
+                onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
                 className="text-left font-semibold text-white hover:bg-white/10 hover:text-[var(--yellow)] transition-all duration-300 rounded-xl px-4 py-3"
               >
                 Benefícios
