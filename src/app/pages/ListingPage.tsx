@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
@@ -10,7 +10,6 @@ interface FilterState {
   region: string;
   type: string;
   priceRange: string;
-  billsIncluded: boolean;
   availableNow: boolean;
 }
 
@@ -22,7 +21,6 @@ export function ListingPage() {
     region: searchParams.get('region') || '',
     type: searchParams.get('type') || '',
     priceRange: '',
-    billsIncluded: false,
     availableNow: false,
   });
 
@@ -30,6 +28,10 @@ export function ListingPage() {
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(
     properties[0]
   );
+
+  // Ref to prevent scroll jump on filter change
+  const listRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -47,30 +49,34 @@ export function ListingPage() {
     key: K,
     value: FilterState[K]
   ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    // Save current scroll position before state update
+    scrollYRef.current = window.scrollY;
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Restore scroll position after filter update
+  useEffect(() => {
+    if (scrollYRef.current > 0) {
+      window.scrollTo({ top: scrollYRef.current, behavior: 'instant' });
+    }
+  }, [filters]);
+
   const clearFilters = () => {
+    scrollYRef.current = window.scrollY;
     setFilters({
       region: '',
       type: '',
       priceRange: '',
-      billsIncluded: false,
       availableNow: false,
     });
   };
 
   const parsePriceRange = (range: string) => {
     if (!range) return [0, Infinity] as const;
-
     if (range.includes('+')) {
       const min = Number(range.replace('+', ''));
       return [min, Infinity] as const;
     }
-
     const [minStr, maxStr] = range.split('-');
     return [Number(minStr), Number(maxStr)] as const;
   };
@@ -78,7 +84,6 @@ export function ListingPage() {
   const getPriceValue = (price: string) => {
     const match = price.match(/\d+(?:[.,]\d+)?/);
     if (!match) return 0;
-
     return Number(match[0].replace(',', '.'));
   };
 
@@ -98,23 +103,17 @@ export function ListingPage() {
 
   if (filters.priceRange) {
     const [min, max] = parsePriceRange(filters.priceRange);
-
     filteredProperties = filteredProperties.filter((p) => {
       const price = getPriceValue(p.price);
       return price >= min && price <= max;
     });
   }
 
-  if (filters.billsIncluded) {
-    filteredProperties = filteredProperties.filter((p) => p.billsIncluded);
-  }
-
   if (filters.availableNow) {
-    filteredProperties = filteredProperties.filter(
-      (p) =>
-        p.available &&
-        ['imediata', 'now'].includes(p.moveInDate.toLowerCase())
-    );
+    filteredProperties = filteredProperties.filter((p) => {
+      const normalized = (p.moveInDate ?? '').trim().toLowerCase();
+      return normalized === 'now' || normalized === 'imediata';
+    });
   }
 
   const visibleSelectedProperty = filteredProperties.find(
@@ -125,7 +124,6 @@ export function ListingPage() {
     filters.region ||
     filters.type ||
     filters.priceRange ||
-    filters.billsIncluded ||
     filters.availableNow;
 
   const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -133,7 +131,7 @@ export function ListingPage() {
       className={`overflow-y-auto overscroll-contain bg-white ${
         isMobile
           ? 'h-full px-5 pb-8 pt-5'
-        : 'max-h-[calc(100vh-7rem)] rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
+          : 'max-h-[calc(100vh-7rem)] rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
       }`}
     >
       <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilters || !isMobile ? 'mb-6' : ''}`}>
@@ -156,35 +154,37 @@ export function ListingPage() {
       <div className="space-y-2">
         <label className="font-bold text-sm">Região</label>
 
-        <label className="flex gap-2 items-center">
+        <label className="flex gap-2 items-center cursor-pointer">
           <input
             type="radio"
+            name={`region-${isMobile ? 'mobile' : 'desktop'}`}
             checked={filters.region === ''}
             onChange={() => updateFilter('region', '')}
           />
           Todas
         </label>
 
-        {['north', 'south', 'east', 'west', 'central'].map((region) => (
-          <label key={region} className="flex gap-2 items-center">
+        {['north', 'south', 'east', 'west'].map((region) => (
+          <label key={region} className="flex gap-2 items-center cursor-pointer">
             <input
               type="radio"
+              name={`region-${isMobile ? 'mobile' : 'desktop'}`}
               checked={filters.region === region}
               onChange={() => updateFilter('region', region)}
             />
-            {region}
+            {region.charAt(0).toUpperCase() + region.slice(1)} London
           </label>
         ))}
-
       </div>
 
       {/* TYPE */}
-      <div className="mt-6">
+      <div className="mt-6 space-y-2">
         <label className="font-bold text-sm">Tipo</label>
 
-        <label className="flex gap-2 items-center">
+        <label className="flex gap-2 items-center cursor-pointer">
           <input
             type="radio"
+            name={`type-${isMobile ? 'mobile' : 'desktop'}`}
             checked={filters.type === ''}
             onChange={() => updateFilter('type', '')}
           />
@@ -198,20 +198,20 @@ export function ListingPage() {
           { value: 'double', label: 'Double' },
           { value: 'flat', label: 'Flat' },
         ].map((type) => (
-          <label key={type.value} className="flex gap-2 items-center">
+          <label key={type.value} className="flex gap-2 items-center cursor-pointer">
             <input
               type="radio"
+              name={`type-${isMobile ? 'mobile' : 'desktop'}`}
               checked={filters.type === type.value}
               onChange={() => updateFilter('type', type.value)}
             />
             {type.label}
           </label>
         ))}
-
       </div>
 
       {/* PRICE */}
-      <div className="mt-6">
+      <div className="mt-6 space-y-2">
         <label className="font-bold text-sm">Preço</label>
 
         {[
@@ -221,9 +221,10 @@ export function ListingPage() {
           { value: '250-350', label: '£250 - £350' },
           { value: '350+', label: '£350+' },
         ].map((range) => (
-          <label key={range.value} className="flex gap-2 items-center">
+          <label key={range.value} className="flex gap-2 items-center cursor-pointer">
             <input
               type="radio"
+              name={`price-${isMobile ? 'mobile' : 'desktop'}`}
               checked={filters.priceRange === range.value}
               onChange={() => updateFilter('priceRange', range.value)}
             />
@@ -232,26 +233,13 @@ export function ListingPage() {
         ))}
       </div>
 
-      {/* CHECKS */}
-      <div className="mt-6 space-y-2">
-        <label className="flex gap-2 items-center">
-          <input
-            type="checkbox"
-            checked={filters.billsIncluded}
-            onChange={(e) =>
-              updateFilter('billsIncluded', e.target.checked)
-            }
-          />
-          Bills inclusas
-        </label>
-
-        <label className="flex gap-2 items-center">
+      {/* ENTRADA IMEDIATA */}
+      <div className="mt-6">
+        <label className="flex gap-2 items-center cursor-pointer">
           <input
             type="checkbox"
             checked={filters.availableNow}
-            onChange={(e) =>
-              updateFilter('availableNow', e.target.checked)
-            }
+            onChange={(e) => updateFilter('availableNow', e.target.checked)}
           />
           Entrada imediata
         </label>
@@ -291,8 +279,8 @@ export function ListingPage() {
             <FiltersPanel />
           </div>
 
-          <div className="lg:col-span-3 grid xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
-            <div className="grid md:grid-cols-2 gap-4">
+          <div ref={listRef} className="lg:col-span-3 grid xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+            <div className="grid md:grid-cols-2 gap-4 content-start">
               {filteredProperties.map((p) => (
                 <div
                   key={p.id}
@@ -332,7 +320,12 @@ export function ListingPage() {
       </button>
 
       {showMobileFilters && (
-        <div className="fixed inset-0 z-[60] flex justify-end bg-black/50 lg:hidden">
+        <div
+          className="fixed inset-0 z-[60] flex justify-end bg-black/50 lg:hidden"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowMobileFilters(false);
+          }}
+        >
           <div className="flex h-full w-full max-w-sm flex-col bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
               <span className="text-lg font-bold text-[var(--green-dark)]">
@@ -348,6 +341,17 @@ export function ListingPage() {
               </button>
             </div>
             <FiltersPanel isMobile />
+
+            {/* Botão aplicar no mobile */}
+            <div className="sticky bottom-0 border-t border-gray-100 bg-white p-4">
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(false)}
+                className="w-full rounded-xl bg-[var(--green-dark)] py-3 font-bold text-white"
+              >
+                Ver {filteredProperties.length} resultado{filteredProperties.length !== 1 ? 's' : ''}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -349,9 +349,9 @@ function rowToProperty(row: CsvRow, index: number): Property | null {
   const availabilityRaw = get(row, ['availability', 'available', 'disponivel']);
   const moveInDateRaw = get(row, ['move_in_date', 'entrada']);
   const moveInDate = moveInDateRaw || availabilityRaw || 'Imediata';
-  const availableNow = normalizeKey(moveInDate) === 'now';
 
-  if (!title || !image || !availableNow) return null;
+  // Exige título e imagem — mas não filtra por data
+  if (!title || !image) return null;
 
   return {
     id,
@@ -389,12 +389,6 @@ function rowToProperty(row: CsvRow, index: number): Property | null {
   };
 }
 
-function onlyNowProperties(properties: Property[]) {
-  return properties.filter(
-    (property) => normalizeKey(property.moveInDate || '') === 'now'
-  );
-}
-
 async function loadPropertiesFromSheet() {
   if (cachedProperties) return cachedProperties;
   if (cachedError) throw new Error(cachedError);
@@ -405,11 +399,9 @@ async function loadPropertiesFromSheet() {
   }
 
   const csv = await response.text();
-  const loadedProperties = onlyNowProperties(
-    parseCsv(csv)
-      .map(rowToProperty)
-      .filter((property): property is Property => Boolean(property))
-  );
+  const loadedProperties = parseCsv(csv)
+    .map(rowToProperty)
+    .filter((property): property is Property => Boolean(property));
 
   if (!loadedProperties.length) {
     throw new Error('A planilha nao possui imoveis validos.');
@@ -421,7 +413,7 @@ async function loadPropertiesFromSheet() {
 
 export function useProperties() {
   const [items, setItems] = useState<Property[]>(
-    cachedProperties || onlyNowProperties(fallbackProperties)
+    cachedProperties || fallbackProperties
   );
   const [isLoading, setIsLoading] = useState(!cachedProperties);
   const [error, setError] = useState<string | null>(cachedError);
@@ -438,7 +430,7 @@ export function useProperties() {
       .catch((err: Error) => {
         cachedError = err.message;
         if (!isMounted) return;
-        setItems(onlyNowProperties(fallbackProperties));
+        setItems(fallbackProperties);
         setError(err.message);
       })
       .finally(() => {
