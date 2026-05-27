@@ -5,6 +5,7 @@ import type { Property } from '../data/properties';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { getGoogleMapsUrl, PropertyMap } from '../components/PropertyMap';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
+import { getAvailabilityInfo } from '../utils/availability';
 
 import {
   ArrowLeft,
@@ -20,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
+  Clock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -72,36 +74,6 @@ function getMediaItems(property: Property): MediaItem[] {
   ];
 }
 
-function getLegacyPropertyAttributes(property: Property): PropertyAttribute[] {
-  const category = property.category.toLowerCase();
-  const type = property.type.toLowerCase();
-  const isRoom = ['single', 'double', 'ensuite', 'studio'].some(
-    (roomType) => category.includes(roomType) || type.includes(roomType)
-  );
-
-  if (!isRoom) {
-    return [
-      property.bedrooms
-        ? { icon: Bed, label: `${property.bedrooms} quartos` }
-        : null,
-      { icon: Home, label: property.furnishing },
-      { icon: Calendar, label: `Entrada: ${property.moveInDate}` },
-    ].filter(Boolean) as PropertyAttribute[];
-  }
-
-  const attributes: PropertyAttribute[] = [{ icon: Home, label: 'Mobiliado' }];
-
-  if (category.includes('studio') || type.includes('studio')) {
-    attributes.push({ icon: CheckCircle, label: 'Bancada, Pia e Armário' });
-    attributes.push({ icon: CheckCircle, label: 'Banheiro privativo' });
-  } else if (category.includes('ensuite') || type.includes('ensuite')) {
-    attributes.push({ icon: CheckCircle, label: 'Banheiro privativo' });
-  }
-
-  attributes.push({ icon: Calendar, label: 'Disponível Now' });
-  return attributes;
-}
-
 export function PropertyDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -148,6 +120,8 @@ export function PropertyDetailsPage() {
       </div>
     );
   }
+
+  const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
@@ -266,8 +240,21 @@ export function PropertyDetailsPage() {
               {/* BADGES */}
               <div className="absolute left-3 top-3 flex max-w-[calc(100%-6rem)] flex-col gap-2 md:left-4 md:top-4">
                 {property.available && (
-                  <span className="rounded-full bg-[var(--yellow)] px-3 py-1.5 text-xs font-bold text-black md:px-4 md:py-2 md:text-sm">
-                    Disponível Agora
+                  <span
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold md:px-4 md:py-2 md:text-sm ${
+                      isNow
+                        ? 'bg-[var(--yellow)] text-black'
+                        : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1.5'
+                    }`}
+                  >
+                    {isNow ? (
+                      'Disponível Agora'
+                    ) : (
+                      <>
+                        <Clock className="w-3.5 h-3.5 shrink-0" />
+                        {availabilityLabel}
+                      </>
+                    )}
                   </span>
                 )}
 
@@ -332,6 +319,18 @@ export function PropertyDetailsPage() {
                     <span className="flex min-w-0 items-center gap-1 text-gray-600">
                       <MapPin className="h-4 w-4 shrink-0" />
                       <span className="break-words">{property.region}</span>
+                    </span>
+
+                    {/* Availability inline badge */}
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold ${
+                        isNow
+                          ? 'bg-[var(--yellow)] text-black'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {!isNow && <Clock className="h-3.5 w-3.5 shrink-0" />}
+                      {availabilityLabel}
                     </span>
                   </div>
 
@@ -398,6 +397,18 @@ export function PropertyDetailsPage() {
                 <div className="mb-4 flex items-start text-4xl font-bold md:text-5xl">
                   <PoundSterling className="mt-1 h-7 w-7 md:h-8 md:w-8" />
                   {property.price}
+                </div>
+
+                {/* Availability in sidebar */}
+                <div
+                  className={`mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${
+                    isNow
+                      ? 'bg-[var(--yellow)] text-black'
+                      : 'bg-white/20 text-white'
+                  }`}
+                >
+                  {!isNow && <Clock className="h-3.5 w-3.5 shrink-0" />}
+                  {availabilityLabel}
                 </div>
 
                 <button

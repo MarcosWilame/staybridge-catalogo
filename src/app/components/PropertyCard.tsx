@@ -9,9 +9,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Images,
+  Clock,
 } from 'lucide-react';
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
+import { getAvailabilityInfo } from '../utils/availability';
 
 interface PropertyCardProps {
   property: Property;
@@ -22,6 +24,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const images = property.images?.length ? property.images : [property.image];
   const currentImage = images[currentImageIndex] || property.image;
   const hasCarousel = images.length > 1;
+
+  const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
@@ -55,7 +59,22 @@ export function PropertyCard({ property }: PropertyCardProps) {
         {/* Overlay Badges */}
         <div className="absolute left-3 top-3 flex max-w-[calc(100%-7rem)] flex-col gap-2">
           {property.available && (
-            <span className="bg-[var(--yellow)] text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse">✓ Disponível Agora</span>
+            <span
+              className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
+                isNow
+                  ? 'bg-[var(--yellow)] text-black animate-pulse'
+                  : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1'
+              }`}
+            >
+              {isNow ? (
+                '✓ Disponível Agora'
+              ) : (
+                <>
+                  <Clock className="w-3 h-3 shrink-0" />
+                  {availabilityLabel}
+                </>
+              )}
+            </span>
           )}
           {property.billsIncluded && (
             <span className="bg-white/95 backdrop-blur text-[var(--green-dark)] px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
