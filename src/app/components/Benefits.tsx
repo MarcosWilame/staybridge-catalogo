@@ -79,22 +79,7 @@ export function Benefits() {
         </div>
 
         {/* Stats */}
-        <div className="mt-10 rounded-2xl bg-[var(--green-dark)] p-6 md:mt-16 md:rounded-3xl md:p-12">
-          <div className="grid grid-cols-1 gap-6 text-center md:grid-cols-3 md:gap-8">
-            <div>
-              <div className="mb-2 text-4xl font-bold text-[var(--yellow)] md:text-5xl">500+</div>
-              <div className="text-white text-lg">Brasileiros Atendidos</div>
-            </div>
-            <div>
-              <div className="mb-2 text-4xl font-bold text-[var(--yellow)] md:text-5xl">100+</div>
-              <div className="text-white text-lg">Propriedades Disponíveis</div>
-            </div>
-            <div>
-              <div className="mb-2 text-4xl font-bold text-[var(--yellow)] md:text-5xl">24/7</div>
-              <div className="text-white text-lg">Suporte em Português</div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </section>
   );
