@@ -5,7 +5,7 @@ export function CTASection() {
   const navigate = useNavigate();
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/447000000000', '_blank');
+    window.open('https://wa.me/5588997993046', '_blank');
   };
 
   const goToProperties = () => {

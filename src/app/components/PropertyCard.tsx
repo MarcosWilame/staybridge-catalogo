@@ -31,7 +31,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
     const message = encodeURIComponent(
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title}`
     );
-    window.open(`https://wa.me/447000000000?text=${message}`, '_blank');
+    window.open(`https://wa.me/5588997993046?text=${message}`, '_blank');
   };
 
   const showPreviousImage = () => {

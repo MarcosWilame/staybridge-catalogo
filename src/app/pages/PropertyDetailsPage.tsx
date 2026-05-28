@@ -129,7 +129,7 @@ export function PropertyDetailsPage() {
     );
 
     window.open(
-      `https://wa.me/447000000000?text=${message}`,
+      `https://wa.me/5588997993046?text=${message}`,
       '_blank'
     );
   };
