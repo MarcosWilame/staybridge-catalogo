@@ -1,29 +1,34 @@
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default function handler(req, res) {
-  const cwd = process.cwd();
-  const dirName = __dirname;
+  const origin = req.headers.origin;
+  const host = req.headers.host || '';
+  const allowedHost = process.env.ALLOWED_HOST || host;
 
-  const candidates = [
-    join(dirName, '..', 'data', 'properties.csv'),
-    join(dirName, 'data', 'properties.csv'),
-    join(cwd, 'data', 'properties.csv'),
-    join(cwd, 'properties.csv'),
-    join(dirName, '..', 'properties.csv'),
-  ];
+  if (origin) {
+    try {
+      const originHost = new URL(origin).host;
+      if (originHost !== allowedHost) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+    } catch {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
-  const debug = {
-    cwd,
-    __dirname: dirName,
-    cwdContents: (() => { try { return readdirSync(cwd); } catch { return 'error'; } })(),
-    dirnameContents: (() => { try { return readdirSync(dirName); } catch { return 'error'; } })(),
-    dirnameParentContents: (() => { try { return readdirSync(join(dirName, '..')); } catch { return 'error'; } })(),
-    candidates: candidates.map(p => ({ path: p, exists: existsSync(p) })),
-  };
-
-  return res.status(200).json(debug);
+  try {
+    const filePath = join(__dirname, 'data.csv');
+    const csv = readFileSync(filePath, 'utf-8');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.status(200).send(csv);
+  } catch (err) {
+    console.error('[properties] CSV not found:', err);
+    return res.status(500).json({ error: 'CSV file not found' });
+  }
 }
