@@ -10,5 +10,10 @@
         { "key": "X-Frame-Options", "value": "DENY" }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/properties.js": {
+      "includeFiles": "data/**"
+    }
+  }
 }
