@@ -13,6 +13,10 @@ interface FilterState {
   availableNow: boolean;
 }
 
+type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
+
+const INITIAL_VISIBLE_COUNT = 12;
+
 export function ListingPage() {
   const [searchParams] = useSearchParams();
   const { properties, isLoading, source } = useProperties();
@@ -25,6 +29,8 @@ export function ListingPage() {
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('recommended');
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(
     properties[0]
   );
@@ -58,6 +64,10 @@ export function ListingPage() {
       availableNow: false,
     });
   };
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+  }, [filters, sortBy]);
 
   const parsePriceRange = (range: string) => {
     if (!range) return [0, Infinity] as const;
@@ -104,7 +114,32 @@ export function ListingPage() {
     });
   }
 
-  const visibleSelectedProperty = filteredProperties.find(
+  const sortedProperties = [...filteredProperties].sort((a, b) => {
+    if (sortBy === 'price-asc') {
+      return getPriceValue(a.price) - getPriceValue(b.price);
+    }
+
+    if (sortBy === 'price-desc') {
+      return getPriceValue(b.price) - getPriceValue(a.price);
+    }
+
+    if (sortBy === 'available') {
+      const aNow = ['now', 'imediata'].includes((a.moveInDate ?? '').trim().toLowerCase());
+      const bNow = ['now', 'imediata'].includes((b.moveInDate ?? '').trim().toLowerCase());
+      return Number(bNow) - Number(aNow);
+    }
+
+    if (sortBy === 'type') {
+      return a.type.localeCompare(b.type);
+    }
+
+    return 0;
+  });
+
+  const visibleProperties = sortedProperties.slice(0, visibleCount);
+  const hasMoreProperties = visibleCount < sortedProperties.length;
+
+  const visibleSelectedProperty = sortedProperties.find(
     (property) => property.id === selectedProperty?.id
   );
 
@@ -113,6 +148,32 @@ export function ListingPage() {
     filters.type ||
     filters.priceRange ||
     filters.availableNow;
+
+  const activeFilterChips = [
+    filters.region && {
+      key: 'region' as const,
+      label: `${filters.region.charAt(0).toUpperCase() + filters.region.slice(1)} London`,
+      clear: () => updateFilter('region', ''),
+    },
+    filters.type && {
+      key: 'type' as const,
+      label: filters.type.charAt(0).toUpperCase() + filters.type.slice(1),
+      clear: () => updateFilter('type', ''),
+    },
+    filters.priceRange && {
+      key: 'priceRange' as const,
+      label:
+        filters.priceRange === '350+'
+          ? '£350+'
+          : `£${filters.priceRange.replace('-', ' - £')}`,
+      clear: () => updateFilter('priceRange', ''),
+    },
+    filters.availableNow && {
+      key: 'availableNow' as const,
+      label: 'Entrada imediata',
+      clear: () => updateFilter('availableNow', false),
+    },
+  ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 
   const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
@@ -268,32 +329,117 @@ export function ListingPage() {
           </div>
 
           <div ref={listRef} className="lg:col-span-3 grid xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
-            {/* Lista de cards com scroll interno */}
-            <div className="overflow-y-auto max-h-[calc(100vh-10rem)] pr-1 grid md:grid-cols-2 gap-4 content-start">
-              {filteredProperties.map((p) => (
-                <div
-                  key={p.id}
-                  onMouseEnter={() => setSelectedProperty(p)}
-                  onFocus={() => setSelectedProperty(p)}
-                >
-                  <PropertyCard property={p} />
+            <div className="min-w-0">
+              <div className="sticky top-20 z-20 mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:top-24">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-500">Resultados</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {sortedProperties.length} propriedade{sortedProperties.length !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    Ordenar por
+                    <select
+                      value={sortBy}
+                      onChange={(event) => setSortBy(event.target.value as SortOption)}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-[var(--green-dark)] focus:outline-none"
+                    >
+                      <option value="recommended">Recomendados</option>
+                      <option value="price-asc">Menor preço</option>
+                      <option value="price-desc">Maior preço</option>
+                      <option value="available">Entrada imediata</option>
+                      <option value="type">Tipo</option>
+                    </select>
+                  </label>
                 </div>
-              ))}
+
+                {activeFilterChips.length > 0 && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {activeFilterChips.map((chip) => (
+                      <button
+                        key={chip.key}
+                        type="button"
+                        onClick={chip.clear}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[var(--green-dark)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--green-dark)]"
+                      >
+                        {chip.label}
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="text-sm font-semibold text-gray-600 hover:text-[var(--green-dark)]"
+                    >
+                      Limpar filtros
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid content-start gap-4 md:grid-cols-2 lg:max-h-[calc(100vh-17rem)] lg:overflow-y-auto lg:pr-1">
+                {visibleProperties.map((p) => (
+                  <div
+                    key={p.id}
+                    onMouseEnter={() => setSelectedProperty(p)}
+                    onFocus={() => setSelectedProperty(p)}
+                  >
+                    <PropertyCard property={p} />
+                  </div>
+                ))}
+
+                {hasMoreProperties && (
+                  <div className="md:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}
+                      className="w-full rounded-xl border border-[var(--green-dark)] bg-white px-4 py-3 font-bold text-[var(--green-dark)] transition-colors hover:bg-[var(--green-dark)] hover:text-white"
+                    >
+                      Ver mais propriedades
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="xl:sticky xl:top-24 xl:self-start">
               <PropertyMap
-                property={visibleSelectedProperty || filteredProperties[0]}
-                properties={filteredProperties}
+                property={visibleSelectedProperty || sortedProperties[0]}
+                properties={sortedProperties}
                 onSelectProperty={setSelectedProperty}
               />
             </div>
           </div>
         </div>
 
-        {filteredProperties.length === 0 && (
-          <div className="text-center mt-10">
-            Nenhum resultado encontrado
+        {sortedProperties.length === 0 && (
+          <div className="mt-10 rounded-2xl bg-white p-8 text-center shadow-sm">
+            <h2 className="mb-2 text-xl font-bold text-gray-900">
+              Nenhuma propriedade encontrada
+            </h2>
+            <p className="mb-5 text-gray-600">
+              Ajuste os filtros ou fale conosco para encontrar uma opção ideal.
+            </p>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rounded-xl bg-[var(--green-dark)] px-5 py-3 font-bold text-white"
+              >
+                Limpar filtros
+              </button>
+              <a
+                href="https://wa.me/447000000000"
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-[var(--green-dark)] px-5 py-3 font-bold text-[var(--green-dark)]"
+              >
+                Falar no WhatsApp
+              </a>
+            </div>
           </div>
         )}
       </div>
@@ -338,7 +484,7 @@ export function ListingPage() {
                 onClick={() => setShowMobileFilters(false)}
                 className="w-full rounded-xl bg-[var(--green-dark)] py-3 font-bold text-white"
               >
-                Ver {filteredProperties.length} resultado{filteredProperties.length !== 1 ? 's' : ''}
+                Ver {sortedProperties.length} resultado{sortedProperties.length !== 1 ? 's' : ''}
               </button>
             </div>
           </div>
