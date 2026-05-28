@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Property, properties as fallbackProperties } from './properties';
 
-const SHEET_URL =
-  import.meta.env.VITE_PROPERTIES_SHEET_URL || '/properties.csv';
+const SHEET_URL = import.meta.env.VITE_PROPERTIES_SHEET_URL || '/api/properties';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
