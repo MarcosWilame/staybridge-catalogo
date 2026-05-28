@@ -29,9 +29,7 @@ export function ListingPage() {
     properties[0]
   );
 
-  // Ref to prevent scroll jump on filter change
   const listRef = useRef<HTMLDivElement>(null);
-  const scrollYRef = useRef(0);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -49,20 +47,10 @@ export function ListingPage() {
     key: K,
     value: FilterState[K]
   ) => {
-    // Save current scroll position before state update
-    scrollYRef.current = window.scrollY;
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Restore scroll position after filter update
-  useEffect(() => {
-    if (scrollYRef.current > 0) {
-      window.scrollTo({ top: scrollYRef.current, behavior: 'instant' });
-    }
-  }, [filters]);
-
   const clearFilters = () => {
-    scrollYRef.current = window.scrollY;
     setFilters({
       region: '',
       type: '',
@@ -280,7 +268,8 @@ export function ListingPage() {
           </div>
 
           <div ref={listRef} className="lg:col-span-3 grid xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
-            <div className="grid md:grid-cols-2 gap-4 content-start">
+            {/* Lista de cards com scroll interno */}
+            <div className="overflow-y-auto max-h-[calc(100vh-10rem)] pr-1 grid md:grid-cols-2 gap-4 content-start">
               {filteredProperties.map((p) => (
                 <div
                   key={p.id}
