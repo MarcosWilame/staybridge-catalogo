@@ -14,6 +14,7 @@ import {
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
+import { getPropertyWhatsAppUrl } from '../utils/whatsapp';
 
 interface PropertyCardProps {
   property: Property;
@@ -28,10 +29,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent(
-      `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title}`
-    );
-    window.open(`https://wa.me/5588997993046?text=${message}`, '_blank');
+    window.open(getPropertyWhatsAppUrl(property), '_blank');
   };
 
   const showPreviousImage = () => {

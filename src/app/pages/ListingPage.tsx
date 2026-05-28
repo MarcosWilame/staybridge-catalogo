@@ -5,6 +5,7 @@ import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
 import { PropertyMap } from '../components/PropertyMap';
 import { SlidersHorizontal, X } from 'lucide-react';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 interface FilterState {
   region: string;
@@ -432,7 +433,9 @@ export function ListingPage() {
                 Limpar filtros
               </button>
               <a
-                href="https://wa.me/447000000000"
+                href={getWhatsAppUrl(
+                  'Olá! Não encontrei uma acomodação com os filtros selecionados. Pode me ajudar a encontrar uma opção em Londres?'
+                )}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-xl border border-[var(--green-dark)] px-5 py-3 font-bold text-[var(--green-dark)]"

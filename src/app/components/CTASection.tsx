@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ArrowRight } from 'lucide-react';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export function CTASection() {
   const navigate = useNavigate();
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/5588997993046', '_blank');
+    window.open(getWhatsAppUrl(), '_blank');
   };
 
   const goToProperties = () => {

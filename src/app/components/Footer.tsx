@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Mail, Phone, Instagram, MessageCircle, Globe } from 'lucide-react';
 import { useState } from 'react';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export function Footer() {
   const [language, setLanguage] = useState<'pt' | 'en'>('pt');
@@ -28,7 +29,7 @@ export function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://wa.me/5588997993046"
+                href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-white/10 hover:bg-[var(--yellow)] hover:text-black rounded-full flex items-center justify-center transition-all duration-300"
