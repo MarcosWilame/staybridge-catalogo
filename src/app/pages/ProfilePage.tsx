@@ -19,7 +19,7 @@ export function ProfilePage() {
 
           <div className="mx-auto grid max-w-lg grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             <a
-              href="https://wa.me/447000000000"
+              href="https://wa.me/5588997993046"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:px-6 md:py-4"

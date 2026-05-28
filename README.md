@@ -242,7 +242,7 @@ Uses Tailwind CSS v4 with custom theme tokens integrated via CSS custom properti
 
 ## 📞 Contact Integration
 
-All WhatsApp CTAs point to: `https://wa.me/447000000000` with pre-filled messages including property details.
+All WhatsApp CTAs point to: `https://wa.me/5588997993046` with pre-filled messages including property details.
 
 ## 🔄 Future Enhancements
 
