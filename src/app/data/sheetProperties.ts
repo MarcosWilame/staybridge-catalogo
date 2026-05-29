@@ -1,35 +1,44 @@
 import { useEffect, useState } from 'react';
-import { Property, properties as fallbackProperties } from './properties';
+import { properties as fallbackProperties, type Property } from './properties';
+import {
+  hasSupabaseConfig,
+  loadPropertiesFromSupabase,
+  readPropertiesCache,
+  writePropertiesCache,
+} from './supabaseProperties';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
 
-const STORAGE_KEY = 'staybridge_properties';
-
-async function loadPropertiesFromJson() {
+async function loadPropertiesFromSource() {
   if (cachedProperties) return cachedProperties;
   if (cachedError) throw new Error(cachedError);
 
   try {
-    // Verificar localStorage primeiro
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      if (Array.isArray(data) && data.length > 0) {
-        cachedProperties = data as Property[];
-        return data;
+    const cached = readPropertiesCache();
+    if (cached.length > 0) {
+      cachedProperties = cached;
+      return cached;
+    }
+
+    if (hasSupabaseConfig()) {
+      const remoteProperties = await loadPropertiesFromSupabase();
+      if (remoteProperties.length > 0) {
+        cachedProperties = remoteProperties;
+        writePropertiesCache(remoteProperties);
+        return remoteProperties;
       }
     }
 
-    // Carregar do properties.json
     const response = await fetch('/properties.json', { cache: 'no-store' });
+
     if (!response.ok) {
       throw new Error(`Falha ao carregar properties.json: ${response.status}`);
     }
 
     const data = await response.json();
     const loadedProperties = Array.isArray(data)
-      ? data.filter((p) => p && typeof p === 'object')
+      ? data.filter((item) => item && typeof item === 'object')
       : [];
 
     if (!loadedProperties.length) {
@@ -37,14 +46,14 @@ async function loadPropertiesFromJson() {
     }
 
     cachedProperties = loadedProperties as Property[];
-    return loadedProperties;
+    writePropertiesCache(cachedProperties);
+    return cachedProperties;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
     cachedError = message;
     throw new Error(message);
   }
 }
-
 
 export function useProperties() {
   const [items, setItems] = useState<Property[]>(
@@ -56,7 +65,7 @@ export function useProperties() {
   useEffect(() => {
     let isMounted = true;
 
-    loadPropertiesFromJson()
+    loadPropertiesFromSource()
       .then((loadedProperties) => {
         if (!isMounted) return;
         setItems(loadedProperties);
@@ -81,6 +90,6 @@ export function useProperties() {
     properties: items,
     isLoading,
     error,
-    source: error ? 'fallback' : 'json',
+    source: error ? 'fallback' : hasSupabaseConfig() ? 'supabase' : 'json',
   };
 }

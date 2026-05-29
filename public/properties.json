@@ -1,14 +1,9 @@
-﻿
-[
+﻿[
   {
     "id": 1,
-    "image": "https://drive.google.com/uc?export=view&id=1uwnxtbm1rp4r-TiWCBmXSqlc95DEJ2Cz",
+    "image": "https://drive.google.com/thumbnail?id=1uwnxtbm1rp4r-TiWCBmXSqlc95DEJ2Cz&sz=w1000",
     "images": [
-      "https://drive.google.com/uc?export=view&id=1uwnxtbm1rp4r-TiWCBmXSqlc95DEJ2Cz",
-      "https://drive.google.com/uc?export=view&id=16TspXtm9DRy0q4ObEZBf28yGCAvqPvNV",
-      "https://drive.google.com/uc?export=view&id=1baOkfzR6cc1U2oC0BD8ff1I_WwNcG-q0",
-      "https://drive.google.com/uc?export=view&id=1EWWD_qdeedq9_ba9SwsWHpIXRWWavMUR",
-      "https://drive.google.com/uc?export=view&id=14yaOVCX5HuOZibzxVCXQDJr0R1SxAmbd"
+      "https://drive.google.com/thumbnail?id=1uwnxtbm1rp4r-TiWCBmXSqlc95DEJ2Cz&sz=w1000"
     ],
     "video": "",
     "type": "2 bedroom flat",
@@ -22,19 +17,10 @@
     "bedrooms": 2,
     "bathrooms": 1,
     "category": "flat",
-    "amenities": [
-      "Bills inclusas",
-      "Wi-Fi",
-      "Mobiliado"
-    ],
+    "amenities": ["Bills inclusas", "Wi-Fi", "Mobiliado"],
     "deposit": 1300,
-    "nearbyStations": [
-      "Croydon"
-    ],
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    },
+    "nearbyStations": ["Croydon"],
+    "coordinates": { "lat": 0, "lng": 0 },
     "furnishing": "Mobiliado",
     "moveInDate": "Imediata",
     "postcode": "SE25 6NN",
@@ -44,14 +30,9 @@
   },
   {
     "id": 2,
-    "image": "https://drive.google.com/uc?export=view&id=13zcNPFSVddgBtxyOGuX4eAoq8Xhlo3pe",
-    "images": [
-      "https://drive.google.com/uc?export=view&id=13zcNPFSVddgBtxyOGuX4eAoq8Xhlo3pe",
-      "https://drive.google.com/uc?export=view&id=1fwVHyyC14QAabym4nKOc4kXkfdOk1r8Y",
-      "https://drive.google.com/uc?export=view&id=1GsfSKzRIcZIh4yQnIkCh6N2ySU1quth6",
-      "https://drive.google.com/uc?export=view&id=16y72roUCi-JRZpoKAy_7ywUqsB9AttuW"
-    ],
-    "video": "https://drive.google.com/file/d/1vRp8BBoFAqJ5ndZXtWQJYo1DpseyfM_s/view?usp=drive_link",
+    "image": "https://drive.google.com/thumbnail?id=13zcNPFSVddgBtxyOGuX4eAoq8Xhlo3pe&sz=w1000",
+    "images": [],
+    "video": "https://drive.google.com/file/d/1vRp8BBoFAqJ5ndZXtWQJYo1DpseyfM_s/view",
     "type": "3 bedroom flat",
     "title": "3 bedroom flat 3 - SE25 6NN",
     "region": "South London",
@@ -63,19 +44,10 @@
     "bedrooms": 3,
     "bathrooms": 1,
     "category": "flat",
-    "amenities": [
-      "Bills inclusas",
-      "Wi-Fi",
-      "Mobiliado"
-    ],
+    "amenities": ["Bills inclusas", "Wi-Fi", "Mobiliado"],
     "deposit": 1500,
-    "nearbyStations": [
-      "Croydon"
-    ],
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    },
+    "nearbyStations": ["Croydon"],
+    "coordinates": { "lat": 0, "lng": 0 },
     "furnishing": "Mobiliado",
     "moveInDate": "Imediata",
     "postcode": "SE25 6NN",
@@ -85,37 +57,24 @@
   },
   {
     "id": 3,
-    "image": "https://drive.google.com/uc?export=view&id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1",
-    "images": [
-      "https://drive.google.com/uc?export=view&id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1",
-      "https://drive.google.com/uc?export=view&id=1oi0m_-UFwzwBx8ogMsTOjmq20XqwWsis",
-      "https://drive.google.com/uc?export=view&id=1dnb1-_l0KGLmbrahHrJ6alsZVgf5ppbr"
-    ],
+    "image": "https://drive.google.com/thumbnail?id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1&sz=w1000",
+    "images": [],
     "video": "",
     "type": "2 bedroom flat",
     "title": "2 bedroom flat 4 - SE25 6NN",
     "region": "South London",
     "price": "£650/week",
     "description": "Flat completo com 2 quartos em Croydon.",
-    "longDescription": "Flat completo totalmente mobiliado em Croydon com excelente localização e bills inclusas.",
+    "longDescription": "Flat completo totalmente mobiliado em Croydon com ótima localização e bills inclusas.",
     "available": true,
     "billsIncluded": true,
     "bedrooms": 2,
     "bathrooms": 1,
     "category": "flat",
-    "amenities": [
-      "Bills inclusas",
-      "Wi‑Fi",
-      "Mobiliado"
-    ],
+    "amenities": ["Bills inclusas", "Wi-Fi", "Mobiliado"],
     "deposit": 1300,
-    "nearbyStations": [
-      "Croydon"
-    ],
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    },
+    "nearbyStations": ["Croydon"],
+    "coordinates": { "lat": 0, "lng": 0 },
     "furnishing": "Mobiliado",
     "moveInDate": "Imediata",
     "postcode": "SE25 6NN",
@@ -125,13 +84,11 @@
   },
   {
     "id": 4,
-    "image": "https://drive.google.com/uc?export=view&id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ",
+    "image": "https://drive.google.com/thumbnail?id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ&sz=w1000",
     "images": [
-      "https://drive.google.com/uc?export=view&id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ",
-      "https://drive.google.com/uc?export=view&id=1dhpvzgSutuiE_ZkT3K8XysrOkDgsNSXM",
-      "https://drive.google.com/uc?export=view&id=16tMFo9Wy0Fa_yqi1OzIjUfi1NGnwEuWU"
+      "https://drive.google.com/thumbnail?id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ&sz=w1000"
     ],
-    "video": "https://drive.google.com/file/d/16MBIEU4ua3Y20XQezoMMVprw8rAOczMk/view?usp=drive_link",
+    "video": "",
     "type": "2 bedroom flat",
     "title": "2 bedroom flat 10 - HA2 7ES",
     "region": "North London",
@@ -143,19 +100,10 @@
     "bedrooms": 2,
     "bathrooms": 1,
     "category": "flat",
-    "amenities": [
-      "Bills inclusas",
-      "Wi‑Fi",
-      "Mobiliado"
-    ],
+    "amenities": ["Bills inclusas", "Wi-Fi", "Mobiliado"],
     "deposit": 1300,
-    "nearbyStations": [
-      "Harrow"
-    ],
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    },
+    "nearbyStations": ["Harrow"],
+    "coordinates": { "lat": 0, "lng": 0 },
     "furnishing": "Mobiliado",
     "moveInDate": "Imediata",
     "postcode": "HA2 7ES",
@@ -179,19 +127,10 @@
     "bedrooms": 1,
     "bathrooms": 1,
     "category": "flat",
-    "amenities": [
-      "Bills inclusas",
-      "Wi‑Fi",
-      "Mobiliado"
-    ],
+    "amenities": ["Bills inclusas", "Wi-Fi", "Mobiliado"],
     "deposit": 1000,
-    "nearbyStations": [
-      "Romford"
-    ],
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    },
+    "nearbyStations": ["Romford"],
+    "coordinates": { "lat": 0, "lng": 0 },
     "furnishing": "Mobiliado",
     "moveInDate": "Imediata",
     "postcode": "RM1 1TR",

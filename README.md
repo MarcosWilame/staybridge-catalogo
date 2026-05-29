@@ -184,6 +184,30 @@ The Vite dev server is already running. View the preview in the Make interface.
 pnpm run build
 ```
 
+## ☁️ Admin online com Supabase
+
+A página `/admin` agora pode publicar imóveis online usando Supabase.
+
+### Configuração
+Crie um arquivo `.env` com:
+
+```bash
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_PROPERTIES_TABLE=properties
+```
+
+### Comportamento
+- A admin tenta carregar primeiro do Supabase
+- Se não houver Supabase configurado, usa `localStorage`
+- Se não houver dados locais, cai para `public/properties.json`
+- Salvar, editar, deletar e importar JSON passam a sincronizar com o Supabase quando configurado
+
+### Tabela esperada
+A tabela `properties` deve ter ao menos:
+- `id` inteiro
+- `data` jsonb
+
 ## 📝 Content
 
 ### Property Data

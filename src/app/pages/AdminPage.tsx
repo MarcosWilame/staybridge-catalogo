@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../data/properties';
-import { Plus, Trash2, Download, Save, X, Check } from 'lucide-react';
+import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import {
+  deletePropertyFromSupabase,
+  hasSupabaseConfig,
+  loadPropertiesFromSupabase,
+  replacePropertiesInSupabase,
+  savePropertyToSupabase,
+  writePropertiesCache,
+} from '../data/supabaseProperties';
 
 const INITIAL_FORM: Omit<Property, 'id'> = {
   image: '',
@@ -36,6 +44,8 @@ export function AdminPage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [syncMessage, setSyncMessage] = useState('');
+  const [syncError, setSyncError] = useState('');
+  const [syncSource, setSyncSource] = useState<'supabase' | 'local' | 'json'>('json');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Property, 'id'>>(INITIAL_FORM);
@@ -43,31 +53,58 @@ export function AdminPage() {
   const [amenityInput, setAmenityInput] = useState('');
   const [stationInput, setStationInput] = useState('');
 
-  // Carregar do localStorage ao montar
+  // Carregar do Supabase, depois localStorage, depois JSON
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setProperties(JSON.parse(stored));
-      } catch {
-        // Se falhar, tenta carregar do properties.json
-        loadFromJson();
+    const loadProperties = async () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+
+      if (hasSupabaseConfig()) {
+        try {
+          const remoteProperties = await loadPropertiesFromSupabase();
+          setProperties(remoteProperties);
+          writePropertiesCache(remoteProperties);
+          setSyncSource('supabase');
+          setSyncError('');
+          return;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Erro ao sincronizar com Supabase';
+          setSyncError(message);
+        }
       }
-    } else {
-      loadFromJson();
-    }
+
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setProperties(parsed);
+            setSyncSource('local');
+            return;
+          }
+        } catch {
+          // Se falhar, tenta carregar do properties.json
+        }
+      }
+
+      await loadFromJson();
+      setSyncSource('json');
+    };
+
+    void loadProperties();
   }, []);
 
   // Salvar no localStorage sempre que properties muda
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(properties));
+    writePropertiesCache(properties);
   }, [properties]);
 
   const loadFromJson = async () => {
     try {
       const response = await fetch('/properties.json');
       const data = await response.json();
-      setProperties(data);
+      const loaded = Array.isArray(data) ? data : [];
+      setProperties(loaded);
+      writePropertiesCache(loaded);
     } catch {
       setProperties([]);
     }
@@ -131,21 +168,52 @@ export function AdminPage() {
     }));
   };
 
-  const handleSaveProperty = () => {
+  const handleSaveProperty = async () => {
     if (!formData.title || !formData.image) {
       alert('Título e imagem principal são obrigatórios');
       return;
     }
 
-    if (editingId !== null) {
-      setProperties(prev => prev.map(p =>
-        p.id === editingId ? { ...formData, id: editingId } : p
-      ));
-    } else {
-      setProperties(prev => [...prev, { ...formData, id: nextId }]);
-    }
+    const propertyToSave: Property = {
+      ...formData,
+      id: editingId !== null ? editingId : nextId,
+    };
 
-    resetForm();
+    try {
+      if (hasSupabaseConfig()) {
+        const savedProperty = await savePropertyToSupabase(propertyToSave);
+
+        setProperties((prev) =>
+          editingId !== null
+            ? prev.map((property) =>
+                property.id === editingId ? savedProperty : property
+              )
+            : [...prev, savedProperty]
+        );
+
+        setSyncSource('supabase');
+        setSyncMessage('✓ Imóvel salvo online no Supabase');
+      } else {
+        setProperties((prev) =>
+          editingId !== null
+            ? prev.map((property) =>
+                property.id === editingId ? propertyToSave : property
+              )
+            : [...prev, propertyToSave]
+        );
+
+        setSyncSource('local');
+        setSyncMessage('✓ Imóvel salvo localmente');
+      }
+
+      setSyncError('');
+      resetForm();
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao salvar imóvel';
+      setSyncError(message);
+      alert(message);
+    }
   };
 
   const handleEditProperty = (property: Property) => {
@@ -155,9 +223,24 @@ export function AdminPage() {
     setShowForm(true);
   };
 
-  const handleDeleteProperty = (id: number) => {
-    if (confirm('Deseja deletar este imóvel?')) {
-      setProperties(prev => prev.filter(p => p.id !== id));
+  const handleDeleteProperty = async (id: number) => {
+    if (!confirm('Deseja deletar este imóvel?')) {
+      return;
+    }
+
+    try {
+      if (hasSupabaseConfig()) {
+        await deletePropertyFromSupabase(id);
+      }
+
+      setProperties((prev) => prev.filter((property) => property.id !== id));
+      setSyncError('');
+      setSyncMessage('✓ Imóvel removido com sucesso');
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao deletar imóvel';
+      setSyncError(message);
+      alert(message);
     }
   };
 
@@ -188,15 +271,30 @@ export function AdminPage() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        if (Array.isArray(data)) {
-          setProperties(data);
-          alert('JSON carregado com sucesso!');
-        } else {
+        if (!Array.isArray(data)) {
           alert('Arquivo JSON inválido');
+          return;
         }
+
+        setProperties(data);
+        writePropertiesCache(data);
+
+        if (hasSupabaseConfig()) {
+          await replacePropertiesInSupabase(data);
+          setSyncSource('supabase');
+          setSyncMessage('✓ JSON importado e publicado no Supabase');
+          setTimeout(() => setSyncMessage(''), 3000);
+        } else {
+          setSyncSource('local');
+          setSyncMessage('✓ JSON importado localmente');
+          setTimeout(() => setSyncMessage(''), 3000);
+        }
+
+        alert('JSON carregado com sucesso!');
+        setSyncError('');
       } catch {
         alert('Erro ao ler o arquivo JSON');
       }
@@ -210,6 +308,20 @@ export function AdminPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin - Gerenciar Imóveis</h1>
           <p className="text-gray-600">Adicione, edite ou remova propriedades</p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-semibold text-gray-700 shadow-sm">
+              <Cloud className="h-4 w-4" />
+              Fonte ativa: {syncSource === 'supabase' ? 'Supabase' : syncSource === 'local' ? 'Local' : 'JSON'}
+            </span>
+
+            {syncError && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 font-semibold text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                {syncError}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ACTIONS */}
