@@ -4,6 +4,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const SUPABASE_TABLE =
   import.meta.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
+const AUTH_STORAGE_KEY = 'staybridge_admin_session';
 
 type SupabasePropertyRow = {
   id: number;
@@ -12,21 +13,34 @@ type SupabasePropertyRow = {
 
 type PropertyInput = Partial<Property> & { id?: number };
 
+export type SupabaseAuthSession = {
+  access_token: string;
+  refresh_token?: string;
+  expires_at: number;
+  user?: {
+    email?: string;
+  };
+};
+
 function isSupabaseConfigured() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_TABLE);
 }
 
-function getHeaders() {
+function getHeaders(accessToken?: string) {
   return {
     apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Authorization: `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
     'Content-Type': 'application/json',
     Accept: 'application/json',
     Prefer: 'return=representation',
   };
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestJson<T>(
+  path: string,
+  init?: RequestInit,
+  accessToken?: string
+): Promise<T> {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase não configurado');
   }
@@ -34,7 +48,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
     headers: {
-      ...getHeaders(),
+      ...getHeaders(accessToken),
       ...(init?.headers || {}),
     },
   });
@@ -51,6 +65,84 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+async function requestAuth<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase nao configurado');
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(init?.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Falha na autenticacao (${response.status})`);
+  }
+
+  return (await response.json()) as T;
+}
+
+function persistSession(session: SupabaseAuthSession) {
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+}
+
+export function getStoredAdminSession() {
+  const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+  if (!stored) return null;
+
+  try {
+    const session = JSON.parse(stored) as SupabaseAuthSession;
+    const hasValidToken =
+      typeof session.access_token === 'string' &&
+      session.access_token.length > 0 &&
+      typeof session.expires_at === 'number' &&
+      session.expires_at > Math.floor(Date.now() / 1000);
+
+    if (!hasValidToken) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      return null;
+    }
+
+    return session;
+  } catch {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
+}
+
+export async function signInAdmin(email: string, password: string) {
+  const response = await requestAuth<{
+    access_token: string;
+    refresh_token?: string;
+    expires_in?: number;
+    user?: { email?: string };
+  }>('token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+
+  const session: SupabaseAuthSession = {
+    access_token: response.access_token,
+    refresh_token: response.refresh_token,
+    expires_at:
+      Math.floor(Date.now() / 1000) + Math.max(0, response.expires_in || 3600),
+    user: response.user,
+  };
+
+  persistSession(session);
+  return session;
+}
+
+export function signOutAdmin() {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
 function toStringValue(value: unknown, fallback = '') {
@@ -161,18 +253,22 @@ function fromRow(row: SupabasePropertyRow) {
   });
 }
 
-export async function loadPropertiesFromSupabase() {
+export async function loadPropertiesFromSupabase(accessToken?: string) {
   const rows = await requestJson<SupabasePropertyRow[]>(
     `${SUPABASE_TABLE}?select=id,data&order=id.asc`,
     {
       method: 'GET',
-    }
+    },
+    accessToken
   );
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));
 }
 
-export async function savePropertyToSupabase(property: Property) {
+export async function savePropertyToSupabase(
+  property: Property,
+  accessToken?: string
+) {
   const rows = await requestJson<SupabasePropertyRow[]>(
     `${SUPABASE_TABLE}?on_conflict=id`,
     {
@@ -181,22 +277,29 @@ export async function savePropertyToSupabase(property: Property) {
         Prefer: 'resolution=merge-duplicates,return=representation',
       },
       body: JSON.stringify([toRecord(property)]),
-    }
+    },
+    accessToken
   );
 
   return rows.map(fromRow).find((item): item is Property => Boolean(item)) || property;
 }
 
-export async function deletePropertyFromSupabase(id: number) {
+export async function deletePropertyFromSupabase(
+  id: number,
+  accessToken?: string
+) {
   await requestJson<null>(`${SUPABASE_TABLE}?id=eq.${id}`, {
     method: 'DELETE',
-  });
+  }, accessToken);
 }
 
-export async function replacePropertiesInSupabase(properties: Property[]) {
+export async function replacePropertiesInSupabase(
+  properties: Property[],
+  accessToken?: string
+) {
   await requestJson<null>(`${SUPABASE_TABLE}?id=gt.0`, {
     method: 'DELETE',
-  });
+  }, accessToken);
 
   if (!properties.length) {
     return [];
@@ -210,7 +313,8 @@ export async function replacePropertiesInSupabase(properties: Property[]) {
         Prefer: 'return=representation',
       },
       body: JSON.stringify(properties.map(toRecord)),
-    }
+    },
+    accessToken
   );
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));

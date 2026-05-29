@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../data/properties';
-import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import {
   deletePropertyFromSupabase,
+  getStoredAdminSession,
   hasSupabaseConfig,
   loadPropertiesFromSupabase,
   replacePropertiesInSupabase,
   savePropertyToSupabase,
+  signInAdmin,
+  signOutAdmin,
+  type SupabaseAuthSession,
 } from '../data/supabaseProperties';
 
 const INITIAL_FORM: Omit<Property, 'id'> = {
@@ -39,6 +43,12 @@ const INITIAL_FORM: Omit<Property, 'id'> = {
 
 export function AdminPage() {
   const navigate = useNavigate();
+  const [session, setSession] = useState<SupabaseAuthSession | null>(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
   const [syncMessage, setSyncMessage] = useState('');
   const [syncError, setSyncError] = useState('');
@@ -49,9 +59,19 @@ export function AdminPage() {
   const [amenityInput, setAmenityInput] = useState('');
   const [stationInput, setStationInput] = useState('');
 
-  // Carregar somente do Supabase para evitar dados locais desatualizados.
+  useEffect(() => {
+    setSession(getStoredAdminSession());
+    setIsAuthLoading(false);
+  }, []);
+
+  // Carregar somente apos login para evitar leitura publica no Supabase.
   useEffect(() => {
     const loadProperties = async () => {
+      if (!session) {
+        setProperties([]);
+        return;
+      }
+
       if (!hasSupabaseConfig()) {
         setProperties([]);
         setSyncError('Supabase nao configurado');
@@ -59,7 +79,7 @@ export function AdminPage() {
       }
 
       try {
-        const remoteProperties = await loadPropertiesFromSupabase();
+        const remoteProperties = await loadPropertiesFromSupabase(session.access_token);
         setProperties(remoteProperties);
         setSyncError('');
       } catch (error) {
@@ -70,7 +90,34 @@ export function AdminPage() {
     };
 
     void loadProperties();
-  }, []);
+  }, [session]);
+
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthError('');
+    setIsSigningIn(true);
+
+    try {
+      const signedSession = await signInAdmin(authEmail.trim(), authPassword);
+      setSession(signedSession);
+      setAuthPassword('');
+      setSyncError('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao entrar';
+      setAuthError(message);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    signOutAdmin();
+    setSession(null);
+    setProperties([]);
+    setShowForm(false);
+    setSyncMessage('');
+    setSyncError('');
+  };
 
   const nextId = Math.max(0, ...properties.map(p => p.id)) + 1;
 
@@ -142,11 +189,14 @@ export function AdminPage() {
     };
 
     try {
-      if (!hasSupabaseConfig()) {
+      if (!hasSupabaseConfig() || !session) {
         throw new Error('Supabase nao configurado');
       }
 
-      const savedProperty = await savePropertyToSupabase(propertyToSave);
+      const savedProperty = await savePropertyToSupabase(
+        propertyToSave,
+        session.access_token
+      );
 
       setProperties((prev) =>
         editingId !== null
@@ -181,11 +231,11 @@ export function AdminPage() {
     }
 
     try {
-      if (!hasSupabaseConfig()) {
+      if (!hasSupabaseConfig() || !session) {
         throw new Error('Supabase nao configurado');
       }
 
-      await deletePropertyFromSupabase(id);
+      await deletePropertyFromSupabase(id, session.access_token);
 
       setProperties((prev) => prev.filter((property) => property.id !== id));
       setSyncError('');
@@ -233,11 +283,14 @@ export function AdminPage() {
           return;
         }
 
-        if (!hasSupabaseConfig()) {
+        if (!hasSupabaseConfig() || !session) {
           throw new Error('Supabase nao configurado');
         }
 
-        const savedProperties = await replacePropertiesInSupabase(data);
+        const savedProperties = await replacePropertiesInSupabase(
+          data,
+          session.access_token
+        );
         setProperties(savedProperties);
         setSyncMessage('✓ JSON importado e publicado no Supabase');
         setTimeout(() => setSyncMessage(''), 3000);
@@ -253,6 +306,83 @@ export function AdminPage() {
     reader.readAsText(file);
   };
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-28 pb-20">
+        <div className="mx-auto max-w-md px-4">
+          <div className="rounded-2xl bg-white p-6 text-center shadow-lg">
+            <p className="font-semibold text-gray-700">Verificando acesso...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-28 pb-20">
+        <div className="mx-auto max-w-md px-4">
+          <form
+            onSubmit={handleSignIn}
+            className="rounded-2xl bg-white p-6 shadow-lg"
+          >
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--green-dark)] text-white">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Admin</h1>
+                <p className="text-sm text-gray-600">Entre com suas credenciais</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-bold">E-mail</label>
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(event) => setAuthEmail(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold">Senha</label>
+                <input
+                  type="password"
+                  value={authPassword}
+                  onChange={(event) => setAuthPassword(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+            </div>
+
+            {authError && (
+              <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                {authError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSigningIn}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-4 py-3 font-bold text-white hover:bg-[var(--green-medium)] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <LogIn className="h-5 w-5" />
+              {isSigningIn ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pt-28 pb-20">
       <div className="max-w-7xl mx-auto px-4">
@@ -265,6 +395,13 @@ export function AdminPage() {
               <Cloud className="h-4 w-4" />
               Fonte ativa: Supabase
             </span>
+
+            {session.user?.email && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-semibold text-gray-700 shadow-sm">
+                <Lock className="h-4 w-4" />
+                {session.user.email}
+              </span>
+            )}
 
             {syncError && (
               <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 font-semibold text-red-700">
@@ -318,6 +455,14 @@ export function AdminPage() {
             className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 ml-auto"
           >
             Voltar
+          </button>
+
+          <button
+            onClick={handleSignOut}
+            className="inline-flex items-center gap-2 border border-red-200 text-red-700 px-4 py-2 rounded-lg font-semibold hover:bg-red-50"
+          >
+            <LogOut className="w-5 h-5" />
+            Sair
           </button>
         </div>
 
