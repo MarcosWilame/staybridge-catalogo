@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../data/properties';
-import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut, Eye, EyeOff, Search } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import {
   deletePropertyFromSupabase,
@@ -42,6 +42,8 @@ const INITIAL_FORM: Omit<Property, 'id'> = {
   people: 1,
 };
 
+type AdminStatusFilter = 'all' | 'listed' | 'hidden';
+
 export function AdminPage() {
   const navigate = useNavigate();
   const [session, setSession] = useState<SupabaseAuthSession | null>(null);
@@ -56,9 +58,21 @@ export function AdminPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Property, 'id'>>(INITIAL_FORM);
+  const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all');
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [imageInput, setImageInput] = useState('');
   const [amenityInput, setAmenityInput] = useState('');
   const [stationInput, setStationInput] = useState('');
+  const formRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToForm = () => {
+    window.requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
+  };
 
   useEffect(() => {
     setSession(getStoredAdminSession());
@@ -121,6 +135,26 @@ export function AdminPage() {
   };
 
   const nextId = Math.max(0, ...properties.map(p => p.id)) + 1;
+  const listedCount = properties.filter((property) => property.listed !== false).length;
+  const hiddenCount = properties.length - listedCount;
+  const normalizedAdminSearch = adminSearchQuery.trim().toLowerCase();
+  const visibleAdminProperties = properties.filter((property) => {
+    if (statusFilter === 'listed' && property.listed === false) return false;
+    if (statusFilter === 'hidden' && property.listed !== false) return false;
+
+    if (!normalizedAdminSearch) return true;
+
+    return [
+      String(property.id),
+      property.title,
+      property.type,
+      property.region,
+      property.address,
+      property.postcode,
+    ]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(normalizedAdminSearch));
+  });
 
   const handleAddImage = () => {
     if (imageInput.trim()) {
@@ -224,6 +258,7 @@ export function AdminPage() {
     setFormData(rest);
     setEditingId(id);
     setShowForm(true);
+    scrollToForm();
   };
 
   const handleDeleteProperty = async (id: number) => {
@@ -244,6 +279,31 @@ export function AdminPage() {
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao deletar imóvel';
+      setSyncError(message);
+      alert(message);
+    }
+  };
+
+  const handleConfirmDeleteProperty = async (property: Property) => {
+    const confirmation = window.prompt(
+      `Esta acao remove definitivamente o imovel #${property.id} - ${property.title}.\nDigite DELETAR para confirmar.`
+    );
+
+    if (confirmation !== 'DELETAR') return;
+
+    try {
+      if (!hasSupabaseConfig() || !session) {
+        throw new Error('Supabase nao configurado');
+      }
+
+      await deletePropertyFromSupabase(property.id, session.access_token);
+
+      setProperties((prev) => prev.filter((item) => item.id !== property.id));
+      setSyncError('');
+      setSyncMessage('Imovel removido com sucesso');
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao deletar imovel';
       setSyncError(message);
       alert(message);
     }
@@ -452,6 +512,7 @@ export function AdminPage() {
             onClick={() => {
               resetForm();
               setShowForm(true);
+              scrollToForm();
             }}
             className="inline-flex items-center gap-2 bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[var(--green-medium)]"
           >
@@ -500,16 +561,85 @@ export function AdminPage() {
           </button>
         </div>
 
+        <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'all' as const, label: `Todos (${properties.length})` },
+                { value: 'listed' as const, label: `No site (${listedCount})` },
+                { value: 'hidden' as const, label: `Ocultos (${hiddenCount})` },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setStatusFilter(option.value)}
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                    statusFilter === option.value
+                      ? 'bg-[var(--green-dark)] text-white shadow'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full lg:max-w-md">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="search"
+                value={adminSearchQuery}
+                onChange={(event) => setAdminSearchQuery(event.target.value)}
+                className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-10 text-sm font-semibold outline-none focus:border-[var(--green-dark)]"
+                placeholder="Buscar por ID, titulo, endereco..."
+              />
+              {adminSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setAdminSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                  aria-label="Limpar busca"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* FORM */}
         {showForm && (
-          <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+          <div
+            ref={formRef}
+            className={`scroll-mt-28 mb-8 rounded-2xl bg-white p-6 shadow-lg transition-all ${
+              editingId !== null
+                ? 'ring-2 ring-blue-300 ring-offset-2'
+                : 'ring-1 ring-gray-100'
+            }`}
+          >
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div
+                  className={`mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                    editingId !== null
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-green-50 text-green-700'
+                  }`}
+                >
+                  {editingId !== null ? `Editando #${editingId}` : 'Novo cadastro'}
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">
                 {editingId ? 'Editar Imóvel' : 'Novo Imóvel'}
-              </h2>
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  {editingId !== null
+                    ? 'Altere os dados e clique em Atualizar Imovel.'
+                    : 'Preencha os dados principais para criar um novo imovel.'}
+                </p>
+              </div>
               <button
                 onClick={resetForm}
-                className="text-gray-400 hover:text-gray-600"
+                className="self-start rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 sm:self-auto"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -908,7 +1038,7 @@ export function AdminPage() {
 
         {/* PROPERTIES LIST */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((property) => (
+          {visibleAdminProperties.map((property) => (
             <div
               key={property.id}
               className={`bg-white rounded-2xl overflow-hidden shadow-lg transition hover:shadow-xl ${
@@ -972,8 +1102,8 @@ export function AdminPage() {
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDeleteProperty(property.id)}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 text-sm flex items-center justify-center gap-1"
+                    onClick={() => handleConfirmDeleteProperty(property)}
+                    className="flex-1 border border-red-200 bg-white py-2 rounded-lg font-semibold text-red-700 hover:bg-red-50 text-sm flex items-center justify-center gap-1"
                   >
                     <Trash2 className="w-4 h-4" />
                     Deletar
@@ -983,6 +1113,21 @@ export function AdminPage() {
             </div>
           ))}
         </div>
+
+        {properties.length > 0 && visibleAdminProperties.length === 0 && !showForm && (
+          <div className="py-12 text-center">
+            <p className="mb-4 text-gray-600">Nenhum imovel encontrado com esses filtros</p>
+            <button
+              onClick={() => {
+                setStatusFilter('all');
+                setAdminSearchQuery('');
+              }}
+              className="rounded-lg bg-[var(--green-dark)] px-6 py-3 font-bold text-white"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        )}
 
         {properties.length === 0 && !showForm && (
           <div className="text-center py-12">
