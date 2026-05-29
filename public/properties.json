@@ -117,7 +117,7 @@
     "images": [],
     "video": "",
     "type": "1 bedroom flat",
-    "title": "1 bedroom flat 12 - RM1 1TR",
+    "title": "1 bedroom flat 12 - TESTEE",
     "region": "East London",
     "price": "£500/week",
     "description": "Flat completo com 1 quarto em Romford.",
@@ -138,4 +138,5 @@
     "people": 2,
     "slug": "1-bedroom-flat-12-rm1-1tr"
   }
+
 ]
