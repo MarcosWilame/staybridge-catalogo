@@ -1,284 +1,202 @@
-﻿[
-    {
-        "id":  20,
-        "image":  "https://lh3.googleusercontent.com/d/1aTCb5tpqflds8l-C8eXjYJkGFShdJXA3",
-        "images":  [
-                       "https://lh3.googleusercontent.com/d/1aTCb5tpqflds8l-C8eXjYJkGFShdJXA3",
-                       "https://lh3.googleusercontent.com/d/1mnNNT_9hCOnCfgXGIm0yK7-Fy_E37ElE",
-                       "https://lh3.googleusercontent.com/d/1_gnujao8l9FTcEKpRL4OvKvvxdaLuXy4",
-                       "https://lh3.googleusercontent.com/d/14D2obX3eWbKFROwEhoqBDozYHBnue5Pc"
-                   ],
-        "video":  "https://drive.google.com/uc?export=download\u0026id=1j7bAJIcDndZ3ddG2ImB9_6bPBLvnCxIX",
-        "type":  "Studio",
-        "title":  "Studio 8 - NW10 2EL",
-        "region":  "North London",
-        "price":  "Â£350/week",
-        "description":  "Studio moderno em Dollis Hill.",
-        "longDescription":  "Studio moderno totalmente mobiliado com bills inclusas.",
-        "available":  true,
-        "billsIncluded":  true,
-        "bedrooms":  1,
-        "category":  "studio",
-        "amenities":  [
-                          "Bills inclusas",
-                          "Wi-Fi",
-                          "Mobiliado"
-                      ],
-        "deposit":  700,
-        "nearbyStations":  [
-                               "Dollis Hill"
-                           ],
-        "coordinates":  {
-                            "lat":  51.551,
-                            "lng":  -0.239
-                        },
-        "furnishing":  "Mobiliado",
-        "moveInDate":  "Imediata",
-        "postcode":  "NW10 2EL",
-        "address":  "1 Meyrick Road NW10 2EL",
-        "people":  2
+﻿
+[
+  {
+    "id": 1,
+    "image": "https://drive.google.com/uc?export=view&id=1uwnxtbm1rp4r-TiWCBmXSqlc95DEJ2Cz",
+    "images": [
+      "https://drive.google.com/uc?export=view&id=1uwnxtbm1rp4r-TiWCBmXSqlc95DEJ2Cz",
+      "https://drive.google.com/uc?export=view&id=16TspXtm9DRy0q4ObEZBf28yGCAvqPvNV",
+      "https://drive.google.com/uc?export=view&id=1baOkfzR6cc1U2oC0BD8ff1I_WwNcG-q0",
+      "https://drive.google.com/uc?export=view&id=1EWWD_qdeedq9_ba9SwsWHpIXRWWavMUR",
+      "https://drive.google.com/uc?export=view&id=14yaOVCX5HuOZibzxVCXQDJr0R1SxAmbd"
+    ],
+    "video": "",
+    "type": "2 bedroom flat",
+    "title": "2 bedroom flat 1 - SE25 6NN",
+    "region": "South London",
+    "price": "£650/week",
+    "description": "Flat completo com 2 quartos em Croydon.",
+    "longDescription": "Flat completo totalmente mobiliado em Croydon com excelente localização, ambiente confortável e bills inclusas.",
+    "available": true,
+    "billsIncluded": true,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "category": "flat",
+    "amenities": [
+      "Bills inclusas",
+      "Wi-Fi",
+      "Mobiliado"
+    ],
+    "deposit": 1300,
+    "nearbyStations": [
+      "Croydon"
+    ],
+    "coordinates": {
+      "lat": 0,
+      "lng": 0
     },
-    {
-        "id":  32,
-        "image":  "https://drive.google.com/thumbnail?id=1kqs9FomsylDymaFtxAFgpiY-5MyJ7pUg\u0026sz=w2000",
-        "images":  [
-                       "https://drive.google.com/thumbnail?id=1kqs9FomsylDymaFtxAFgpiY-5MyJ7pUg\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1uVYdaiak0qWZuXSERK3To5-NgcHPub9T\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=165GheMsj_QQoDrTsCcXJi3EKnp9nrcHc\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1cld4AyM4qvkuVNiuY9jli0fysar7dadv\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1j7bAJIcDndZ3ddG2ImB9_6bPBLvnCxIX\u0026sz=w2000"
-                   ],
-        "type":  "Studio",
-        "title":  "Studio 4 - SW16 5BA",
-        "region":  "South London",
-        "price":  "Â£280/week",
-        "description":  "Studio moderno em Streatham.",
-        "longDescription":  "Studio moderno totalmente mobiliado com bills inclusas.",
-        "available":  true,
-        "billsIncluded":  true,
-        "bedrooms":  1,
-        "category":  "studio",
-        "amenities":  [
-                          "Bills inclusas",
-                          "Wi-Fi",
-                          "Mobiliado"
-                      ],
-        "deposit":  560,
-        "nearbyStations":  [
-                               "Streatham"
-                           ],
-        "coordinates":  {
-                            "lat":  51.42,
-                            "lng":  -0.13
-                        },
-        "furnishing":  "Mobiliado",
-        "moveInDate":  "Imediata",
-        "postcode":  "SW16 5BA",
-        "address":  "2 Bencroft Road SW16 5BA",
-        "people":  2
+    "furnishing": "Mobiliado",
+    "moveInDate": "Imediata",
+    "postcode": "SE25 6NN",
+    "address": "4 Prince Road SE25 6NN",
+    "people": 4,
+    "slug": "2-bedroom-flat-1-se25-6nn"
+  },
+  {
+    "id": 2,
+    "image": "https://drive.google.com/uc?export=view&id=13zcNPFSVddgBtxyOGuX4eAoq8Xhlo3pe",
+    "images": [
+      "https://drive.google.com/uc?export=view&id=13zcNPFSVddgBtxyOGuX4eAoq8Xhlo3pe",
+      "https://drive.google.com/uc?export=view&id=1fwVHyyC14QAabym4nKOc4kXkfdOk1r8Y",
+      "https://drive.google.com/uc?export=view&id=1GsfSKzRIcZIh4yQnIkCh6N2ySU1quth6",
+      "https://drive.google.com/uc?export=view&id=16y72roUCi-JRZpoKAy_7ywUqsB9AttuW"
+    ],
+    "video": "https://drive.google.com/file/d/1vRp8BBoFAqJ5ndZXtWQJYo1DpseyfM_s/view?usp=drive_link",
+    "type": "3 bedroom flat",
+    "title": "3 bedroom flat 3 - SE25 6NN",
+    "region": "South London",
+    "price": "£750/week",
+    "description": "Flat completo com 3 quartos em Croydon.",
+    "longDescription": "Flat completo totalmente mobiliado em Croydon com excelente espaço interno e bills inclusas.",
+    "available": true,
+    "billsIncluded": true,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "category": "flat",
+    "amenities": [
+      "Bills inclusas",
+      "Wi-Fi",
+      "Mobiliado"
+    ],
+    "deposit": 1500,
+    "nearbyStations": [
+      "Croydon"
+    ],
+    "coordinates": {
+      "lat": 0,
+      "lng": 0
     },
-    {
-        "id":  34,
-        "image":  "https://drive.google.com/thumbnail?id=18D4FAjFTwvbRwZVtVhhtd_E_DOi8_Cxv\u0026sz=w2000",
-        "images":  [
-                       "https://drive.google.com/thumbnail?id=18D4FAjFTwvbRwZVtVhhtd_E_DOi8_Cxv\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1nyyScPrw9zj3nOmBNgTkCPwhisbOS1Bg\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1a5SnD5FA-No8VI-RN1bfw_7JCppHKybU\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1kjXlpjozHj3zL6a3pry0vtN8pY6V8fpB\u0026sz=w2000"
-                   ],
-        "type":  "Single Room",
-        "title":  "Single Room 8 - NW2 7DL",
-        "region":  "North London",
-        "price":  "Â£160/week",
-        "description":  "Quarto individual confortÃ¡vel em Neasden.",
-        "longDescription":  "Single room totalmente mobiliado em Ã³tima localizaÃ§Ã£o de Neasden. Ambiente confortÃ¡vel, com fÃ¡cil acesso ao transporte pÃºblico e bills inclusas.",
-        "available":  true,
-        "billsIncluded":  true,
-        "bedrooms":  1,
-        "category":  "single",
-        "amenities":  [
-                          "Bills inclusas",
-                          "Wi-Fi",
-                          "Mobiliado",
-                          "Cozinha equipada"
-                      ],
-        "deposit":  320,
-        "nearbyStations":  [
-                               "Neasden Station"
-                           ],
-        "coordinates":  {
-                            "lat":  51.553,
-                            "lng":  -0.252
-                        },
-        "furnishing":  "Mobiliado",
-        "moveInDate":  "Now",
-        "postcode":  "NW2 7DL",
-        "address":  "10 Paddock Road NW2 7DL",
-        "people":  1
+    "furnishing": "Mobiliado",
+    "moveInDate": "Imediata",
+    "postcode": "SE25 6NN",
+    "address": "4 Prince Road SE25 6NN",
+    "people": 4,
+    "slug": "3-bedroom-flat-3-se25-6nn"
+  },
+  {
+    "id": 3,
+    "image": "https://drive.google.com/uc?export=view&id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1",
+    "images": [
+      "https://drive.google.com/uc?export=view&id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1",
+      "https://drive.google.com/uc?export=view&id=1oi0m_-UFwzwBx8ogMsTOjmq20XqwWsis",
+      "https://drive.google.com/uc?export=view&id=1dnb1-_l0KGLmbrahHrJ6alsZVgf5ppbr"
+    ],
+    "video": "",
+    "type": "2 bedroom flat",
+    "title": "2 bedroom flat 4 - SE25 6NN",
+    "region": "South London",
+    "price": "£650/week",
+    "description": "Flat completo com 2 quartos em Croydon.",
+    "longDescription": "Flat completo totalmente mobiliado em Croydon com excelente localização e bills inclusas.",
+    "available": true,
+    "billsIncluded": true,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "category": "flat",
+    "amenities": [
+      "Bills inclusas",
+      "Wi‑Fi",
+      "Mobiliado"
+    ],
+    "deposit": 1300,
+    "nearbyStations": [
+      "Croydon"
+    ],
+    "coordinates": {
+      "lat": 0,
+      "lng": 0
     },
-    {
-        "id":  35,
-        "image":  "https://drive.google.com/thumbnail?id=1r20rODzN_tUaA92nQFR0_QojXVlagMse\u0026sz=w2000",
-        "images":  [
-                       "https://drive.google.com/thumbnail?id=1r20rODzN_tUaA92nQFR0_QojXVlagMse\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1nbbBCCTWQjQ14jQCbYQbFUhQbor7XDO7\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=11MKbUY032khaVmQ_jJN1uI9HUgEIH-nW\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1FJrmQOgLcSeHzXlaETDNJZ9Mbn01d74T\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1msrNWE83cx9TL-Jq3fJxLB-EqU82S51m\u0026sz=w2000"
-                   ],
-        "type":  "Ensuite",
-        "title":  "Ensuite 4 - SW16 5BJ",
-        "region":  "South London",
-        "price":  "Â£270/week",
-        "description":  "Ensuite moderna em Streatham.",
-        "longDescription":  "Ensuite moderna totalmente mobiliada em Streatham, com excelente localizaÃ§Ã£o, banheiro privativo, ambiente confortÃ¡vel e bills inclusas.",
-        "available":  true,
-        "billsIncluded":  true,
-        "bedrooms":  1,
-        "category":  "ensuite",
-        "amenities":  [
-                          "Bills inclusas",
-                          "Wi-Fi",
-                          "Banheiro Privativo",
-                          "Mobiliado",
-                          "Cozinha equipada"
-                      ],
-        "deposit":  540,
-        "nearbyStations":  [
-                               "Streatham"
-                           ],
-        "coordinates":  {
-                            "lat":  51.427,
-                            "lng":  -0.130
-                        },
-        "furnishing":  "Mobiliado",
-        "moveInDate":  "Imediata",
-        "postcode":  "SW16 5BJ",
-        "address":  "10 Larbert Road SW16 5BJ",
-        "people":  1
+    "furnishing": "Mobiliado",
+    "moveInDate": "Imediata",
+    "postcode": "SE25 6NN",
+    "address": "4 Prince Road SE25 6NN",
+    "people": 4,
+    "slug": "2-bedroom-flat-4-se25-6nn"
+  },
+  {
+    "id": 4,
+    "image": "https://drive.google.com/uc?export=view&id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ",
+    "images": [
+      "https://drive.google.com/uc?export=view&id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ",
+      "https://drive.google.com/uc?export=view&id=1dhpvzgSutuiE_ZkT3K8XysrOkDgsNSXM",
+      "https://drive.google.com/uc?export=view&id=16tMFo9Wy0Fa_yqi1OzIjUfi1NGnwEuWU"
+    ],
+    "video": "https://drive.google.com/file/d/16MBIEU4ua3Y20XQezoMMVprw8rAOczMk/view?usp=drive_link",
+    "type": "2 bedroom flat",
+    "title": "2 bedroom flat 10 - HA2 7ES",
+    "region": "North London",
+    "price": "£650/week",
+    "description": "Flat completo com 2 quartos em Harrow.",
+    "longDescription": "Flat completo totalmente mobiliado em Harrow com ótima localização e bills inclusas.",
+    "available": true,
+    "billsIncluded": true,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "category": "flat",
+    "amenities": [
+      "Bills inclusas",
+      "Wi‑Fi",
+      "Mobiliado"
+    ],
+    "deposit": 1300,
+    "nearbyStations": [
+      "Harrow"
+    ],
+    "coordinates": {
+      "lat": 0,
+      "lng": 0
     },
-    {
-        "id":  36,
-        "image":  "https://drive.google.com/thumbnail?id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1\u0026sz=w2000",
-        "images":  [
-                       "https://drive.google.com/thumbnail?id=1kBb1qCrgElDcgkZG0Ve6d09L1_V24mD1\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1XR3S4ZlMGt6ZmaIlz2lMyjgYkBHe_H8o\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1hrjHmHbuKcePeALbhL4Ii_i2LblHM1Ru\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1T-jwLW3bMd3eOKsAgBimSXiGVfpzApvZ\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1ledfwpl4-eHUbCP138VI2zNujyj18ZQR\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1dX5vp0xCNWCkEgwf-0C-EdfiRkAmpKVo\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1Cl3rPiEbHFnjHWev8DIvKhd_R8kThUsh\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1ncBPzvrqpEvGh3yMxbI6zihbwDHguJxb\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1txw028rvErFN7CAGfeZitRm-4Rf-mo1r\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1ww7R-iJuA95j5a94VNzmbhQXPAFt0yJm\u0026sz=w2000"
-                   ],
-        "type":  "2 Bedroom Flat",
-        "title":  "2 Bedroom Flat 4 - SE25 6NN",
-        "region":  "South London",
-        "price":  "Â£650/week",
-        "description":  "Flat completo com 2 quartos em Croydon.",
-        "longDescription":  "Flat completo totalmente mobiliado em Croydon com 2 quartos, 1 banheiro, sala ampla e cozinha completa equipada. Ideal para famÃ­lias ou amigos compartilhando acomodaÃ§Ã£o, em excelente localizaÃ§Ã£o e com bills inclusas.",
-        "available":  true,
-        "billsIncluded":  true,
-        "bedrooms":  2,
-        "bathrooms":  1,
-        "category":  "flat",
-        "amenities":  [
-                          "Bills inclusas",
-                          "Wi-Fi",
-                          "2 quartos",
-                          "1 banheiro",
-                          "Sala ampla",
-                          "Cozinha completa",
-                          "Mobiliado"
-                      ],
-        "deposit":  1300,
-        "nearbyStations":  [
-                               "Norwood Junction",
-                               "Selhurst"
-                           ],
-        "coordinates":  {
-                            "lat":  51.398,
-                            "lng":  -0.074
-                        },
-        "furnishing":  "Mobiliado",
-        "moveInDate":  "Imediata",
-        "postcode":  "SE25 6NN",
-        "address":  "4 Prince Road SE25 6NN",
-        "people":  4
+    "furnishing": "Mobiliado",
+    "moveInDate": "Imediata",
+    "postcode": "HA2 7ES",
+    "address": "10 Kingston House, 232-238 Imperial Drive",
+    "people": 4,
+    "slug": "2-bedroom-flat-10-ha2-7es"
+  },
+  {
+    "id": 5,
+    "image": "",
+    "images": [],
+    "video": "",
+    "type": "1 bedroom flat",
+    "title": "1 bedroom flat 12 - RM1 1TR",
+    "region": "East London",
+    "price": "£500/week",
+    "description": "Flat completo com 1 quarto em Romford.",
+    "longDescription": "Flat completo em Romford com excelente localização e ambiente confortável.",
+    "available": true,
+    "billsIncluded": true,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "category": "flat",
+    "amenities": [
+      "Bills inclusas",
+      "Wi‑Fi",
+      "Mobiliado"
+    ],
+    "deposit": 1000,
+    "nearbyStations": [
+      "Romford"
+    ],
+    "coordinates": {
+      "lat": 0,
+      "lng": 0
     },
-    {
-        "id":  37,
-        "image":  "https://drive.google.com/thumbnail?id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ\u0026sz=w2000",
-        "images":  [
-                       "https://drive.google.com/thumbnail?id=1gDaxHhvAD_P3aMGO72fcGOYLSc4W4_qJ\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1dhpvzgSutuiE_ZkT3K8XysrOkDgsNSXM\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=16ANDcPBOaBOK_fB0CMAahCOEZl8FYvkj\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1h-00UwyuJXnvCvZow2w4yHKPaxu393da\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1-1zIwSGKreQvuOVp_O8mpT21IczQZaSA\u0026sz=w2000",
-                       "https://drive.google.com/thumbnail?id=1yqFFhdvRjKlqpDDc-_MzfLmso_KBnWRA\u0026sz=w2000"
-                   ],
-        "type":  "2 bedroom flat",
-        "title":  "2 Bedroom Flat - Harrow",
-        "region":  "Harrow",
-        "price":  "Â£650/week",
-        "description":  "Flat com 2 quartos, sala, cozinha e 1 banheiro.",
-        "longDescription":  "ImÃ³vel composto por 2 quartos, sala de estar, cozinha equipada e 1 banheiro. Excelente localizaÃ§Ã£o em Harrow com boa conectividade e estrutura residencial confortÃ¡vel.",
-        "available":  true,
-        "billsIncluded":  false,
-        "bedrooms":  2,
-        "bathrooms":  1,
-        "category":  "flat",
-        "amenities":  [
-
-                      ],
-        "deposit":  0,
-        "nearbyStations":  [
-
-                           ],
-        "coordinates":  {
-                            "lat":  0,
-                            "lng":  0
-                        },
-        "furnishing":  "Mobiliado",
-        "moveInDate":  "30/05/2026",
-        "postcode":  "HA2 7ES",
-        "address":  "10 Kingston House, 232-238 Imperial Drive",
-        "people":  5
-    },
-    {
-        "coordinates":  {
-                            "lat":  51.5,
-                            "lng":  -0.1
-                        },
-        "id":  999,
-        "type":  "TESTE",
-        "moveInDate":  "Imediata",
-        "bathrooms":  1,
-        "longDescription":  "Este é um imóvel criado para teste do admin panel",
-        "bedrooms":  1,
-        "image":  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200",
-        "billsIncluded":  true,
-        "title":  "TESTE - Imóvel Teste",
-        "address":  "123 Test Street NW1 1AA",
-        "available":  true,
-        "people":  2,
-        "postcode":  "NW1 1AA",
-        "nearbyStations":  [
-                               "Test Station"
-                           ],
-        "category":  "studio",
-        "price":  "£999/week",
-        "description":  "Imóvel de teste",
-        "furnishing":  "Mobiliado",
-        "amenities":  [
-                          "Wi-Fi",
-                          "Mobiliado"
-                      ],
-        "deposit":  1000,
-        "region":  "North London",
-        "images":  [
-                       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200"
-                   ]
-    }
+    "furnishing": "Mobiliado",
+    "moveInDate": "Imediata",
+    "postcode": "RM1 1TR",
+    "address": "Opal House, 1 Regarth Avenue Romford RM1 1TJ",
+    "people": 2,
+    "slug": "1-bedroom-flat-12-rm1-1tr"
+  }
 ]
