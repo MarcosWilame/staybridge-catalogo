@@ -1,7 +1,5 @@
 import type { Property } from './properties';
 
-const STORAGE_KEY = 'staybridge_properties';
-
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const SUPABASE_TABLE =
@@ -216,25 +214,6 @@ export async function replacePropertiesInSupabase(properties: Property[]) {
   );
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));
-}
-
-export function readPropertiesCache() {
-  if (typeof localStorage === 'undefined') return [];
-
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-
-  try {
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? (parsed as Property[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function writePropertiesCache(properties: Property[]) {
-  if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(properties));
 }
 
 export function hasSupabaseConfig() {

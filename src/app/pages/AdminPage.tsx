@@ -9,7 +9,6 @@ import {
   loadPropertiesFromSupabase,
   replacePropertiesInSupabase,
   savePropertyToSupabase,
-  writePropertiesCache,
 } from '../data/supabaseProperties';
 
 const INITIAL_FORM: Omit<Property, 'id'> = {
@@ -38,14 +37,11 @@ const INITIAL_FORM: Omit<Property, 'id'> = {
   people: 1,
 };
 
-const STORAGE_KEY = 'staybridge_properties';
-
 export function AdminPage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [syncMessage, setSyncMessage] = useState('');
   const [syncError, setSyncError] = useState('');
-  const [syncSource, setSyncSource] = useState<'supabase' | 'local' | 'json'>('json');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Property, 'id'>>(INITIAL_FORM);
@@ -53,62 +49,28 @@ export function AdminPage() {
   const [amenityInput, setAmenityInput] = useState('');
   const [stationInput, setStationInput] = useState('');
 
-  // Carregar do Supabase, depois localStorage, depois JSON
+  // Carregar somente do Supabase para evitar dados locais desatualizados.
   useEffect(() => {
     const loadProperties = async () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-
-      if (hasSupabaseConfig()) {
-        try {
-          const remoteProperties = await loadPropertiesFromSupabase();
-          setProperties(remoteProperties);
-          writePropertiesCache(remoteProperties);
-          setSyncSource('supabase');
-          setSyncError('');
-          return;
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Erro ao sincronizar com Supabase';
-          setSyncError(message);
-        }
+      if (!hasSupabaseConfig()) {
+        setProperties([]);
+        setSyncError('Supabase nao configurado');
+        return;
       }
 
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            setProperties(parsed);
-            setSyncSource('local');
-            return;
-          }
-        } catch {
-          // Se falhar, tenta carregar do properties.json
-        }
+      try {
+        const remoteProperties = await loadPropertiesFromSupabase();
+        setProperties(remoteProperties);
+        setSyncError('');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Erro ao sincronizar com Supabase';
+        setProperties([]);
+        setSyncError(message);
       }
-
-      await loadFromJson();
-      setSyncSource('json');
     };
 
     void loadProperties();
   }, []);
-
-  // Salvar no localStorage sempre que properties muda
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(properties));
-    writePropertiesCache(properties);
-  }, [properties]);
-
-  const loadFromJson = async () => {
-    try {
-      const response = await fetch('/properties.json');
-      const data = await response.json();
-      const loaded = Array.isArray(data) ? data : [];
-      setProperties(loaded);
-      writePropertiesCache(loaded);
-    } catch {
-      setProperties([]);
-    }
-  };
 
   const nextId = Math.max(0, ...properties.map(p => p.id)) + 1;
 
@@ -180,31 +142,21 @@ export function AdminPage() {
     };
 
     try {
-      if (hasSupabaseConfig()) {
-        const savedProperty = await savePropertyToSupabase(propertyToSave);
-
-        setProperties((prev) =>
-          editingId !== null
-            ? prev.map((property) =>
-                property.id === editingId ? savedProperty : property
-              )
-            : [...prev, savedProperty]
-        );
-
-        setSyncSource('supabase');
-        setSyncMessage('✓ Imóvel salvo online no Supabase');
-      } else {
-        setProperties((prev) =>
-          editingId !== null
-            ? prev.map((property) =>
-                property.id === editingId ? propertyToSave : property
-              )
-            : [...prev, propertyToSave]
-        );
-
-        setSyncSource('local');
-        setSyncMessage('✓ Imóvel salvo localmente');
+      if (!hasSupabaseConfig()) {
+        throw new Error('Supabase nao configurado');
       }
+
+      const savedProperty = await savePropertyToSupabase(propertyToSave);
+
+      setProperties((prev) =>
+        editingId !== null
+          ? prev.map((property) =>
+              property.id === editingId ? savedProperty : property
+            )
+          : [...prev, savedProperty]
+      );
+
+      setSyncMessage('✓ Imóvel salvo online no Supabase');
 
       setSyncError('');
       resetForm();
@@ -229,9 +181,11 @@ export function AdminPage() {
     }
 
     try {
-      if (hasSupabaseConfig()) {
-        await deletePropertyFromSupabase(id);
+      if (!hasSupabaseConfig()) {
+        throw new Error('Supabase nao configurado');
       }
+
+      await deletePropertyFromSupabase(id);
 
       setProperties((prev) => prev.filter((property) => property.id !== id));
       setSyncError('');
@@ -279,24 +233,21 @@ export function AdminPage() {
           return;
         }
 
-        setProperties(data);
-        writePropertiesCache(data);
-
-        if (hasSupabaseConfig()) {
-          await replacePropertiesInSupabase(data);
-          setSyncSource('supabase');
-          setSyncMessage('✓ JSON importado e publicado no Supabase');
-          setTimeout(() => setSyncMessage(''), 3000);
-        } else {
-          setSyncSource('local');
-          setSyncMessage('✓ JSON importado localmente');
-          setTimeout(() => setSyncMessage(''), 3000);
+        if (!hasSupabaseConfig()) {
+          throw new Error('Supabase nao configurado');
         }
+
+        const savedProperties = await replacePropertiesInSupabase(data);
+        setProperties(savedProperties);
+        setSyncMessage('✓ JSON importado e publicado no Supabase');
+        setTimeout(() => setSyncMessage(''), 3000);
 
         alert('JSON carregado com sucesso!');
         setSyncError('');
-      } catch {
-        alert('Erro ao ler o arquivo JSON');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Erro ao ler o arquivo JSON';
+        setSyncError(message);
+        alert(message);
       }
     };
     reader.readAsText(file);
@@ -312,7 +263,7 @@ export function AdminPage() {
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-semibold text-gray-700 shadow-sm">
               <Cloud className="h-4 w-4" />
-              Fonte ativa: {syncSource === 'supabase' ? 'Supabase' : syncSource === 'local' ? 'Local' : 'JSON'}
+              Fonte ativa: Supabase
             </span>
 
             {syncError && (

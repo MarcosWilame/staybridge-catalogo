@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { properties as fallbackProperties, type Property } from './properties';
+import type { Property } from './properties';
 import {
   hasSupabaseConfig,
   loadPropertiesFromSupabase,
-  readPropertiesCache,
-  writePropertiesCache,
 } from './supabaseProperties';
 
 let cachedProperties: Property[] | null = null;
@@ -15,38 +13,11 @@ async function loadPropertiesFromSource() {
   if (cachedError) throw new Error(cachedError);
 
   try {
-    const cached = readPropertiesCache();
-    if (cached.length > 0) {
-      cachedProperties = cached;
-      return cached;
+    if (!hasSupabaseConfig()) {
+      throw new Error('Supabase nao configurado.');
     }
 
-    if (hasSupabaseConfig()) {
-      const remoteProperties = await loadPropertiesFromSupabase();
-      if (remoteProperties.length > 0) {
-        cachedProperties = remoteProperties;
-        writePropertiesCache(remoteProperties);
-        return remoteProperties;
-      }
-    }
-
-    const response = await fetch('/properties.json', { cache: 'no-store' });
-
-    if (!response.ok) {
-      throw new Error(`Falha ao carregar properties.json: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const loadedProperties = Array.isArray(data)
-      ? data.filter((item) => item && typeof item === 'object')
-      : [];
-
-    if (!loadedProperties.length) {
-      throw new Error('properties.json está vazio ou inválido.');
-    }
-
-    cachedProperties = loadedProperties as Property[];
-    writePropertiesCache(cachedProperties);
+    cachedProperties = await loadPropertiesFromSupabase();
     return cachedProperties;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -56,9 +27,7 @@ async function loadPropertiesFromSource() {
 }
 
 export function useProperties() {
-  const [items, setItems] = useState<Property[]>(
-    cachedProperties || fallbackProperties
-  );
+  const [items, setItems] = useState<Property[]>(cachedProperties || []);
   const [isLoading, setIsLoading] = useState(!cachedProperties);
   const [error, setError] = useState<string | null>(cachedError);
 
@@ -74,7 +43,7 @@ export function useProperties() {
       .catch((err: Error) => {
         cachedError = err.message;
         if (!isMounted) return;
-        setItems(fallbackProperties);
+        setItems([]);
         setError(err.message);
       })
       .finally(() => {
@@ -90,6 +59,6 @@ export function useProperties() {
     properties: items,
     isLoading,
     error,
-    source: error ? 'fallback' : hasSupabaseConfig() ? 'supabase' : 'json',
+    source: 'supabase',
   };
 }
