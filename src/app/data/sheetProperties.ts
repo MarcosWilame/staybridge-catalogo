@@ -13,9 +13,16 @@ async function loadPropertiesFromSource() {
       cache: 'no-store',
     });
 
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('A rota /api/public-properties nao retornou JSON. Verifique o deploy da funcao.');
+    }
+
     if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(detail || `Falha ao carregar propriedades: ${response.status}`);
+      const detail = await response.json().catch(() => null);
+      throw new Error(
+        detail?.error || `Falha ao carregar propriedades: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -61,6 +68,5 @@ export function useProperties() {
     properties: items,
     isLoading,
     error,
-    source: 'supabase',
   };
 }

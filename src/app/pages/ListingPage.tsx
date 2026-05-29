@@ -19,7 +19,7 @@ const INITIAL_VISIBLE_COUNT = 12;
 
 export function ListingPage() {
   const [searchParams] = useSearchParams();
-  const { properties, isLoading, source } = useProperties();
+  const { properties, isLoading, error } = useProperties();
 
   const [filters, setFilters] = useState<FilterState>({
     region: searchParams.get('region') || '',
@@ -303,13 +303,13 @@ export function ListingPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Propriedades</h1>
             <p>
-              {isLoading ? 'Sincronizando planilha...' : `${filteredProperties.length} resultados`}
-              {source === 'fallback' && (
-                <span className="ml-2 text-sm text-amber-700">
-                  usando dados locais
-                </span>
-              )}
+              {isLoading ? 'Sincronizando propriedades...' : `${filteredProperties.length} resultados`}
             </p>
+            {error && (
+              <p className="mt-2 max-w-2xl rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                {error}
+              </p>
+            )}
           </div>
 
           <button
