@@ -199,6 +199,7 @@ function sanitizeProperty(input: PropertyInput): Property | null {
     description: toStringValue(input.description),
     longDescription: toStringValue(input.longDescription),
     available: toBooleanValue(input.available, true),
+    listed: toBooleanValue(input.listed, true),
     billsIncluded: toBooleanValue(input.billsIncluded, false),
     bedrooms:
       typeof input.bedrooms === 'number' && Number.isFinite(input.bedrooms)

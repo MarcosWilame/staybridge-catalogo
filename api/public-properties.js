@@ -55,7 +55,7 @@ export default async function handler(req, res) {
             ...data,
             id: Number(data.id || row.id),
           };
-        })
+        }).filter((property) => property.listed !== false)
       : [];
 
     res.setHeader(

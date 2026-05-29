@@ -4,6 +4,10 @@ import type { Property } from './properties';
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
 
+function isListedProperty(property: Property) {
+  return property.listed !== false;
+}
+
 async function loadPropertiesFromSource() {
   if (cachedProperties) return cachedProperties;
   if (cachedError) throw new Error(cachedError);
@@ -26,7 +30,9 @@ async function loadPropertiesFromSource() {
     }
 
     const data = await response.json();
-    cachedProperties = Array.isArray(data) ? (data as Property[]) : [];
+    cachedProperties = Array.isArray(data)
+      ? (data as Property[]).filter(isListedProperty)
+      : [];
     return cachedProperties;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../data/properties';
-import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut } from 'lucide-react';
+import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut, Eye, EyeOff } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import {
   deletePropertyFromSupabase,
@@ -26,6 +26,7 @@ const INITIAL_FORM: Omit<Property, 'id'> = {
   description: '',
   longDescription: '',
   available: true,
+  listed: true,
   billsIncluded: false,
   bedrooms: 1,
   bathrooms: 0,
@@ -243,6 +244,39 @@ export function AdminPage() {
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao deletar imóvel';
+      setSyncError(message);
+      alert(message);
+    }
+  };
+
+  const handleToggleListed = async (property: Property) => {
+    try {
+      if (!hasSupabaseConfig() || !session) {
+        throw new Error('Supabase nao configurado');
+      }
+
+      const nextListed = property.listed === false;
+      const savedProperty = await savePropertyToSupabase(
+        {
+          ...property,
+          listed: nextListed,
+        },
+        session.access_token
+      );
+
+      setProperties((prev) =>
+        prev.map((item) => (item.id === property.id ? savedProperty : item))
+      );
+      setSyncError('');
+      setSyncMessage(
+        nextListed
+          ? 'Imovel ativado na listagem publica'
+          : 'Imovel ocultado da listagem publica'
+      );
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Erro ao atualizar visibilidade';
       setSyncError(message);
       alert(message);
     }
@@ -656,6 +690,18 @@ export function AdminPage() {
                 </label>
               </div>
 
+              {/* LISTED */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold">
+                  <input
+                    type="checkbox"
+                    checked={formData.listed !== false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, listed: e.target.checked }))}
+                  />
+                  Mostrar no site
+                </label>
+              </div>
+
               {/* BILLS INCLUDED */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-bold">
@@ -863,7 +909,12 @@ export function AdminPage() {
         {/* PROPERTIES LIST */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {properties.map((property) => (
-            <div key={property.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition">
+            <div
+              key={property.id}
+              className={`bg-white rounded-2xl overflow-hidden shadow-lg transition hover:shadow-xl ${
+                property.listed === false ? 'opacity-75 ring-2 ring-gray-200' : ''
+              }`}
+            >
               <div className="relative h-40 overflow-hidden">
                 <ImageWithFallback
                   src={property.image}
@@ -871,6 +922,15 @@ export function AdminPage() {
                 />
                 <div className="absolute top-2 left-2 bg-[var(--green-dark)] text-white px-3 py-1 rounded-full text-xs font-bold">
                   #{property.id}
+                </div>
+                <div
+                  className={`absolute top-2 right-2 rounded-full px-3 py-1 text-xs font-bold shadow ${
+                    property.listed === false
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-green-100 text-green-800'
+                  }`}
+                >
+                  {property.listed === false ? 'Oculto' : 'No site'}
                 </div>
               </div>
 
@@ -883,7 +943,28 @@ export function AdminPage() {
                   <span className="text-xs bg-gray-100 px-2 py-1 rounded">{property.category}</span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleToggleListed(property)}
+                    className={`col-span-2 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold ${
+                      property.listed === false
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
+                  >
+                    {property.listed === false ? (
+                      <>
+                        <Eye className="h-4 w-4" />
+                        Ativar no site
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="h-4 w-4" />
+                        Ocultar do site
+                      </>
+                    )}
+                  </button>
+
                   <button
                     onClick={() => handleEditProperty(property)}
                     className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm"

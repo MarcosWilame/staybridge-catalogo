@@ -72,7 +72,6 @@ A modern, responsive real estate catalog platform for connecting Brazilian custo
 #### Property Components
 - **PropertyCard**: Reusable card with image, price, badges, and actions
 - **FeaturedProperties**: Carousel/grid for homepage
-- **SearchFilter**: Advanced filtering component (deprecated, moved to ListingPage sidebar)
 
 #### Sections
 - **Hero**: Full-screen hero with animated headline and brush stroke effects
@@ -118,7 +117,6 @@ src/
 │   │   ├── HowItWorks.tsx
 │   │   ├── MobileBottomNav.tsx
 │   │   ├── PropertyCard.tsx
-│   │   ├── SearchFilter.tsx (deprecated)
 │   │   ├── Testimonials.tsx
 │   │   └── WhatsAppButton.tsx
 │   ├── data/
@@ -198,10 +196,9 @@ VITE_SUPABASE_PROPERTIES_TABLE=properties
 ```
 
 ### Comportamento
-- A admin tenta carregar primeiro do Supabase
-- Se não houver Supabase configurado, usa `localStorage`
-- Se não houver dados locais, cai para `public/properties.json`
-- Salvar, editar, deletar e importar JSON passam a sincronizar com o Supabase quando configurado
+- A listagem publica carrega os imoveis via `/api/public-properties`
+- A pagina admin exige login no Supabase
+- Salvar, editar, deletar e importar JSON sincronizam com o Supabase quando configurado
 
 ### Tabela esperada
 A tabela `properties` deve ter ao menos:

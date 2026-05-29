@@ -12,9 +12,6 @@
     }
   ],
   "functions": {
-    "api/properties.js": {
-      "includeFiles": "data/**"
-    },
     "api/public-properties.js": {
       "maxDuration": 10
     }
