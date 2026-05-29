@@ -1,7 +1,6 @@
 import { useState, useEffect, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, MessageCircle } from 'lucide-react';
-import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -63,7 +62,7 @@ export function Header() {
   };
 
   const handleWhatsApp = () => {
-    window.open(getWhatsAppUrl(), '_blank');
+    window.open('https://wa.me/5588997993046', '_blank');
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
