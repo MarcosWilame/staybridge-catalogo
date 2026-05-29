@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { Property } from './properties';
-import {
-  hasSupabaseConfig,
-  loadPropertiesFromSupabase,
-} from './supabaseProperties';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
@@ -13,11 +9,17 @@ async function loadPropertiesFromSource() {
   if (cachedError) throw new Error(cachedError);
 
   try {
-    if (!hasSupabaseConfig()) {
-      throw new Error('Supabase nao configurado.');
+    const response = await fetch('/api/public-properties', {
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(detail || `Falha ao carregar propriedades: ${response.status}`);
     }
 
-    cachedProperties = await loadPropertiesFromSupabase();
+    const data = await response.json();
+    cachedProperties = Array.isArray(data) ? (data as Property[]) : [];
     return cachedProperties;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
