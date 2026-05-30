@@ -248,7 +248,7 @@ export function PropertyDetailsPage() {
                     }`}
                   >
                     {isNow ? (
-                      'Disponível Agora'
+                      availabilityLabel
                     ) : (
                       <>
                         <Clock className="w-3.5 h-3.5 shrink-0" />

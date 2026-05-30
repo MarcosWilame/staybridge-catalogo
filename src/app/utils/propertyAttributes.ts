@@ -1,6 +1,7 @@
 import { Bed, Calendar, CheckCircle, Home } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Property } from '../data/properties';
+import { getAvailabilityInfo } from './availability';
 
 export interface PropertyAttribute {
   icon: LucideIcon;
@@ -10,6 +11,7 @@ export interface PropertyAttribute {
 export function getPropertyAttributes(property: Property): PropertyAttribute[] {
   const category = property.category.toLowerCase();
   const type = property.type.toLowerCase();
+  const { label: availabilityLabel } = getAvailabilityInfo(property.moveInDate);
   const isRoom = ['single', 'double', 'ensuite', 'studio'].some(
     (roomType) => category.includes(roomType) || type.includes(roomType)
   );
@@ -20,7 +22,7 @@ export function getPropertyAttributes(property: Property): PropertyAttribute[] {
         ? { icon: Bed, label: `${property.bedrooms} quartos` }
         : null,
       { icon: Home, label: property.furnishing },
-      { icon: Calendar, label: `Entrada: ${property.moveInDate}` },
+      { icon: Calendar, label: availabilityLabel },
     ].filter(Boolean) as PropertyAttribute[];
   }
 
@@ -33,6 +35,6 @@ export function getPropertyAttributes(property: Property): PropertyAttribute[] {
     attributes.push({ icon: CheckCircle, label: 'Banheiro privativo' });
   }
 
-  attributes.push({ icon: Calendar, label: 'Disponível Now' });
+  attributes.push({ icon: Calendar, label: availabilityLabel });
   return attributes;
 }

@@ -67,7 +67,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
               }`}
             >
               {isNow ? (
-                '✓ Disponível Agora'
+                availabilityLabel
               ) : (
                 <>
                   <Clock className="w-3 h-3 shrink-0" />

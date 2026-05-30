@@ -4,7 +4,7 @@ import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
 import { PropertyMap } from '../components/PropertyMap';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { Building2, Home, KeyRound, MapPin, SlidersHorizontal, TrainFront, X } from 'lucide-react';
 
 interface FilterState {
   region: string;
@@ -16,6 +16,73 @@ interface FilterState {
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
 
 const INITIAL_VISIBLE_COUNT = 12;
+
+function LondonPropertiesLoading() {
+  const loadingCards = [
+    { label: 'Studio', width: 'w-3/4' },
+    { label: 'Ensuite', width: 'w-2/3' },
+    { label: 'Flat', width: 'w-4/5' },
+    { label: 'Room', width: 'w-3/5' },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
+      <div className="mb-6 overflow-hidden rounded-2xl bg-[var(--green-dark)] p-5 text-white">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide">
+              <MapPin className="h-3.5 w-3.5" />
+              Londres
+            </div>
+            <h2 className="text-xl font-bold md:text-2xl">
+              Preparando as chaves das unidades
+            </h2>
+            <p className="mt-2 max-w-xl text-sm text-white/80">
+              Estamos buscando os imoveis disponiveis e montando a vitrine.
+            </p>
+          </div>
+
+          <div className="hidden shrink-0 items-end gap-1 md:flex">
+            <div className="h-12 w-8 rounded-t-lg bg-white/20" />
+            <div className="h-20 w-10 rounded-t-xl bg-[var(--yellow)]" />
+            <div className="h-16 w-8 rounded-t-lg bg-white/25" />
+          </div>
+        </div>
+
+        <div className="relative mt-6 h-10 overflow-hidden rounded-full bg-black/20">
+          <div className="absolute left-4 right-4 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/30" />
+          <div className="absolute left-8 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-4 border-[var(--yellow)] bg-white" />
+          <div className="absolute right-8 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-4 border-white/80 bg-[var(--green-dark)]" />
+          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 animate-pulse items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-[var(--green-dark)] shadow-lg">
+            <TrainFront className="h-4 w-4" />
+            Northern Line
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {loadingCards.map((card) => (
+          <div key={card.label} className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+            <div className="flex h-40 animate-pulse items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <Building2 className="h-12 w-12 text-gray-300" />
+            </div>
+            <div className="space-y-3 p-4">
+              <div className={`h-4 ${card.width} rounded-full bg-gray-200`} />
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+                <Home className="h-4 w-4" />
+                {card.label}
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+                <KeyRound className="h-4 w-4" />
+                Confirmando disponibilidade
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function ListingPage() {
   const [searchParams] = useSearchParams();
@@ -175,6 +242,12 @@ export function ListingPage() {
     },
   ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 
+  const quickMobileFilters = [
+    { key: 'studio', label: 'Studio', type: 'studio' },
+    { key: 'ensuite', label: 'Ensuite', type: 'ensuite' },
+    { key: 'flat', label: 'Flat', type: 'flat' },
+  ];
+
   const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
       className={`overflow-y-auto overscroll-contain bg-white ${
@@ -323,19 +396,71 @@ export function ListingPage() {
           </button>
         </div>
 
+        <div className="sticky top-20 z-30 -mx-4 mb-5 border-y border-gray-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {quickMobileFilters.map((filter) => {
+              const isActive = filters.type === filter.type;
+
+              return (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => updateFilter('type', isActive ? '' : filter.type)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
+                    isActive
+                      ? 'bg-[var(--green-dark)] text-white shadow'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => updateFilter('availableNow', !filters.availableNow)}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
+                filters.availableNow
+                  ? 'bg-[var(--yellow)] text-black shadow'
+                  : 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              Entrada imediata
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="hidden lg:block">
             <FiltersPanel />
           </div>
 
-          <div ref={listRef} className="lg:col-span-3 grid xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+          <div
+            ref={listRef}
+            className={`lg:col-span-3 grid gap-6 ${
+              isLoading ? '' : 'xl:grid-cols-[minmax(0,1fr)_360px]'
+            }`}
+          >
             <div className="min-w-0">
               <div className="sticky top-20 z-20 mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:top-24">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-gray-500">Resultados</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {sortedProperties.length} propriedade{sortedProperties.length !== 1 ? 's' : ''}
+                      {isLoading
+                        ? 'Buscando unidades...'
+                        : `${sortedProperties.length} propriedade${sortedProperties.length !== 1 ? 's' : ''}`}
                     </div>
                   </div>
 
@@ -380,42 +505,48 @@ export function ListingPage() {
                 )}
               </div>
 
-              <div className="grid content-start gap-4 md:grid-cols-2 lg:max-h-[calc(100vh-17rem)] lg:overflow-y-auto lg:pr-1">
-                {visibleProperties.map((p) => (
-                  <div
-                    key={p.id}
-                    onMouseEnter={() => setSelectedProperty(p)}
-                    onFocus={() => setSelectedProperty(p)}
-                  >
-                    <PropertyCard property={p} />
-                  </div>
-                ))}
-
-                {hasMoreProperties && (
-                  <div className="md:col-span-2">
-                    <button
-                      type="button"
-                      onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}
-                      className="w-full rounded-xl border border-[var(--green-dark)] bg-white px-4 py-3 font-bold text-[var(--green-dark)] transition-colors hover:bg-[var(--green-dark)] hover:text-white"
+              {isLoading ? (
+                <LondonPropertiesLoading />
+              ) : (
+                <div className="grid content-start gap-4 md:grid-cols-2 lg:max-h-[calc(100vh-17rem)] lg:overflow-y-auto lg:pr-1">
+                  {visibleProperties.map((p) => (
+                    <div
+                      key={p.id}
+                      onMouseEnter={() => setSelectedProperty(p)}
+                      onFocus={() => setSelectedProperty(p)}
                     >
-                      Ver mais propriedades
-                    </button>
-                  </div>
-                )}
-              </div>
+                      <PropertyCard property={p} />
+                    </div>
+                  ))}
+
+                  {hasMoreProperties && (
+                    <div className="md:col-span-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}
+                        className="w-full rounded-xl border border-[var(--green-dark)] bg-white px-4 py-3 font-bold text-[var(--green-dark)] transition-colors hover:bg-[var(--green-dark)] hover:text-white"
+                      >
+                        Ver mais propriedades
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="xl:sticky xl:top-24 xl:self-start">
-              <PropertyMap
-                property={visibleSelectedProperty || sortedProperties[0]}
-                properties={sortedProperties}
-                onSelectProperty={setSelectedProperty}
-              />
-            </div>
+            {!isLoading && (
+              <div className="xl:sticky xl:top-24 xl:self-start">
+                <PropertyMap
+                  property={visibleSelectedProperty || sortedProperties[0]}
+                  properties={sortedProperties}
+                  onSelectProperty={setSelectedProperty}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {sortedProperties.length === 0 && (
+        {!isLoading && sortedProperties.length === 0 && (
           <div className="mt-10 rounded-2xl bg-white p-8 text-center shadow-sm">
             <h2 className="mb-2 text-xl font-bold text-gray-900">
               Nenhuma propriedade encontrada
