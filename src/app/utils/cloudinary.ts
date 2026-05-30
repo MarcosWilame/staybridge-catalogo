@@ -6,7 +6,7 @@ type ImageVariant = 'card' | 'detail' | 'thumb' | 'admin';
 
 const IMAGE_TRANSFORMS: Record<ImageVariant, string> = {
   card: 'f_auto,q_auto,c_fill,w_720,h_520',
-  detail: 'f_auto,q_auto,c_fill,w_1600,h_1000',
+  detail: 'f_auto,q_auto,c_fill,w_1200,h_760',
   thumb: 'f_auto,q_auto,c_fill,w_240,h_180',
   admin: 'f_auto,q_auto,c_fill,w_360,h_240',
 };
@@ -34,6 +34,14 @@ export function getOptimizedImageUrl(
   }
 
   return src.replace('/upload/', `/upload/${IMAGE_TRANSFORMS[variant]}/`);
+}
+
+export function preloadImage(src: string | undefined) {
+  if (!src) return;
+
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = src;
 }
 
 export async function uploadImageToCloudinary(file: File) {

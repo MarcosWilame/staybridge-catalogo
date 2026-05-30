@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect } from 'react';
+import { useEffect, useMemo, useState, useLayoutEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
@@ -6,7 +6,7 @@ import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { getGoogleMapsUrl, PropertyMap } from '../components/PropertyMap';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
-import { getOptimizedImageUrl } from '../utils/cloudinary';
+import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 
 import {
   ArrowLeft,
@@ -84,6 +84,12 @@ export function PropertyDetailsPage() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const mediaItems = useMemo(
+    () => (property ? getMediaItems(property) : []),
+    [property]
+  );
+  const currentMedia = mediaItems[currentImageIndex] || mediaItems[0];
+  const videoThumbnail = property ? property.image || property.images[0] : '';
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
@@ -100,8 +106,7 @@ export function PropertyDetailsPage() {
     return () => window.cancelAnimationFrame(frame);
   }, [id, property?.id]);
 
-  if (!property) {
-    return (
+  const propertyNotFoundContent = !property ? (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -119,12 +124,15 @@ export function PropertyDetailsPage() {
           )}
         </div>
       </div>
-    );
-  }
+    ) : null;
 
-  const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
+  const { label: availabilityLabel, isNow } = property
+    ? getAvailabilityInfo(property.moveInDate)
+    : { label: '', isNow: false };
 
   const handleWhatsApp = () => {
+    if (!property) return;
+
     const message = encodeURIComponent(
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title} (ID: ${property.id})`
     );
@@ -135,9 +143,35 @@ export function PropertyDetailsPage() {
     );
   };
 
-  const mediaItems = getMediaItems(property);
-  const currentMedia = mediaItems[currentImageIndex] || mediaItems[0];
-  const videoThumbnail = property.image || property.images[0];
+  useEffect(() => {
+    if (!property) return;
+
+    const imageItems = mediaItems.filter(
+      (item): item is Extract<MediaItem, { type: 'image' }> => item.type === 'image'
+    );
+
+    imageItems.slice(0, 4).forEach((item) => {
+      preloadImage(getOptimizedImageUrl(item.src, 'detail'));
+    });
+  }, [mediaItems, property]);
+
+  useEffect(() => {
+    if (!property) return;
+
+    if (mediaItems.length < 2) return;
+
+    const nextItem = mediaItems[(currentImageIndex + 1) % mediaItems.length];
+    const previousItem =
+      mediaItems[(currentImageIndex - 1 + mediaItems.length) % mediaItems.length];
+
+    [nextItem, previousItem].forEach((item) => {
+      if (item?.type === 'image') {
+        preloadImage(getOptimizedImageUrl(item.src, 'detail'));
+      }
+    });
+  }, [currentImageIndex, mediaItems, property]);
+
+  if (!property) return propertyNotFoundContent;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -212,7 +246,7 @@ export function PropertyDetailsPage() {
                   alt={`${property.title} - Image ${currentImageIndex + 1}`}
                   className="w-full h-full object-cover"
                   loading="eager"
-                  fetchPriority="high"
+                  fetchPriority={currentImageIndex === 0 ? 'high' : 'auto'}
                   decoding="async"
                 />
               )}
@@ -299,7 +333,7 @@ export function PropertyDetailsPage() {
                   <ImageWithFallback
                     src={getOptimizedImageUrl(item.src, 'thumb')}
                     className="w-full h-full object-cover"
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
                   />
                 )}

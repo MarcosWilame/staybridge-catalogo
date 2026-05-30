@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import {
@@ -14,7 +14,7 @@ import {
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
-import { getOptimizedImageUrl } from '../utils/cloudinary';
+import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 
 interface PropertyCardProps {
   property: Property;
@@ -22,7 +22,10 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = property.images?.length ? property.images : [property.image];
+  const images = useMemo(
+    () => (property.images?.length ? property.images : [property.image]),
+    [property.image, property.images]
+  );
   const currentImage = images[currentImageIndex] || property.image;
   const hasCarousel = images.length > 1;
 
@@ -44,6 +47,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const showNextImage = () => {
     setCurrentImageIndex((current) => (current + 1) % images.length);
   };
+
+  useEffect(() => {
+    if (!hasCarousel) return;
+
+    const nextImage = images[(currentImageIndex + 1) % images.length];
+    const previousImage =
+      images[(currentImageIndex - 1 + images.length) % images.length];
+
+    preloadImage(getOptimizedImageUrl(nextImage, 'card'));
+    preloadImage(getOptimizedImageUrl(previousImage, 'card'));
+  }, [currentImageIndex, hasCarousel, images]);
 
   return (
     <div className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
