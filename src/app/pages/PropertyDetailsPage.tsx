@@ -6,6 +6,7 @@ import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { getGoogleMapsUrl, PropertyMap } from '../components/PropertyMap';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 import {
   ArrowLeft,
@@ -207,9 +208,12 @@ export function PropertyDetailsPage() {
                 />
               ) : (
                 <ImageWithFallback
-                  src={currentMedia?.src || property.image}
+                  src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')}
                   alt={`${property.title} - Image ${currentImageIndex + 1}`}
                   className="w-full h-full object-cover"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                 />
               )}
 
@@ -282,8 +286,10 @@ export function PropertyDetailsPage() {
                 {item.type === 'video' ? (
                   <div className="relative h-full w-full bg-black">
                     <ImageWithFallback
-                      src={videoThumbnail}
+                      src={getOptimizedImageUrl(videoThumbnail, 'thumb')}
                       className="h-full w-full object-cover opacity-60"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 flex items-center justify-center text-white">
                       <Play className="h-7 w-7 fill-current" />
@@ -291,8 +297,10 @@ export function PropertyDetailsPage() {
                   </div>
                 ) : (
                   <ImageWithFallback
-                    src={item.src}
+                    src={getOptimizedImageUrl(item.src, 'thumb')}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 )}
               </button>

@@ -4,6 +4,11 @@ import { Property } from '../data/properties';
 import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut, Eye, EyeOff, Search } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import {
+  getOptimizedImageUrl,
+  isCloudinaryConfigured,
+  uploadImageToCloudinary,
+} from '../utils/cloudinary';
+import {
   deletePropertyFromSupabase,
   getStoredAdminSession,
   hasSupabaseConfig,
@@ -61,6 +66,7 @@ export function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all');
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [imageInput, setImageInput] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [amenityInput, setAmenityInput] = useState('');
   const [stationInput, setStationInput] = useState('');
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -259,6 +265,43 @@ export function AdminPage() {
     setEditingId(id);
     setShowForm(true);
     scrollToForm();
+  };
+
+  const handleUploadImages = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+
+    if (!files.length) return;
+
+    setIsUploadingImage(true);
+    setSyncError('');
+
+    try {
+      const imageUrls = [];
+
+      for (const file of files) {
+        imageUrls.push(await uploadImageToCloudinary(file));
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...imageUrls],
+        image: prev.image || imageUrls[0],
+      }));
+      setSyncMessage(
+        imageUrls.length === 1
+          ? 'Imagem enviada ao Cloudinary'
+          : `${imageUrls.length} imagens enviadas ao Cloudinary`
+      );
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Erro ao enviar imagem';
+      setSyncError(message);
+      alert(message);
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleDeleteProperty = async (id: number) => {
@@ -503,6 +546,17 @@ export function AdminPage() {
                 {syncError}
               </span>
             )}
+
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold shadow-sm ${
+                isCloudinaryConfigured()
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-amber-50 text-amber-700'
+              }`}
+            >
+              <Cloud className="h-4 w-4" />
+              Cloudinary {isCloudinaryConfigured() ? 'ativo' : 'pendente'}
+            </span>
           </div>
         </div>
 
@@ -917,12 +971,41 @@ export function AdminPage() {
                 </button>
               </div>
 
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <label
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold ${
+                    isCloudinaryConfigured()
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleUploadImages}
+                    className="hidden"
+                    disabled={!isCloudinaryConfigured() || isUploadingImage}
+                  />
+                  <Cloud className="h-4 w-4" />
+                  {isUploadingImage ? 'Enviando...' : 'Upload Cloudinary'}
+                </label>
+
+                {!isCloudinaryConfigured() && (
+                  <span className="text-sm font-semibold text-amber-700">
+                    Configure VITE_CLOUDINARY_CLOUD_NAME e VITE_CLOUDINARY_UPLOAD_PRESET.
+                  </span>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {formData.images.map((img, idx) => (
                   <div key={idx} className="relative group">
                     <ImageWithFallback
-                      src={img}
+                      src={getOptimizedImageUrl(img, 'admin')}
                       className="w-full h-24 object-cover rounded-lg border border-gray-300"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <button
                       onClick={() => handleRemoveImage(idx)}
@@ -1047,8 +1130,10 @@ export function AdminPage() {
             >
               <div className="relative h-40 overflow-hidden">
                 <ImageWithFallback
-                  src={property.image}
+                  src={getOptimizedImageUrl(property.image, 'admin')}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute top-2 left-2 bg-[var(--green-dark)] text-white px-3 py-1 rounded-full text-xs font-bold">
                   #{property.id}

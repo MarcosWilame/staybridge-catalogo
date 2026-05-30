@@ -14,6 +14,7 @@ import {
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 interface PropertyCardProps {
   property: Property;
@@ -50,9 +51,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
       <div className="relative h-56 overflow-hidden sm:h-64">
         <Link to={`/property/${property.id}`} className="block h-full">
           <ImageWithFallback
-            src={currentImage}
+            src={getOptimizedImageUrl(currentImage, 'card')}
             alt={property.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
+            decoding="async"
           />
         </Link>
 
