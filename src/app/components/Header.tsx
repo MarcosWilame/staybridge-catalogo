@@ -82,7 +82,7 @@ export function Header() {
           {/* Logo */}
           <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
             <img
-              src="/img/logo-white.png"
+              src="/img/logobedminster.jpg"
               alt="Bedminster London"
               className="h-20 w-auto object-contain md:h-24"
               style={{ mixBlendMode: 'screen' }}
