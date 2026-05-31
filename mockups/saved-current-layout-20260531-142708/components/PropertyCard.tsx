@@ -58,7 +58,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <div className="group overflow-hidden rounded-lg border border-black/5 bg-white shadow-[0_18px_36px_rgba(17,17,17,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2563eb]/30 hover:shadow-2xl">
+    <div className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
       {/* Image Container */}
       <div className="relative h-56 overflow-hidden sm:h-64">
         <Link to={`/property/${property.id}`} className="block h-full">
@@ -75,8 +75,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
             <span
               className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
                 isNow
-                  ? 'animate-pulse bg-[#2563eb] text-white'
-                  : 'bg-white/95 text-[#2563eb] flex items-center gap-1'
+                  ? 'bg-[var(--yellow)] text-black animate-pulse'
+                  : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1'
               }`}
             >
               {isNow ? (
@@ -90,7 +90,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </span>
           )}
           {property.billsIncluded && (
-            <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#2563eb] shadow-md backdrop-blur">
+            <span className="bg-white/95 backdrop-blur text-[var(--green-dark)] px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
               Bills Inclusas
             </span>
           )}
@@ -98,7 +98,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Price Badge */}
         <div className="absolute bottom-3 right-3">
-          <div className="rounded-lg bg-[#111] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
+          <div className="rounded-xl bg-[var(--green-dark)] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
             <div className="text-xs opacity-90 font-medium">por semana</div>
             <div className="text-xl font-bold md:text-2xl">{property.price}</div>
           </div>
@@ -139,7 +139,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       <div className="p-4 md:p-5">
         {/* Type and Region */}
         <div className="flex items-center justify-between gap-3 mb-3">
-          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-[#dbe7ff] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[#2563eb]">
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
             <Bed className="w-3.5 h-3.5" />
             <span className="line-clamp-1 break-words">{property.type}</span>
           </span>
@@ -151,13 +151,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Title */}
         <Link to={`/property/${property.id}`} onClick={handleDetailsClick}>
-          <h3 className="mb-2 line-clamp-2 font-['Syne'] text-lg font-extrabold leading-tight text-[#111] transition-colors hover:text-[#2563eb]">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[var(--green-dark)] transition-colors leading-tight">
             {property.title}
           </h3>
         </Link>
 
         {/* Description */}
-        <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-[#6f6a62]">
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
           {property.description}
         </p>
 
@@ -169,9 +169,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
             return (
               <div
                 key={attribute.label}
-                className="flex items-start gap-2 text-sm leading-5 text-[#6f6a62]"
+                className="flex items-start gap-2 text-sm leading-5 text-gray-600"
               >
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]" />
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-dark)]" />
                 <span className="line-clamp-1 break-words">{attribute.label}</span>
               </div>
             );
@@ -183,14 +183,14 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <Link
             to={`/property/${property.id}`}
             onClick={handleDetailsClick}
-            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[#1d4ed8] md:px-4"
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[var(--yellow-dark)] md:px-4"
           >
             <span className="truncate">Ver Detalhes</span>
             <ArrowRight className="h-4 w-4 shrink-0" />
           </Link>
           <button
             onClick={handleWhatsApp}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#111] px-3 py-2.5 font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[#2a2a2a] md:px-4"
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2.5 font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[var(--green-medium)] md:px-4"
             title="Falar no WhatsApp"
           >
             <MessageCircle className="w-5 h-5" />

@@ -15,8 +15,8 @@ export function PropertyCategories() {
       icon: Home,
       description: 'Espaços independentes completos',
       count: countByCategory('studio'),
-      color: 'bg-[#dbe7ff] text-[#2563eb]',
-      accent: 'border-black/5 hover:border-[#2563eb]/30',
+      color: 'from-blue-500 to-blue-600',
+      accent: 'border-blue-100 hover:border-blue-300',
       category: 'studio',
     },
     {
@@ -24,8 +24,8 @@ export function PropertyCategories() {
       icon: Bed,
       description: 'Quartos com banheiro privativo',
       count: countByCategory('ensuite'),
-      color: 'bg-[#ece7dd] text-[#111]',
-      accent: 'border-black/5 hover:border-[#2563eb]/30',
+      color: 'from-purple-500 to-purple-600',
+      accent: 'border-purple-100 hover:border-purple-300',
       category: 'ensuite',
     },
     {
@@ -33,8 +33,8 @@ export function PropertyCategories() {
       icon: Building2,
       description: 'Apartamentos completos',
       count: countByCategory('flat'),
-      color: 'bg-[#ccf3dc] text-[#14532d]',
-      accent: 'border-black/5 hover:border-[#2563eb]/30',
+      color: 'from-green-500 to-green-600',
+      accent: 'border-emerald-100 hover:border-emerald-300',
       category: 'flat',
     },
     {
@@ -42,8 +42,8 @@ export function PropertyCategories() {
       icon: User,
       description: 'Quartos individuais',
       count: countByCategory('single'),
-      color: 'bg-[#fff1bf] text-[#9a6a12]',
-      accent: 'border-black/5 hover:border-[#2563eb]/30',
+      color: 'from-orange-500 to-orange-600',
+      accent: 'border-orange-100 hover:border-orange-300',
       category: 'single',
     },
     {
@@ -51,22 +51,24 @@ export function PropertyCategories() {
       icon: Users,
       description: 'Quartos para casais',
       count: countByCategory('double'),
-      color: 'bg-[#dbe7ff] text-[#2563eb]',
-      accent: 'border-black/5 hover:border-[#2563eb]/30',
+      color: 'from-[var(--green-medium)] to-[var(--yellow-dark)]',
+      accent: 'border-amber-100 hover:border-[var(--yellow-dark)]',
       category: 'double',
     },
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#faf7f0] py-12 md:py-20">
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#edf7ed_0%,#f7fbf6_42%,#ffffff_100%)] py-12 md:py-20">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#edf7ed] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-white" />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="mb-10 text-center md:mb-14">
-          <h2 className="mb-3 font-['Syne'] text-3xl font-extrabold text-[#111] md:mb-4 md:text-5xl">
+          <h2 className="mb-3 text-3xl font-bold text-[var(--green-dark)] md:mb-4 md:text-5xl">
             Perfeito para você
           </h2>
 
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#6f6a62] md:text-xl">
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 md:text-xl">
             Escolha entre diferentes tipos de acomodação em toda Londres
           </p>
         </div>
@@ -78,19 +80,20 @@ export function PropertyCategories() {
             return (
               <div
                 key={category.name}
-                className={`group relative flex flex-col overflow-hidden rounded-lg border bg-white p-5 text-center shadow-[0_18px_36px_rgba(17,17,17,0.06)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_26px_52px_rgba(17,17,17,0.10)] md:p-8 ${category.accent}`}
+                className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white p-5 text-center shadow-[0_18px_40px_rgba(15,83,45,0.10)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_26px_55px_rgba(15,83,45,0.18)] md:p-8 lg:rounded-3xl ${category.accent}`}
               >
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${category.color}`} />
                 <div
-                  className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${category.color} transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-16 md:w-16`}
+                  className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${category.color} shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-16 md:w-16 md:rounded-2xl`}
                 >
-                  <Icon className="h-6 w-6 md:h-8 md:w-8" />
+                  <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                 </div>
 
-                <h3 className="mb-2 font-['Syne'] text-xl font-extrabold text-[#111] md:mb-3 md:text-2xl">
+                <h3 className="mb-2 text-xl font-bold text-[var(--green-dark)] md:mb-3 md:text-2xl">
                   {category.name}
                 </h3>
 
-                <p className="mb-4 flex-1 text-sm leading-relaxed text-[#6f6a62] md:mb-5 md:text-base">
+                <p className="mb-4 flex-1 text-sm leading-relaxed text-gray-600 md:mb-5 md:text-base">
                   {category.description}
                 </p>
 
@@ -104,7 +107,7 @@ export function PropertyCategories() {
                         available_count: category.count,
                       })
                     }
-                    className="inline-flex items-center justify-center rounded-full bg-[#2563eb] px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#1d4ed8] hover:shadow-md"
+                    className="inline-flex items-center justify-center rounded-full bg-[var(--green-dark)] px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[var(--green-medium)] hover:shadow-md"
                   >
                     {category.count} disponíveis
                   </Link>

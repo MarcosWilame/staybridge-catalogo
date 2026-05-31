@@ -26,18 +26,18 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="relative overflow-hidden bg-[#faf7f0] py-14 md:py-24">
+    <section className="relative overflow-hidden bg-[var(--green-light)] py-14 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-10 text-center md:mb-16">
-          <div className="mb-4 inline-flex rounded-full bg-[#dbe7ff] px-4 py-2 text-xs font-bold text-[#2563eb] md:text-sm">
+          <div className="mb-4 inline-flex rounded-full bg-[#143725] px-4 py-2 text-xs font-bold text-white md:text-sm">
             DEPOIMENTOS
           </div>
-          <h2 className="mb-4 font-['Syne'] text-3xl font-extrabold leading-tight text-[#111] md:text-5xl">
+          <h2 className="mb-4 text-3xl font-extrabold leading-tight text-[#143725] md:text-5xl">
             Histórias de quem
             <br />
-            <span className="text-[#2563eb]">já se mudou</span>
+            <span className="text-[#0f8f5f]">já se mudou</span>
           </h2>
-          <p className="mx-auto max-w-2xl text-[#6f6a62] md:text-lg">
+          <p className="mx-auto max-w-2xl text-gray-600 md:text-lg">
             Relatos curtos, sem exagero, de brasileiros que encontraram moradia em Londres.
           </p>
         </div>
@@ -46,7 +46,7 @@ export function Testimonials() {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="relative rounded-lg border border-black/5 bg-white p-5 shadow-[0_18px_36px_rgba(17,17,17,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2563eb]/30 hover:shadow-lg md:p-7"
+              className="relative rounded-lg border border-gray-200 bg-[#fbfcfa] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#0f8f5f]/40 hover:shadow-lg md:p-7"
             >
               <div className="absolute right-5 top-5 text-[#d8e3d5]">
                 <Quote className="h-10 w-10" />
@@ -58,17 +58,17 @@ export function Testimonials() {
                 ))}
               </div>
 
-              <p className="mb-6 min-h-32 leading-relaxed text-[#4d4943]">
+              <p className="mb-6 min-h-32 text-gray-700 leading-relaxed">
                 "{testimonial.text}"
               </p>
 
               <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2563eb] text-sm font-bold text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#143725] text-sm font-bold text-white">
                   {testimonial.initials}
                 </div>
                 <div>
-                  <div className="font-bold text-[#111]">{testimonial.name}</div>
-                  <div className="text-sm text-[#6f6a62]">{testimonial.role}</div>
+                  <div className="font-bold text-gray-900">{testimonial.name}</div>
+                  <div className="text-sm text-gray-600">{testimonial.role}</div>
                 </div>
               </div>
             </div>
