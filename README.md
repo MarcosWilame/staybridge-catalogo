@@ -1,12 +1,12 @@
 # Bedminster London
 
-Catalogo de acomodacoes em Londres com administracao via Supabase, deploy na Netlify e metricas via GA4.
+Catalogo de acomodacoes em Londres com dados no Supabase, deploy na Netlify e metricas via GA4.
 
 ## Fonte De Dados
 
 A fonte oficial dos imoveis e o Supabase.
 
-- O painel `/admin` lista, cria, edita, oculta e remove os imoveis.
+- A area administrativa lista, cria, edita, oculta e remove os imoveis.
 - A listagem publica `/unidades` carrega os imoveis por `/api/public-properties`.
 - O arquivo `src/app/data/properties.ts` existe apenas como fallback de emergencia para desenvolvimento.
 - Nao use `public/properties.json` ou planilhas como fonte paralela.
@@ -32,7 +32,7 @@ A tabela esperada no Supabase e `properties`, com:
 - `id`: inteiro
 - `data`: jsonb com o imovel completo
 
-O campo `listed` controla se o imovel aparece no site publico. Imoveis ocultos continuam visiveis no admin.
+O campo `listed` controla se o imovel aparece no site publico. Imoveis ocultos continuam disponiveis na area administrativa.
 
 ## Desenvolvimento
 
@@ -67,7 +67,6 @@ Depois de mudar variaveis de ambiente na Netlify, rode `Trigger deploy > Deploy 
 - `/property/:id`: detalhe do imovel
 - `/favorites`: favoritos
 - `/profile`: area do cliente
-- `/admin`: painel administrativo
 
 ## Metricas
 
