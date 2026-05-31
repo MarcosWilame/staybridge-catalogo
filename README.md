@@ -1,282 +1,86 @@
-# Bedminster London - Premium Accommodation Platform
+# Bedminster London
 
-<!-- Project version: BEDMINSTER CATALOGO.v1 -->
+Catalogo de acomodacoes em Londres com administracao via Supabase, deploy na Netlify e metricas via GA4.
 
-A modern, responsive real estate catalog platform for connecting Brazilian customers with quality accommodation in London.
+## Fonte De Dados
 
-## 🎨 Design System
+A fonte oficial dos imoveis e o Supabase.
 
-### Color Palette
-- **Primary Green**: `#1a4d2e` - Main brand color
-- **Medium Green**: `#2d5a3d` - Hover states
-- **Yellow**: `#f4d03f` - Accent color and CTAs
-- **Black**: `#0a0a0a` - Text and contrast
-- **White**: `#ffffff` - Typography and cards
+- O painel `/admin` lista, cria, edita, oculta e remove os imoveis.
+- A listagem publica `/unidades` carrega os imoveis por `/api/public-properties`.
+- O arquivo `src/app/data/properties.ts` existe apenas como fallback de emergencia para desenvolvimento.
+- Nao use `public/properties.json` ou planilhas como fonte paralela.
 
-### Visual Identity
-- Premium real estate aesthetic
-- London night theme (Big Ben hero image)
-- Promotional style with diagonal sections
-- Modern card layouts with soft shadows
-- Bold typography with high contrast
-- Conversion-focused design
+## Variaveis De Ambiente
 
-## 📱 Features
+Configure na Netlify em `Project configuration > Environment variables`:
 
-### Pages
-1. **Home Page** (`/`)
-   - Hero section with London skyline
-   - Featured properties carousel
-   - Benefits section with stats
-   - "How it Works" 4-step guide
-   - Testimonials from Brazilian tenants
-   - WhatsApp CTA section
-
-2. **Property Listing** (`/properties`)
-   - Grid layout with responsive cards
-   - Advanced filters sidebar (desktop)
-   - Mobile filter drawer
-   - Region filters (North/South/East/West/Central London)
-   - Property type filters (Studio/Ensuite/Flat/Single/Double)
-   - Price range filters
-   - Bills included toggle
-   - Immediate move-in filter
-
-3. **Property Details** (`/property/:id`)
-   - Image gallery with navigation
-   - Thumbnail gallery
-   - Full property description
-   - Amenities list
-   - Nearby transport stations
-   - Location map placeholder
-   - Pricing breakdown (weekly rent + deposit)
-   - Sticky WhatsApp CTA (desktop & mobile)
-   - Favorite and share buttons
-
-4. **Favorites** (`/favorites`)
-   - Saved properties placeholder
-   - Empty state with CTA
-
-5. **Profile** (`/profile`)
-   - Customer area information
-   - Service overview
-   - Contact options
-
-### Components
-
-#### Navigation
-- **Header**: Fixed navigation with transparency on scroll, mobile menu
-- **MobileBottomNav**: Sticky bottom navigation for mobile (Home, Search, Favorites, Profile)
-- **WhatsAppButton**: Floating button with pulse animation
-
-#### Property Components
-- **PropertyCard**: Reusable card with image, price, badges, and actions
-- **FeaturedProperties**: Carousel/grid for homepage
-
-#### Sections
-- **Hero**: Full-screen hero with animated headline and brush stroke effects
-- **Benefits**: 6-column grid with icons and stats
-- **Testimonials**: Customer reviews with 5-star ratings
-- **Footer**: Multi-column footer with links, contact, social media, and language switcher
-
-### Mobile Optimizations
-- Mobile-first responsive design
-- Swipeable property gallery
-- Bottom navigation (Home, Search, Favorites, Profile)
-- Sticky WhatsApp button (adjusted for mobile nav)
-- Mobile filter drawer for listings
-- Touch-optimized cards and buttons
-- Responsive grid layouts
-
-## 🛠 Tech Stack
-
-- **React 18.3.1** - UI framework
-- **React Router 7.13.0** - Client-side routing (Data mode)
-- **TypeScript** - Type safety
-- **Tailwind CSS 4.1.12** - Utility-first styling
-- **Motion (Framer Motion) 12.23.24** - Animations
-- **Lucide React** - Icon library
-- **Vite 6.3.5** - Build tool
-
-## 📂 Project Structure
-
-```
-src/
-├── app/
-│   ├── components/
-│   │   ├── figma/
-│   │   │   └── ImageWithFallback.tsx
-│   │   ├── Benefits.tsx
-│   │   ├── FeaturedProperties.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Header.tsx
-│   │   ├── Hero.tsx
-│   │   ├── MobileBottomNav.tsx
-│   │   ├── PropertyCard.tsx
-│   │   ├── Testimonials.tsx
-│   │   └── WhatsAppButton.tsx
-│   ├── data/
-│   │   └── properties.ts
-│   ├── layouts/
-│   │   └── RootLayout.tsx
-│   ├── pages/
-│   │   ├── FavoritesPage.tsx
-│   │   ├── HomePage.tsx
-│   │   ├── ListingPage.tsx
-│   │   ├── NotFoundPage.tsx
-│   │   ├── ProfilePage.tsx
-│   │   └── PropertyDetailsPage.tsx
-│   ├── App.tsx
-│   └── routes.tsx
-├── styles/
-│   ├── fonts.css
-│   └── theme.css
-└── ...
-```
-
-## 🎯 Key Features
-
-### Conversion Optimization
-- Multiple WhatsApp CTAs throughout the site
-- Sticky WhatsApp button on all pages
-- "Disponível Agora" (Available Now) badges
-- "Bills Inclusas" (Bills Included) highlights
-- Immediate move-in filters
-- Clear pricing with no hidden fees
-- Brazilian-focused messaging and Portuguese language
-
-### User Experience
-- Smooth page transitions
-- Animated hero section
-- Image galleries with navigation
-- Hover effects on cards
-- Responsive design (mobile-first)
-- Fast loading property cards
-- Empty states with helpful CTAs
-- 404 page with navigation options
-
-### Mobile Features
-- Bottom navigation bar
-- Filter drawer (slide-in)
-- Sticky CTAs
-- Touch-optimized interactions
-- Responsive image galleries
-- Mobile-specific spacing adjustments
-
-## 🚀 Development
-
-### Install Dependencies
-```bash
-pnpm install
-```
-
-### Run Development Server
-The Vite dev server is already running. View the preview in the Make interface.
-
-### Build
-```bash
-pnpm run build
-```
-
-## ☁️ Admin online com Supabase
-
-A página `/admin` agora pode publicar imóveis online usando Supabase.
-
-### Configuração
-Crie um arquivo `.env` com:
-
-```bash
+```env
 VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 VITE_SUPABASE_PROPERTIES_TABLE=properties
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
-### Comportamento
-- A listagem publica carrega os imoveis via `/api/public-properties`
-- A pagina admin exige login no Supabase
-- Salvar, editar, deletar e importar JSON sincronizam com o Supabase quando configurado
+`SUPABASE_SERVICE_ROLE_KEY` e privada. Use somente em ambiente de servidor, como Netlify Functions.
 
-### Tabela esperada
-A tabela `properties` deve ter ao menos:
-- `id` inteiro
-- `data` jsonb
+## Banco
 
-## 📝 Content
+A tabela esperada no Supabase e `properties`, com:
 
-### Property Data
-All property data is stored in `src/app/data/properties.ts` with the following structure:
+- `id`: inteiro
+- `data`: jsonb com o imovel completo
 
-```typescript
-interface Property {
-  id: number;
-  image: string;
-  images: string[];
-  type: string;
-  title: string;
-  region: string;
-  price: number;
-  description: string;
-  longDescription: string;
-  available: boolean;
-  billsIncluded: boolean;
-  bedrooms?: number;
-  category: string;
-  amenities: string[];
-  deposit: number;
-  nearbyStations: string[];
-  coordinates: { lat: number; lng: number };
-  furnishing: string;
-  moveInDate: string;
-}
+O campo `listed` controla se o imovel aparece no site publico. Imoveis ocultos continuam visiveis no admin.
+
+## Desenvolvimento
+
+```bash
+npm install
+npm run dev
 ```
 
-### Sample Properties
-The platform includes 9 sample properties across different regions and types:
-- Studios in North and South London
-- Ensuites in South and North London
-- Flats (1-2 bedrooms) in East and West London
-- Single and Double rooms in various locations
+Validacao antes de deploy:
 
-## 🌐 Routes
+```bash
+npx tsc --noEmit
+npm run build
+```
 
-- `/` - Home page
-- `/properties` - Property listing with filters
-- `/property/:id` - Individual property details
-- `/favorites` - Saved properties
-- `/profile` - Customer area
-- `*` - 404 Not Found page
+## Deploy
 
-## 🎨 Styling
+O projeto esta preparado para Netlify:
 
-### Custom CSS Variables
-Defined in `src/styles/theme.css`:
-- `--green-dark`, `--green-medium`, `--green-light`
-- `--yellow`, `--yellow-dark`
-- `--black`, `--gray-light`, `--gray-medium`
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Function publica: `netlify/functions/public-properties.js`
+- Redirect SPA/API: `public/_redirects`
 
-### Tailwind Configuration
-Uses Tailwind CSS v4 with custom theme tokens integrated via CSS custom properties.
+Depois de mudar variaveis de ambiente na Netlify, rode `Trigger deploy > Deploy site`.
 
-## 📞 Contact Integration
+## Rotas
 
-All WhatsApp CTAs point to: `https://wa.me/5588997993046` with pre-filled messages including property details.
+- `/`: inicial
+- `/unidades`: listagem publica
+- `/properties`: alias legado da listagem
+- `/property/:id`: detalhe do imovel
+- `/favorites`: favoritos
+- `/profile`: area do cliente
+- `/admin`: painel administrativo
 
-## 🔄 Future Enhancements
+## Metricas
 
-- [ ] Implement actual favorites functionality with local storage
-- [ ] Add user authentication and profile management
-- [ ] Integrate Google Maps for location display
-- [ ] Add image zoom/lightbox functionality
-- [ ] Implement property comparison feature
-- [ ] Add admin dashboard for property management
-- [ ] Multi-language support (Portuguese/English toggle)
-- [ ] Instagram feed integration
-- [ ] Lead capture forms with email integration
-- [ ] Virtual tour integration
-- [ ] Advanced search with more filters
-- [ ] Property availability calendar
-- [ ] Review and rating system
+O GA4 e carregado com o ID `G-J6HK0DQQ11` e eventos adicionais sao enviados por `src/app/utils/analytics.ts`.
 
----
+Eventos principais:
 
-Built with ❤️ for the Brazilian community in London
+- `page_view`
+- `whatsapp_click`
+- `view_units_click`
+- `property_details_click`
+- `property_category_click`
+- `property_favorite_add`
+- `property_favorite_remove`
+- `property_map_click`
+- `social_click`

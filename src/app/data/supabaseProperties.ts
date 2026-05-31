@@ -11,7 +11,7 @@ type SupabasePropertyRow = {
   data: unknown;
 };
 
-type PropertyInput = Partial<Property> & { id?: number };
+type PropertyInput = Partial<Property> & { id?: number | string };
 
 export type SupabaseAuthSession = {
   access_token: string;
@@ -150,10 +150,21 @@ function toStringValue(value: unknown, fallback = '') {
 }
 
 function toBooleanValue(value: unknown, fallback = false) {
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', 'yes', 'sim', '1'].includes(normalized)) return true;
+    if (['false', 'no', 'nao', 'não', '0'].includes(normalized)) return false;
+  }
+
   return typeof value === 'boolean' ? value : fallback;
 }
 
 function toNumberValue(value: unknown, fallback = 0) {
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
@@ -176,19 +187,32 @@ function toCoordinates(value: unknown) {
   };
 }
 
-function sanitizeProperty(input: PropertyInput): Property | null {
-  const id = typeof input.id === 'number' && Number.isFinite(input.id)
-    ? input.id
-    : null;
+function normalizeCategory(category: unknown, type: unknown) {
+  const raw = toStringValue(category || type, 'studio').trim().toLowerCase();
 
-  if (id === null) {
+  if (raw.includes('ensuite')) return 'ensuite';
+  if (raw.includes('single')) return 'single';
+  if (raw.includes('double')) return 'double';
+  if (raw.includes('flat') || raw.includes('bedroom')) return 'flat';
+  if (raw.includes('studio')) return 'studio';
+
+  return raw || 'studio';
+}
+
+export function normalizeProperty(input: PropertyInput): Property | null {
+  const id = toNumberValue(input.id, Number.NaN);
+
+  if (!Number.isFinite(id)) {
     return null;
   }
 
+  const image = toStringValue(input.image);
+  const images = toStringArray(input.images);
+
   return {
     id,
-    image: toStringValue(input.image),
-    images: toStringArray(input.images),
+    image: image || images[0] || '',
+    images: images.length ? images : image ? [image] : [],
     video: toStringValue(input.video),
     type: toStringValue(input.type),
     title: toStringValue(input.title),
@@ -209,7 +233,7 @@ function sanitizeProperty(input: PropertyInput): Property | null {
       typeof input.bathrooms === 'number' && Number.isFinite(input.bathrooms)
         ? input.bathrooms
         : 0,
-    category: toStringValue(input.category, 'studio'),
+    category: normalizeCategory(input.category, input.type),
     amenities: toStringArray(input.amenities),
     deposit:
       typeof input.deposit === 'number' && Number.isFinite(input.deposit)
@@ -226,6 +250,18 @@ function sanitizeProperty(input: PropertyInput): Property | null {
         ? input.people
         : 1,
   };
+}
+
+export function normalizeProperties(input: unknown) {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((item) =>
+      item && typeof item === 'object'
+        ? normalizeProperty(item as PropertyInput)
+        : null
+    )
+    .filter((property): property is Property => Boolean(property));
 }
 
 function toRecord(property: Property) {
@@ -245,7 +281,7 @@ function fromRow(row: SupabasePropertyRow) {
       ? (row.data as PropertyInput)
       : { id: row.id };
 
-  return sanitizeProperty({
+  return normalizeProperty({
     ...rawData,
     id:
       typeof rawData.id === 'number' && Number.isFinite(rawData.id)
@@ -270,6 +306,12 @@ export async function savePropertyToSupabase(
   property: Property,
   accessToken?: string
 ) {
+  const normalizedProperty = normalizeProperty(property);
+
+  if (!normalizedProperty) {
+    throw new Error('Imovel invalido');
+  }
+
   const rows = await requestJson<SupabasePropertyRow[]>(
     `${SUPABASE_TABLE}?on_conflict=id`,
     {
@@ -277,12 +319,12 @@ export async function savePropertyToSupabase(
       headers: {
         Prefer: 'resolution=merge-duplicates,return=representation',
       },
-      body: JSON.stringify([toRecord(property)]),
+      body: JSON.stringify([toRecord(normalizedProperty)]),
     },
     accessToken
   );
 
-  return rows.map(fromRow).find((item): item is Property => Boolean(item)) || property;
+  return rows.map(fromRow).find((item): item is Property => Boolean(item)) || normalizedProperty;
 }
 
 export async function deletePropertyFromSupabase(
@@ -295,16 +337,18 @@ export async function deletePropertyFromSupabase(
 }
 
 export async function replacePropertiesInSupabase(
-  properties: Property[],
+  properties: unknown,
   accessToken?: string
 ) {
+  const normalizedProperties = normalizeProperties(properties);
+
+  if (!normalizedProperties.length) {
+    throw new Error('Nenhum imovel valido para importar');
+  }
+
   await requestJson<null>(`${SUPABASE_TABLE}?id=gt.0`, {
     method: 'DELETE',
   }, accessToken);
-
-  if (!properties.length) {
-    return [];
-  }
 
   const rows = await requestJson<SupabasePropertyRow[]>(
     `${SUPABASE_TABLE}`,
@@ -313,7 +357,7 @@ export async function replacePropertiesInSupabase(
       headers: {
         Prefer: 'return=representation',
       },
-      body: JSON.stringify(properties.map(toRecord)),
+      body: JSON.stringify(normalizedProperties.map(toRecord)),
     },
     accessToken
   );

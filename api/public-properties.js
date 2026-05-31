@@ -10,6 +10,10 @@ const SUPABASE_TABLE =
   process.env.VITE_SUPABASE_PROPERTIES_TABLE ||
   'properties';
 
+function isPublicListed(property) {
+  return property?.listed !== false && property?.listed !== 'false';
+}
+
 function resolveSupabaseUrl() {
   const dashboardProjectMatch = RAW_SUPABASE_URL.match(
     /supabase\.com\/dashboard\/project\/([a-z0-9]+)/i
@@ -77,7 +81,7 @@ export default async function handler(req, res) {
             ...data,
             id: Number(data.id || row.id),
           };
-        }).filter((property) => property.listed !== false)
+        }).filter(isPublicListed)
       : [];
 
     res.setHeader(

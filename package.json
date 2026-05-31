@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "node ./node_modules/vite/bin/vite.js build",
-    "import:properties": "node scripts/import-rooms-available.cjs",
     "preview": "vite preview"
   },
   "dependencies": {
