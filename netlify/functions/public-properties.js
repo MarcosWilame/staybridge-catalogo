@@ -46,8 +46,17 @@ export async function handler(event) {
 
   const serviceKey = resolveSupabaseSecretKey();
 
-  if (!SUPABASE_URL || !serviceKey || !SUPABASE_TABLE) {
-    return json(500, { error: 'Supabase server config missing' });
+  const missingConfig = [
+    !SUPABASE_URL && 'VITE_SUPABASE_URL or SUPABASE_URL',
+    !serviceKey && 'SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_KEY',
+    !SUPABASE_TABLE && 'VITE_SUPABASE_PROPERTIES_TABLE or SUPABASE_PROPERTIES_TABLE',
+  ].filter(Boolean);
+
+  if (missingConfig.length) {
+    return json(500, {
+      error: 'Supabase server config missing',
+      missing: missingConfig,
+    });
   }
 
   try {
