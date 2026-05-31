@@ -76,7 +76,7 @@ export function Header() {
             <img
               src="/img/logobedminster.png"
               alt="Bedminster London"
-              className="h-14 w-auto object-contain md:h-16"
+              className="h-14 w-auto rounded-lg bg-[#14532d] object-contain p-1.5 md:h-16"
             />
           </NavLink>
 

@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, BedDouble, Bolt, Home, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { trackEvent, trackWhatsAppClick } from '../utils/analytics';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 
 const heroBenefits = [
   {
@@ -41,17 +40,7 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="relative overflow-hidden bg-[#111] pt-28 md:pt-32">
-      <div className="absolute inset-0">
-        <ImageWithFallback
-          src="/img/pexels-shambadatta-33257244.jpg"
-          alt="Rua residencial em Londres"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-[#080808]/55" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,8,0.76)_0%,rgba(8,8,8,0.54)_48%,rgba(8,8,8,0.18)_100%)]" />
-      </div>
-
+    <section id="hero" className="relative overflow-hidden bg-[#f4f1eb] pt-28 md:pt-32">
       <div className="relative z-10 mx-auto grid min-h-[calc(100svh-8rem)] w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-16 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] md:gap-16 md:pb-20 lg:px-8">
         <div className="max-w-3xl">
           <motion.div
@@ -72,7 +61,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mb-6 max-w-3xl break-words font-['Syne'] text-[clamp(3.35rem,8.8vw,7.2rem)] font-extrabold leading-[0.88] tracking-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.55)]"
+            className="mb-6 max-w-3xl break-words font-['Syne'] text-[clamp(3.35rem,8.8vw,7.2rem)] font-extrabold leading-[0.88] tracking-normal text-[#111]"
           >
             Moradia em <span className="text-[#2563eb]">Londres</span> sem complicar.
           </motion.h1>
@@ -81,7 +70,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-8 max-w-2xl text-base leading-relaxed text-white/90 drop-shadow-[0_3px_12px_rgba(0,0,0,0.55)] sm:text-xl"
+            className="mb-8 max-w-2xl text-base leading-relaxed text-[#605b54] sm:text-xl"
           >
             Studios, ensuites e flats prontos para entrar, com bills inclusas,
             atendimento em português e suporte do primeiro contato até a chave.
@@ -103,7 +92,7 @@ export function Hero() {
 
             <button
               onClick={handleWhatsApp}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/12 px-6 py-3.5 font-bold text-white shadow-lg shadow-black/20 backdrop-blur-md transition-all hover:scale-[1.02] hover:bg-white/20 sm:w-auto sm:px-8 sm:py-4"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-black/10 bg-white px-6 py-3.5 font-bold text-[#111] shadow-lg shadow-black/5 transition-all hover:scale-[1.02] hover:border-[#2563eb]/30 sm:w-auto sm:px-8 sm:py-4"
             >
               <MessageCircle className="h-5 w-5" />
               Falar no WhatsApp
@@ -114,7 +103,7 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.45 }}
-            className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-sm font-bold text-white/90"
+            className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-sm font-bold text-[#605b54]"
           >
             <span>Bills inclusas</span>
             <span className="text-[#2563eb]">·</span>
@@ -136,7 +125,7 @@ export function Hero() {
             return (
               <article
                 key={item.title}
-                className="grid min-h-[104px] grid-cols-[54px_1fr] items-center gap-4 rounded-lg border border-white/20 bg-white/90 p-5 shadow-[0_18px_36px_rgba(0,0,0,0.18)] backdrop-blur"
+                className="grid min-h-[104px] grid-cols-[54px_1fr] items-center gap-4 rounded-lg border border-white/80 bg-white/85 p-5 shadow-[0_18px_36px_rgba(17,17,17,0.06)] backdrop-blur"
               >
                 <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${item.tone}`}>
                   <Icon className="h-5 w-5" />
