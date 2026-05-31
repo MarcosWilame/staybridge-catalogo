@@ -1,4 +1,4 @@
-const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
+const RAW_SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
 
 const SUPABASE_SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -9,6 +9,18 @@ const SUPABASE_TABLE =
   process.env.SUPABASE_PROPERTIES_TABLE ||
   process.env.VITE_SUPABASE_PROPERTIES_TABLE ||
   'properties';
+
+function resolveSupabaseUrl() {
+  const dashboardProjectMatch = RAW_SUPABASE_URL.match(
+    /supabase\.com\/dashboard\/project\/([a-z0-9]+)/i
+  );
+
+  if (dashboardProjectMatch?.[1]) {
+    return `https://${dashboardProjectMatch[1]}.supabase.co`;
+  }
+
+  return RAW_SUPABASE_URL;
+}
 
 function resolveSupabaseSecretKey() {
   const key = SUPABASE_SERVICE_KEY.trim();
@@ -24,8 +36,9 @@ export default async function handler(req, res) {
   }
 
   const serviceKey = resolveSupabaseSecretKey();
+  const supabaseUrl = resolveSupabaseUrl();
 
-  if (!SUPABASE_URL || !serviceKey || !SUPABASE_TABLE) {
+  if (!supabaseUrl || !serviceKey || !SUPABASE_TABLE) {
     return res.status(500).json({
       error: 'Supabase server config missing',
     });
@@ -33,7 +46,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,data&order=id.asc`,
+      `${supabaseUrl}/rest/v1/${SUPABASE_TABLE}?select=id,data&order=id.asc`,
       {
         headers: {
           apikey: serviceKey,

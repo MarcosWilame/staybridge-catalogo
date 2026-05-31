@@ -1,7 +1,7 @@
-const SUPABASE_URL = (
+const RAW_SUPABASE_URL = (
   process.env.SUPABASE_URL ||
   process.env.VITE_SUPABASE_URL ||
-  ''
+''
 ).replace(/\/$/, '');
 
 const SUPABASE_SERVICE_KEY =
@@ -13,6 +13,18 @@ const SUPABASE_TABLE =
   process.env.SUPABASE_PROPERTIES_TABLE ||
   process.env.VITE_SUPABASE_PROPERTIES_TABLE ||
   'properties';
+
+function resolveSupabaseUrl() {
+  const dashboardProjectMatch = RAW_SUPABASE_URL.match(
+    /supabase\.com\/dashboard\/project\/([a-z0-9]+)/i
+  );
+
+  if (dashboardProjectMatch?.[1]) {
+    return `https://${dashboardProjectMatch[1]}.supabase.co`;
+  }
+
+  return RAW_SUPABASE_URL;
+}
 
 function resolveSupabaseSecretKey() {
   const key = SUPABASE_SERVICE_KEY.trim();
@@ -45,9 +57,10 @@ export async function handler(event) {
   }
 
   const serviceKey = resolveSupabaseSecretKey();
+  const supabaseUrl = resolveSupabaseUrl();
 
   const missingConfig = [
-    !SUPABASE_URL && 'VITE_SUPABASE_URL or SUPABASE_URL',
+    !supabaseUrl && 'VITE_SUPABASE_URL or SUPABASE_URL',
     !serviceKey && 'SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_KEY',
     !SUPABASE_TABLE && 'VITE_SUPABASE_PROPERTIES_TABLE or SUPABASE_PROPERTIES_TABLE',
   ].filter(Boolean);
@@ -61,7 +74,7 @@ export async function handler(event) {
 
   try {
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,data&order=id.asc`,
+      `${supabaseUrl}/rest/v1/${SUPABASE_TABLE}?select=id,data&order=id.asc`,
       {
         headers: {
           apikey: serviceKey,
