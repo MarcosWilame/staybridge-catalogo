@@ -3,7 +3,7 @@ import { Home, Search } from 'lucide-react';
 
 export function NotFoundPage() {
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 pb-24 pt-24">
+    <div className="flex min-h-[70vh] items-center justify-center px-4 pb-24 pt-28">
       <div className="max-w-md text-center">
         <div className="mb-8">
           <div className="text-7xl font-bold text-[var(--green-dark)] md:text-9xl">404</div>
@@ -24,7 +24,7 @@ export function NotFoundPage() {
             Voltar ao Início
           </Link>
           <Link
-            to="/properties"
+            to="/unidades"
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-5 py-3 font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] md:px-6"
           >
             <Search className="w-5 h-5" />

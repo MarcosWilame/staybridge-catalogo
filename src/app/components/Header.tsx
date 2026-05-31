@@ -1,6 +1,6 @@
 import { useState, useEffect, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle } from 'lucide-react';
+import { Heart, Menu, MessageCircle, X } from 'lucide-react';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -45,12 +45,6 @@ export function Header() {
     return () => cancelAnimationFrame(raf);
   }, [isHome]);
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    element?.scrollIntoView({ behavior: 'smooth' });
-    setIsMobileMenuOpen(false);
-  };
-
   const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     setIsMobileMenuOpen(false);
@@ -72,25 +66,23 @@ export function Header() {
         : ''
     }`;
 
-  const buttonClass = `font-semibold transition-all duration-300 rounded-xl px-4 py-2 text-white hover:bg-white/10 hover:text-[var(--yellow)]`;
-
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isTransparent
           ? 'bg-transparent'
-          : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
+          : 'border-b border-white/10 bg-[rgba(20,83,45,0.88)] shadow-lg shadow-black/15 backdrop-blur-xl'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex h-24 items-center justify-between md:h-28">
 
           {/* Logo */}
           <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
             <img
               src="/img/logo-white.png"
-              alt="Staybridge London"
-              className="h-16 w-auto object-contain md:h-[68px]"
+              alt="Bedminster London"
+              className="h-20 w-auto object-contain md:h-24"
               style={{ mixBlendMode: 'screen' }}
             />
           </NavLink>
@@ -101,16 +93,16 @@ export function Header() {
               Início
             </NavLink>
 
-            <NavLink to="/properties" className={navLinkClass}>
+            <NavLink to="/unidades" className={navLinkClass}>
               Unidades
             </NavLink>
 
-            <button
-              onClick={() => { navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
-              className={buttonClass}
+            <NavLink
+              to="/favorites"
+              className={navLinkClass}
             >
-              Benefícios
-            </button>
+              Favoritos
+            </NavLink>
 
             <button
               onClick={handleWhatsApp}
@@ -132,7 +124,7 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-green-700 bg-[#2d6a4f]">
+          <div className="md:hidden py-4 border-t border-white/10 bg-[var(--green-dark)]">
             <nav className="flex flex-col gap-4">
               <NavLink
                 to="/"
@@ -150,7 +142,7 @@ export function Header() {
               </NavLink>
 
               <NavLink
-                to="/properties"
+                to="/unidades"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
@@ -163,12 +155,22 @@ export function Header() {
                 Unidades
               </NavLink>
 
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
-                className="text-left font-semibold text-white hover:bg-white/10 hover:text-[var(--yellow)] transition-all duration-300 rounded-xl px-4 py-3"
+              <NavLink
+                to="/favorites"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
+                    isActive
+                      ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
+                      : 'text-white hover:bg-white/10 hover:text-[var(--yellow)]'
+                  }`
+                }
               >
-                Benefícios
-              </button>
+                <span className="inline-flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  Favoritos
+                </span>
+              </NavLink>
 
               <button
                 onClick={handleWhatsApp}

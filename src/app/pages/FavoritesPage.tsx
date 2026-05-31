@@ -1,30 +1,85 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Search } from 'lucide-react';
+import { ArrowRight, Heart, Search, Sparkles } from 'lucide-react';
+import { PropertyCard } from '../components/PropertyCard';
+import { useProperties } from '../data/sheetProperties';
+import { getFavoritePropertyIds } from '../utils/favorites';
 
 export function FavoritesPage() {
+  const { properties } = useProperties();
+  const [favoriteIds, setFavoriteIds] = useState<number[]>(() =>
+    getFavoritePropertyIds()
+  );
+
+  useEffect(() => {
+    const syncFavorites = () => setFavoriteIds(getFavoritePropertyIds());
+
+    window.addEventListener('bedminster:favorites-changed', syncFavorites);
+    window.addEventListener('storage', syncFavorites);
+
+    return () => {
+      window.removeEventListener('bedminster:favorites-changed', syncFavorites);
+      window.removeEventListener('storage', syncFavorites);
+    };
+  }, []);
+
+  const favoriteProperties = useMemo(
+    () => properties.filter((property) => favoriteIds.includes(property.id)),
+    [favoriteIds, properties]
+  );
+
   return (
-    <div className="min-h-screen bg-[var(--gray-light)] px-4 pb-28 pt-28 md:pb-24">
-      <div className="mx-auto max-w-4xl text-center">
-        <div className="rounded-2xl bg-white p-6 shadow-lg md:p-12">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)]/20 md:h-20 md:w-20">
-            <Heart className="h-8 w-8 text-[var(--green-dark)] md:h-10 md:w-10" />
+    <div className="min-h-screen bg-[image:var(--page-gradient)] px-4 pb-28 pt-28 md:pb-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 overflow-hidden rounded-2xl border border-emerald-100 bg-white/90 p-6 text-center shadow-[0_18px_45px_rgba(15,83,45,0.10)] md:p-10">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--yellow)] text-black shadow-lg shadow-yellow-900/10 md:h-20 md:w-20">
+            <Heart className="h-8 w-8 md:h-10 md:w-10" />
           </div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">
+          <h1 className="mb-3 text-3xl font-bold text-[var(--green-dark)] md:text-5xl">
             Seus Favoritos
           </h1>
-          <p className="mb-8 text-sm leading-relaxed text-gray-600 md:text-base">
-            Você ainda não salvou nenhuma propriedade como favorita.
-            <br />
-            Navegue pelas propriedades e clique no ícone de coração para salvá-las aqui.
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-600 md:text-base">
+            Salve as unidades que chamaram sua atenção e volte nelas rapidamente.
           </p>
-          <Link
-            to="/properties"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] sm:w-auto md:px-6"
-          >
-            <Search className="w-5 h-5" />
-            Explorar Propriedades
-          </Link>
+          {favoriteProperties.length > 0 && (
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--green-dark)] px-4 py-2 text-sm font-bold text-white">
+              <Sparkles className="h-4 w-4 text-[var(--yellow)]" />
+              {favoriteProperties.length} unidade{favoriteProperties.length > 1 ? 's' : ''} salva{favoriteProperties.length > 1 ? 's' : ''}
+            </div>
+          )}
         </div>
+
+        {favoriteProperties.length ? (
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {favoriteProperties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        ) : (
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-emerald-100 bg-white text-center shadow-[0_18px_45px_rgba(15,83,45,0.10)]">
+            <div className="h-2 bg-[image:var(--brand-gradient)]" />
+            <div className="p-6 md:p-12">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--gray-light)] text-[var(--green-dark)]">
+              <Search className="h-7 w-7" />
+            </div>
+            <h2 className="mb-3 text-2xl font-bold text-[var(--green-dark)] md:text-3xl">
+              Monte sua lista ideal
+            </h2>
+            <p className="mb-8 text-sm leading-relaxed text-gray-600 md:text-base">
+              Você ainda não salvou nenhuma propriedade como favorita.
+              <br />
+              Abra uma unidade e toque no coração para salvá-la aqui.
+            </p>
+            <Link
+              to="/unidades"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-5 py-3.5 font-bold text-white transition-all duration-300 hover:bg-[var(--green-medium)] hover:shadow-lg sm:w-auto md:px-6"
+            >
+              Explorar Propriedades
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

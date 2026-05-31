@@ -10,13 +10,22 @@ const SUPABASE_TABLE =
   process.env.VITE_SUPABASE_PROPERTIES_TABLE ||
   'properties';
 
+function resolveSupabaseSecretKey() {
+  const key = SUPABASE_SERVICE_KEY.trim();
+  const jwtStart = key.indexOf('eyJ');
+
+  return jwtStart > 0 ? key.slice(jwtStart) : key;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !SUPABASE_TABLE) {
+  const serviceKey = resolveSupabaseSecretKey();
+
+  if (!SUPABASE_URL || !serviceKey || !SUPABASE_TABLE) {
     return res.status(500).json({
       error: 'Supabase server config missing',
     });
@@ -27,8 +36,8 @@ export default async function handler(req, res) {
       `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,data&order=id.asc`,
       {
         headers: {
-          apikey: SUPABASE_SERVICE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
           Accept: 'application/json',
         },
       }

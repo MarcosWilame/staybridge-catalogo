@@ -11,21 +11,21 @@ export function Hero() {
   };
 
   const goToProperties = () => {
-    navigate('/properties');
+    navigate('/unidades');
   };
 
   return (
-    <div id="hero" className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[90vh]">
+    <div id="hero" className="relative flex min-h-[calc(100svh-6rem)] items-center overflow-hidden md:min-h-[90vh]">
 
       {/* BACKGROUND */}
       <div className="absolute inset-0">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=1920&q=85"
-          alt="Vista clara e aconchegante de Londres durante o dia"
+          src="/img/pexels-shambadatta-33257244.jpg"
+          alt="Rua residencial em Londres"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#07140f]/86 via-[#173627]/48 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#06110c]/88 via-[#123321]/58 to-[#06110c]/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--green-dark)]/70 via-transparent to-transparent" />
       </div>
 
       {/* CONTENT */}
@@ -37,28 +37,12 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mb-5 break-words text-4xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)] sm:text-6xl lg:text-7xl"
+            className="mb-5 break-words text-4xl leading-[0.98] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)] sm:text-6xl lg:text-7xl"
           >
-            Sua Nova
-            <br />
-            <span className="relative inline-block">
-              Acomodação
-              <svg
-                className="absolute -bottom-2 left-0 w-full"
-                height="12"
-                viewBox="0 0 300 12"
-                fill="none"
-              >
-                <path
-                  d="M2 10C80 2 220 2 298 10"
-                  stroke="var(--yellow)"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-              </svg>
+            Moradia em Londres,
+            <span className="block text-[var(--yellow)]">
+              sem complicação
             </span>
-            <br />
-            <span className="text-[var(--yellow)]">em Londres</span>
           </motion.h1>
 
           {/* DESCRIPTION */}
@@ -66,14 +50,10 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-7 inline-block rounded-xl bg-black/35 px-4 py-3 text-base leading-relaxed text-white shadow-lg backdrop-blur-[2px] sm:text-xl"
+            className="mb-8 max-w-2xl text-base leading-relaxed text-white/95 drop-shadow-[0_3px_12px_rgba(0,0,0,0.7)] sm:text-xl"
           >
-            Studios, ensuites e flats prontos para você morar.
-            <br />
-            <strong className="text-[var(--yellow)]">
-              Atendimento em português
-            </strong>{' '}
-            e entrada imediata.
+            Studios, ensuites e flats prontos para entrar, com bills inclusas,
+            atendimento em português e suporte do primeiro contato até a chave.
           </motion.p>
 
           {/* BUTTONS */}
@@ -85,47 +65,39 @@ export function Hero() {
           >
             <button
               onClick={goToProperties}
-              className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-6 py-3.5 font-semibold text-black transition-all hover:bg-[var(--yellow-dark)] hover:scale-105 sm:w-auto sm:px-8 sm:py-4"
+              className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-6 py-3.5 font-bold text-black shadow-xl shadow-black/20 transition-all hover:bg-[var(--yellow-dark)] hover:scale-[1.02] sm:w-auto sm:px-8 sm:py-4"
             >
-              Ver Unidades
+              Ver unidades
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 
             <button
               onClick={handleWhatsApp}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 sm:w-auto sm:px-8 sm:py-4"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/12 px-6 py-3.5 font-bold text-white shadow-lg shadow-black/20 backdrop-blur-md transition-all hover:bg-white/20 hover:scale-[1.02] sm:w-auto sm:px-8 sm:py-4"
             >
               <MessageCircle className="w-5 h-5" />
               Falar no WhatsApp
             </button>
           </motion.div>
 
-          {/* TRUST */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-8 flex flex-wrap gap-2 text-sm text-white sm:mt-12 sm:gap-3"
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-white/90"
           >
-            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
-              <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Contratos seguros</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
-              <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Bills inclusas</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
-              <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Entrada imediata</span>
-            </div>
+            <span>Bills inclusas</span>
+            <span className="text-[var(--yellow)]">·</span>
+            <span>Entrada imediata</span>
+            <span className="text-[var(--yellow)]">·</span>
+            <span>Atendimento em português</span>
           </motion.div>
-
         </div>
       </div>
 
       {/* DECOR */}
-      <div className="absolute bottom-0 right-0 w-1/3 h-64 bg-gradient-to-tl from-[var(--green-dark)]/30 to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[var(--green-dark)]" />
+      <div className="absolute bottom-0 right-0 w-1/3 h-56 bg-gradient-to-tl from-[var(--green-dark)]/20 to-transparent pointer-events-none" />
     </div>
   );
 }

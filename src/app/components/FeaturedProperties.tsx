@@ -99,11 +99,13 @@ export function FeaturedProperties() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white to-[var(--green-light)] py-14 md:py-28">
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#ffffff_0%,#f7fbf6_52%,#eef8ee_100%)] py-14 md:py-28">
 
       {/* Background Decorative Elements */}
       <div className="absolute top-10 right-0 w-1/3 h-64 bg-[var(--yellow)]/10 transform skew-y-6 blur-3xl" />
       <div className="absolute bottom-0 left-0 w-1/4 h-52 bg-[var(--green-medium)]/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[#eef8ee]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
@@ -164,42 +166,14 @@ export function FeaturedProperties() {
 
         </div>
 
-        <div className="mb-10 flex justify-center md:mb-16">
+        <div className="flex justify-center">
           <Link
-            to="/properties"
+            to="/unidades"
             className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[var(--yellow)] px-6 py-3.5 text-base font-bold text-black shadow-lg transition-all duration-300 hover:bg-[var(--yellow-dark)] hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
           >
             Ver mais unidades
             <ArrowRight className="w-5 h-5" />
           </Link>
-        </div>
-
-        {/* CTA Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-[var(--green-dark)] p-6 text-center shadow-2xl md:rounded-3xl md:p-14">
-
-          {/* Decorative Glow */}
-          <div className="absolute top-0 right-0 w-72 h-72 bg-[var(--yellow)]/10 rounded-full blur-3xl" />
-
-          <div className="relative z-10">
-
-            <h3 className="mb-4 text-2xl font-bold leading-tight text-white md:text-4xl">
-              Ainda procurando a acomodação ideal?
-            </h3>
-
-            <p className="mx-auto mb-6 max-w-2xl text-base leading-relaxed text-gray-200 md:mb-8 md:text-lg">
-              Explore todas as nossas unidades disponíveis em Londres e encontre
-              studios, flats e quartos perfeitos para você.
-            </p>
-
-            <Link
-              to="/properties"
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[var(--yellow)] px-5 py-3.5 text-base font-bold text-black transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
-            >
-              Ver Todas as Unidades Disponíveis
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-
-          </div>
         </div>
       </div>
     </section>
