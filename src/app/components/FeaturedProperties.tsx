@@ -100,32 +100,38 @@ export function FeaturedProperties() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#f4f1eb] py-14 md:py-28">
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#ffffff_0%,#f7fbf6_52%,#eef8ee_100%)] py-14 md:py-28">
+
+      {/* Background Decorative Elements */}
+      <div className="absolute top-10 right-0 w-1/3 h-64 bg-[var(--yellow)]/10 transform skew-y-6 blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-1/4 h-52 bg-[var(--green-medium)]/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[#eef8ee]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Header */}
         <div className="mb-10 text-center md:mb-16">
 
-          <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full bg-[#dbe7ff] px-4 py-2 text-xs font-bold text-[#2563eb] md:mb-5 md:px-5 md:text-sm">
-            PROPRIEDADES EM DESTAQUE
+          <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full bg-[var(--green-dark)] px-4 py-2 text-xs font-bold text-white shadow-lg md:mb-5 md:px-5 md:text-sm">
+            🇬🇧 PROPRIEDADES EM DESTAQUE
           </div>
 
-          <h2 className="font-['Syne'] text-3xl font-extrabold leading-tight text-[#111] sm:text-4xl md:text-6xl">
+          <h2 className="text-3xl font-extrabold leading-tight text-[var(--green-dark)] sm:text-4xl md:text-6xl">
             Sua Nova Vida
             <br />
-            <span className="text-[#2563eb]">
+            <span className="text-[var(--yellow)]">
               Começa Aqui
             </span>
           </h2>
 
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-[#6f6a62] md:mt-6 md:text-xl">
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-gray-600 md:mt-6 md:text-xl">
             Studios, flats e ensuites disponíveis em diversas regiões de Londres
             com entrada imediata, bills inclusas e suporte completo para brasileiros.
           </p>
 
       
-          <div className="mt-5 text-sm font-semibold text-[#6f6a62]">
+          <div className="text-sm text-gray-500 mt-5 font-medium">
             {featuredProperties.length} propriedades disponíveis agora
           </div>
         </div>
@@ -165,7 +171,7 @@ export function FeaturedProperties() {
           <Link
             to="/unidades"
             onClick={() => trackEvent('view_units_click', { source: 'featured_properties' })}
-            className="inline-flex w-full items-center justify-center gap-3 rounded-lg bg-[#2563eb] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[#2563eb]/20 transition-all duration-300 hover:bg-[#1d4ed8] hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
+            className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[var(--yellow)] px-6 py-3.5 text-base font-bold text-black shadow-lg transition-all duration-300 hover:bg-[var(--yellow-dark)] hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
           >
             Ver mais unidades
             <ArrowRight className="w-5 h-5" />

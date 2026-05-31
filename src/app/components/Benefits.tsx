@@ -35,20 +35,24 @@ const benefits = [
 
 export function Benefits() {
   return (
-    <section className="relative overflow-hidden bg-[#faf7f0] py-12 md:py-20">
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#eef8ee_0%,#f8fbf7_48%,#ffffff_100%)] py-12 md:py-20">
+      {/* Diagonal Background Element */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-[var(--green-dark)]/5 to-transparent transform -skew-y-3 origin-top-left" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#eef8ee] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-white" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="mb-10 text-center md:mb-16">
-          <div className="mb-4 inline-block rounded-full bg-[#dbe7ff] px-4 py-2 text-xs font-bold text-[#2563eb] md:text-sm">
+          <div className="mb-4 inline-block rounded-full bg-[var(--yellow)] px-4 py-2 text-xs font-bold text-black md:text-sm">
             POR QUE ESCOLHER A BEDMINSTER
           </div>
-          <h2 className="mb-4 font-['Syne'] text-3xl font-extrabold leading-tight text-[#111] md:text-5xl">
+          <h2 className="mb-4 text-3xl font-bold leading-tight text-[var(--green-dark)] md:text-5xl">
             Facilitamos sua Vida
             <br />
-            <span className="text-[#2563eb]">em Londres</span>
+            <span className="text-[var(--yellow)]">em Londres</span>
           </h2>
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#6f6a62] md:text-xl">
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 md:text-xl">
             Mais de 500 brasileiros já encontraram seu lar conosco
           </p>
         </div>
@@ -60,15 +64,16 @@ export function Benefits() {
             return (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-lg border border-black/5 bg-white p-5 shadow-[0_18px_36px_rgba(17,17,17,0.06)] transition-all duration-300 hover:-translate-y-2 hover:border-[#2563eb]/30 hover:shadow-[0_26px_52px_rgba(17,17,17,0.10)] md:p-8"
+                className="group relative overflow-hidden rounded-xl border border-emerald-100 bg-white p-5 shadow-[0_18px_40px_rgba(15,83,45,0.10)] transition-all duration-300 hover:-translate-y-2 hover:border-[var(--green-medium)]/50 hover:shadow-[0_26px_55px_rgba(15,83,45,0.18)] md:rounded-2xl md:p-8"
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#dbe7ff] text-[#2563eb] transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-16 md:w-16">
-                  <Icon className="h-6 w-6 md:h-8 md:w-8" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[image:var(--brand-gradient)]" />
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] shadow-lg shadow-emerald-900/10 transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-16 md:w-16 md:rounded-2xl">
+                  <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                 </div>
-                <h3 className="mb-3 font-['Syne'] text-xl font-extrabold text-[#111]">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
                   {benefit.title}
                 </h3>
-                <p className="leading-relaxed text-[#6f6a62]">
+                <p className="text-gray-600 leading-relaxed">
                   {benefit.description}
                 </p>
               </div>

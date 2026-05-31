@@ -2,19 +2,19 @@
 
 :root {
   --font-size: 16px;
-  --background: #f4f1eb;
-  --foreground: #111111;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
   --card: #ffffff;
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #2563eb;
+  --primary: #14532d;
   --primary-foreground: #ffffff;
-  --secondary: #c9a96e;
+  --secondary: #f4c542;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f5;
   --muted-foreground: #666666;
-  --accent: #2563eb;
+  --accent: #f4c542;
   --accent-foreground: #0a0a0a;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
@@ -24,10 +24,10 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #2563eb;
-  --chart-1: #2563eb;
-  --chart-2: #c9a96e;
-  --chart-3: #111111;
+  --ring: #4fb06d;
+  --chart-1: #14532d;
+  --chart-2: #f4c542;
+  --chart-3: #0a0a0a;
   --chart-4: #ffffff;
   --chart-5: #2e7d4f;
   --radius: 0.5rem;
@@ -44,19 +44,14 @@
   --green-dark: #14532d;
   --green-medium: #2e7d4f;
   --green-light: #e8f5ec;
-  --blue: #2563eb;
-  --blue-dark: #1d4ed8;
-  --cream: #f4f1eb;
-  --cream-soft: #faf7f0;
   --yellow: #f4c542;
   --yellow-dark: #d9a72c;
-  --gold: #c9a96e;
-  --black: #111111;
-  --gray-light: #faf7f0;
-  --gray-medium: #6f6a62;
-  --page-gradient: #f4f1eb;
-  --brand-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  --soft-gradient: #faf7f0;
+  --black: #0a0a0a;
+  --gray-light: #f6faf4;
+  --gray-medium: #5c7564;
+  --page-gradient: linear-gradient(180deg, #ffffff 0%, #f6faf4 32%, #e8f5ec 68%, #ffffff 100%);
+  --brand-gradient: linear-gradient(135deg, #14532d 0%, #2e7d4f 48%, #f4c542 115%);
+  --soft-gradient: linear-gradient(180deg, #ffffff 0%, #f6faf4 58%, #e8f5ec 100%);
 }
 
 .dark {
@@ -150,8 +145,6 @@
   body {
     @apply text-foreground;
     background: var(--page-gradient);
-    color: var(--black);
-    font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   /**
@@ -165,22 +158,19 @@
 
   h1 {
     font-size: var(--text-2xl);
-    font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 800;
+    font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   h2 {
     font-size: var(--text-xl);
-    font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 800;
+    font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   h3 {
     font-size: var(--text-lg);
-    font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 800;
+    font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
