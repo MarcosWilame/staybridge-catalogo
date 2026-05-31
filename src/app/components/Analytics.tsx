@@ -18,14 +18,9 @@ export function Analytics() {
     if (document.querySelector(`script[src*="${GA_MEASUREMENT_ID}"]`)) return;
 
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag(...args: unknown[]) {
+    window.gtag = window.gtag || function gtag(...args: unknown[]) {
       window.dataLayer.push(args);
     };
-
-    window.gtag('js', new Date());
-    window.gtag('config', GA_MEASUREMENT_ID, {
-      send_page_view: false,
-    });
 
     const script = document.createElement('script');
     script.async = true;
