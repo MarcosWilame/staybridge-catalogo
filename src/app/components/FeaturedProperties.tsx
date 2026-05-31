@@ -60,45 +60,6 @@ export function FeaturedProperties() {
   );
   const visibleProperties = pickFeaturedProperties(featuredProperties);
 
-  // CONTADORES AUTOMÁTICOS
-  const studios = properties.filter(
-    (p) => p.category === 'studio'
-  ).length;
-
-  const ensuites = properties.filter(
-    (p) => p.category === 'ensuite'
-  ).length;
-
-  const flats = properties.filter(
-    (p) => p.category === 'flat'
-  ).length;
-
-  const singles = properties.filter(
-    (p) => p.category === 'single'
-  ).length;
-
-  const doubles = properties.filter(
-    (p) => p.category === 'double'
-  ).length;
-
-  const propertyTypes = [
-    {
-      label: `Studios (${studios})`,
-    },
-    {
-      label: `Ensuites (${ensuites})`,
-    },
-    {
-      label: `Flats (${flats})`,
-    },
-    {
-      label: `Singles (${singles})`,
-    },
-    {
-      label: `Doubles (${doubles})`,
-    },
-  ];
-
   return (
     <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#ffffff_0%,#f7fbf6_52%,#eef8ee_100%)] py-14 md:py-28">
 
@@ -136,35 +97,17 @@ export function FeaturedProperties() {
           </div>
         </div>
 
-        {/* Filters 
-        <div className="mb-10 flex flex-wrap justify-center gap-2 md:mb-14 md:gap-3">
-
-          {propertyTypes.map((type) => (
-            <button
-              key={type.label}
-              className="rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-[var(--yellow)] hover:text-black hover:shadow-lg md:px-5"
-            >
-              {type.label}
-            </button>
-          ))}
-
-        </div>
-        */}
-
-        {/* Properties Grid */}
-        <div className="mb-10 grid grid-cols-1 gap-5 md:mb-16 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-
-          {visibleProperties.map((property) => (
-
-            <div
-              key={property.id}
-              className="transform transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-            >
-              <PropertyCard property={property} />
-            </div>
-
-          ))}
-
+        <div className="mb-10 overflow-hidden md:mb-16">
+          <div className="featured-carousel flex w-max gap-5 py-2 md:gap-8">
+            {[...visibleProperties, ...visibleProperties].map((property, index) => (
+              <div
+                key={`${property.id}-${index}`}
+                className="w-[min(82vw,340px)] shrink-0 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl md:w-[360px]"
+              >
+                <PropertyCard property={property} />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-center">

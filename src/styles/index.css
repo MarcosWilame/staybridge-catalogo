@@ -17,3 +17,27 @@ body,
   max-width: 100%;
   overflow-x: hidden;
 }
+
+@keyframes featured-card-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.featured-carousel {
+  animation: featured-card-scroll 42s linear infinite;
+}
+
+.featured-carousel:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-carousel {
+    animation: none;
+    overflow-x: auto;
+  }
+}

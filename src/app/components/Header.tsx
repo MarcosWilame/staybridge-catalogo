@@ -76,15 +76,15 @@ export function Header() {
           : 'border-b border-white/10 bg-[rgba(20,83,45,0.88)] shadow-lg shadow-black/15 backdrop-blur-xl'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-24 items-center justify-between md:h-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between md:h-20">
 
           {/* Logo */}
           <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
             <img
               src="/img/logobedminster.png"
               alt="Bedminster London"
-              className="h-20 w-auto object-contain md:h-24"
+              className="h-14 w-auto object-contain md:h-16"
               style={{ mixBlendMode: 'screen' }}
             />
           </NavLink>

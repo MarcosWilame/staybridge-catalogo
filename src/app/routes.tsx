@@ -7,6 +7,8 @@ import { FavoritesPage } from './pages/FavoritesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +20,8 @@ export const router = createBrowserRouter([
       { path: '/property/:id', element: <PropertyDetailsPage /> },
       { path: '/favorites', element: <FavoritesPage /> },
       { path: '/profile', element: <ProfilePage /> },
+      { path: '/privacidade', element: <PrivacyPage /> },
+      { path: '/termos', element: <TermsPage /> },
       { path: '/admin', element: <AdminPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
