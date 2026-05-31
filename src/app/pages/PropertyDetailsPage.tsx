@@ -7,6 +7,7 @@ import { getGoogleMapsUrl, getPropertyAreaLabel, PropertyMap } from '../componen
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { isFavoriteProperty, toggleFavoriteProperty } from '../utils/favorites';
+import { trackPropertyEvent, trackWhatsAppClick } from '../utils/analytics';
 
 import {
   ArrowLeft,
@@ -186,10 +187,33 @@ export function PropertyDetailsPage() {
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title} (ID: ${property.id})`
     );
 
+    trackWhatsAppClick('property_details', {
+      property_id: property.id,
+      property_title: property.title,
+      property_type: property.type,
+      property_region: property.region,
+    });
+
     window.open(
       `https://wa.me/5588997993046?text=${message}`,
       '_blank'
     );
+  };
+
+  const handleFavoriteClick = () => {
+    const nextFavoriteState = toggleFavoriteProperty(property.id);
+    setIsFavorite(nextFavoriteState);
+    trackPropertyEvent(
+      nextFavoriteState ? 'property_favorite_add' : 'property_favorite_remove',
+      property,
+      { source: 'property_details' }
+    );
+  };
+
+  const handleMapClick = () => {
+    trackPropertyEvent('property_map_click', property, {
+      source: 'property_details',
+    });
   };
 
   const mediaItems = getMediaItems(property);
@@ -400,7 +424,7 @@ export function PropertyDetailsPage() {
 
                 <div className="flex shrink-0 gap-2">
                   <button
-                    onClick={() => setIsFavorite(toggleFavoriteProperty(property.id))}
+                    onClick={handleFavoriteClick}
                     className={`rounded-full border-2 p-3 ${
                       isFavorite
                         ? 'bg-red-50 border-red-500 text-red-500'
@@ -468,6 +492,7 @@ export function PropertyDetailsPage() {
                   href={getGoogleMapsUrl(property)}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={handleMapClick}
                   className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white py-3.5 font-bold text-[var(--green-dark)] transition-colors hover:bg-[var(--gray-light)] md:py-4"
                 >
                   <MapPin className="w-6 h-6" />

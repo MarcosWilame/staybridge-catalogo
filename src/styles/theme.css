@@ -8,13 +8,13 @@
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #1a4d2e;
+  --primary: #14532d;
   --primary-foreground: #ffffff;
-  --secondary: #f4d03f;
+  --secondary: #f4c542;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f5;
   --muted-foreground: #666666;
-  --accent: #f4d03f;
+  --accent: #f4c542;
   --accent-foreground: #0a0a0a;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
@@ -24,31 +24,34 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #1a4d2e;
-  --chart-1: #1a4d2e;
-  --chart-2: #f4d03f;
+  --ring: #4fb06d;
+  --chart-1: #14532d;
+  --chart-2: #f4c542;
   --chart-3: #0a0a0a;
   --chart-4: #ffffff;
-  --chart-5: #2d5a3d;
+  --chart-5: #2e7d4f;
   --radius: 0.5rem;
-  --sidebar: #1a4d2e;
+  --sidebar: #14532d;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #f4d03f;
+  --sidebar-primary: #f4c542;
   --sidebar-primary-foreground: #0a0a0a;
-  --sidebar-accent: #2d5a3d;
+  --sidebar-accent: #2e7d4f;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #f4d03f;
+  --sidebar-ring: #f4c542;
 
-  /* Custom Staybridge colors */
-  --green-dark: #1a4d2e;
-  --green-medium: #2d5a3d;
-  --green-light: #4a7c59;
-  --yellow: #f4d03f;
-  --yellow-dark: #d4b034;
+  /* Custom Bedminster colors */
+  --green-dark: #14532d;
+  --green-medium: #2e7d4f;
+  --green-light: #e8f5ec;
+  --yellow: #f4c542;
+  --yellow-dark: #d9a72c;
   --black: #0a0a0a;
-  --gray-light: #f5f5f5;
-  --gray-medium: #e0e0e0;
+  --gray-light: #f6faf4;
+  --gray-medium: #5c7564;
+  --page-gradient: linear-gradient(180deg, #ffffff 0%, #f6faf4 32%, #e8f5ec 68%, #ffffff 100%);
+  --brand-gradient: linear-gradient(135deg, #14532d 0%, #2e7d4f 48%, #f4c542 115%);
+  --soft-gradient: linear-gradient(180deg, #ffffff 0%, #f6faf4 58%, #e8f5ec 100%);
 }
 
 .dark {
@@ -140,7 +143,8 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: var(--page-gradient);
   }
 
   /**

@@ -3,6 +3,7 @@ import { PropertyCard } from './PropertyCard';
 import { useProperties } from '../data/sheetProperties';
 import { ArrowRight } from 'lucide-react';
 import type { Property } from '../data/properties';
+import { trackEvent } from '../utils/analytics';
 
 function pickFirstUnused(
   properties: Property[],
@@ -169,6 +170,7 @@ export function FeaturedProperties() {
         <div className="flex justify-center">
           <Link
             to="/unidades"
+            onClick={() => trackEvent('view_units_click', { source: 'featured_properties' })}
             className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[var(--yellow)] px-6 py-3.5 text-base font-bold text-black shadow-lg transition-all duration-300 hover:bg-[var(--yellow-dark)] hover:shadow-2xl sm:w-auto md:px-8 md:py-4 md:text-lg"
           >
             Ver mais unidades

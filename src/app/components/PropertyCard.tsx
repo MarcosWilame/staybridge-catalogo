@@ -14,6 +14,7 @@ import {
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
+import { trackPropertyEvent, trackWhatsAppClick } from '../utils/analytics';
 
 interface PropertyCardProps {
   property: Property;
@@ -31,7 +32,19 @@ export function PropertyCard({ property }: PropertyCardProps) {
     const message = encodeURIComponent(
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title}`
     );
+    trackWhatsAppClick('property_card', {
+      property_id: property.id,
+      property_title: property.title,
+      property_type: property.type,
+      property_region: property.region,
+    });
     window.open(`https://wa.me/5588997993046?text=${message}`, '_blank');
+  };
+
+  const handleDetailsClick = () => {
+    trackPropertyEvent('property_details_click', property, {
+      source: 'property_card',
+    });
   };
 
   const showPreviousImage = () => {
@@ -137,7 +150,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Title */}
-        <Link to={`/property/${property.id}`}>
+        <Link to={`/property/${property.id}`} onClick={handleDetailsClick}>
           <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[var(--green-dark)] transition-colors leading-tight">
             {property.title}
           </h3>
@@ -169,6 +182,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <div className="flex gap-2">
           <Link
             to={`/property/${property.id}`}
+            onClick={handleDetailsClick}
             className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[var(--yellow-dark)] md:px-4"
           >
             <span className="truncate">Ver Detalhes</span>

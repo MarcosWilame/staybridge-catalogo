@@ -1,6 +1,6 @@
-# Staybridge London - Premium Accommodation Platform
+# Bedminster London - Premium Accommodation Platform
 
-<!-- Project version: STAYBRIDGE CATALOGO.v1 -->
+<!-- Project version: BEDMINSTER CATALOGO.v1 -->
 
 A modern, responsive real estate catalog platform for connecting Brazilian customers with quality accommodation in London.
 
@@ -76,9 +76,7 @@ A modern, responsive real estate catalog platform for connecting Brazilian custo
 #### Sections
 - **Hero**: Full-screen hero with animated headline and brush stroke effects
 - **Benefits**: 6-column grid with icons and stats
-- **HowItWorks**: 4-step process guide
 - **Testimonials**: Customer reviews with 5-star ratings
-- **CTASection**: Conversion-focused section with WhatsApp CTA
 - **Footer**: Multi-column footer with links, contact, social media, and language switcher
 
 ### Mobile Optimizations
@@ -109,12 +107,10 @@ src/
 │   │   ├── figma/
 │   │   │   └── ImageWithFallback.tsx
 │   │   ├── Benefits.tsx
-│   │   ├── CTASection.tsx
 │   │   ├── FeaturedProperties.tsx
 │   │   ├── Footer.tsx
 │   │   ├── Header.tsx
 │   │   ├── Hero.tsx
-│   │   ├── HowItWorks.tsx
 │   │   ├── MobileBottomNav.tsx
 │   │   ├── PropertyCard.tsx
 │   │   ├── Testimonials.tsx

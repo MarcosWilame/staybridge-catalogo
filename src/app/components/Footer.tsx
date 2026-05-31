@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Mail, Phone, Instagram, MessageCircle, Globe } from 'lucide-react';
 import { useState } from 'react';
+import { trackEvent, trackWhatsAppClick } from '../utils/analytics';
 
 export function Footer() {
   const [language, setLanguage] = useState<'pt' | 'en'>('pt');
@@ -23,6 +24,7 @@ export function Footer() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackEvent('social_click', { network: 'instagram', source: 'footer' })}
                 className="w-10 h-10 bg-white/10 hover:bg-[var(--yellow)] hover:text-black rounded-full flex items-center justify-center transition-all duration-300"
               >
                 <Instagram className="w-5 h-5" />
@@ -31,6 +33,7 @@ export function Footer() {
                 href="https://wa.me/5588997993046"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick('footer')}
                 className="w-10 h-10 bg-white/10 hover:bg-[var(--yellow)] hover:text-black rounded-full flex items-center justify-center transition-all duration-300"
               >
                 <MessageCircle className="w-5 h-5" />
@@ -43,7 +46,11 @@ export function Footer() {
             <h3 className="font-bold text-lg mb-4 text-[var(--yellow)]">Links Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/unidades" className="text-gray-300 hover:text-[var(--yellow)] transition-colors">
+                <Link
+                  to="/unidades"
+                  onClick={() => trackEvent('view_units_click', { source: 'footer' })}
+                  className="text-gray-300 hover:text-[var(--yellow)] transition-colors"
+                >
                   Ver Unidades
                 </Link>
               </li>

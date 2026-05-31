@@ -5,12 +5,34 @@ interface PropertyMapProps {
   property?: Property;
   properties?: Property[];
   onSelectProperty?: (property: Property) => void;
+  className?: string;
+  mapHeightClassName?: string;
 }
 
 function getAreaLabel(property?: Property) {
   if (!property) return 'London';
 
-  return property.localArea || property.region || 'London';
+  if (property.localArea) return property.localArea;
+
+  const descriptionArea = property.description?.match(/\bem\s+([^.,]+)/i)?.[1]?.trim();
+  if (descriptionArea) return descriptionArea;
+
+  const station = property.nearbyStations?.find(Boolean);
+  if (station) return station.replace(/\s+Station$/i, '').trim();
+
+  const titleArea = property.title?.match(/\s-\s([A-Za-z][A-Za-z\s]+)$/)?.[1]?.trim();
+  if (titleArea) return titleArea;
+
+  const region = property.region || '';
+  if (!/^(north|south|east|west|central)\s+london$/i.test(region)) {
+    return region;
+  }
+
+  return property.postcode || region || 'London';
+}
+
+export function getPropertyAreaLabel(property?: Property) {
+  return getAreaLabel(property);
 }
 
 export function getMapQuery(property?: Property) {
@@ -31,6 +53,8 @@ export function PropertyMap({
   property,
   properties = [],
   onSelectProperty,
+  className = '',
+  mapHeightClassName = 'h-64 md:h-80',
 }: PropertyMapProps) {
   const selectedProperty = property || properties[0];
   const areaLabel = getAreaLabel(selectedProperty);
@@ -40,8 +64,8 @@ export function PropertyMap({
   )}&z=13&output=embed`;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg md:rounded-2xl">
-      <div className="p-4 border-b border-gray-100">
+    <div className={`overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-lg md:rounded-2xl ${className}`}>
+      <div className="border-b border-emerald-100 bg-white/90 p-4 md:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-[var(--green-dark)] font-bold">
@@ -67,9 +91,9 @@ export function PropertyMap({
         </div>
       </div>
 
-      <div className="relative h-64 md:h-80">
+      <div className={`relative ${mapHeightClassName}`}>
         <iframe
-          title={`Mapa - ${selectedProperty?.title || 'Staybridge'}`}
+          title={`Mapa - ${selectedProperty?.title || 'Bedminster'}`}
           src={mapUrl}
           className="h-full w-full border-0"
           loading="lazy"

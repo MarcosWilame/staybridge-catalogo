@@ -2,15 +2,20 @@ import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { trackEvent, trackWhatsAppClick } from '../utils/analytics';
 
 export function Hero() {
   const navigate = useNavigate();
 
   const handleWhatsApp = () => {
+    trackWhatsAppClick('hero');
     window.open('https://wa.me/5588997993046', '_blank');
   };
 
   const goToProperties = () => {
+    trackEvent('view_units_click', {
+      source: 'hero',
+    });
     navigate('/unidades');
   };
 

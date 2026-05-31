@@ -1,15 +1,17 @@
 import { MessageCircle } from 'lucide-react';
 import { motion } from "framer-motion";
+import { trackWhatsAppClick } from '../utils/analytics';
 
 export function WhatsAppButton() {
   const handleClick = () => {
+    trackWhatsAppClick('floating_button');
     window.open('https://wa.me/5588997993046', '_blank');
   };
 
   return (
     <motion.button
       onClick={handleClick}
-      className="group fixed bottom-24 right-4 z-50 rounded-full bg-[#25D366] p-3 text-white shadow-2xl transition-all duration-300 hover:bg-[#20BA5A] hover:shadow-3xl md:bottom-6 md:right-6 md:p-4"
+      className="group fixed bottom-24 right-4 z-50 rounded-full bg-[#0f8f5f] p-3 text-white shadow-2xl transition-all duration-300 hover:bg-[#0b754f] hover:shadow-3xl md:bottom-6 md:right-6 md:p-4"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       initial={{ scale: 0 }}
@@ -26,7 +28,7 @@ export function WhatsAppButton() {
 
       {/* Pulse Animation */}
       <motion.div
-        className="absolute inset-0 bg-[#25D366] rounded-full"
+        className="absolute inset-0 rounded-full bg-[#0f8f5f]"
         animate={{
           scale: [1, 1.5, 1.5],
           opacity: [0.7, 0, 0],

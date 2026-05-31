@@ -29,10 +29,12 @@ const stats = [
 
 export function QuickStats() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] py-10 md:py-16">
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,var(--green-dark)_0%,#17633a_72%,#edf7ed_100%)] pb-20 pt-14 md:pb-24 md:pt-16">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-[var(--yellow)]/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/8 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[#edf7ed]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
@@ -41,7 +43,7 @@ export function QuickStats() {
             return (
               <div
                 key={index}
-                className="rounded-xl border border-white/20 bg-white/10 p-4 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/20 md:rounded-2xl md:p-6"
+                className="rounded-xl border border-white/20 bg-white/10 p-4 text-center shadow-lg shadow-black/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/20 md:rounded-2xl md:p-6"
               >
                 <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} md:mb-4 md:h-16 md:w-16 md:rounded-2xl`}>
                   <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Home, Bed, Building2, User, Users } from 'lucide-react';
 import { useProperties } from '../data/sheetProperties';
+import { trackEvent } from '../utils/analytics';
 
 export function PropertyCategories() {
   const { properties } = useProperties();
@@ -99,6 +100,13 @@ export function PropertyCategories() {
                 <div className="mt-auto">
                   <Link
                     to={`/unidades?type=${category.category}`}
+                    onClick={() =>
+                      trackEvent('property_category_click', {
+                        category: category.category,
+                        category_name: category.name,
+                        available_count: category.count,
+                      })
+                    }
                     className="inline-flex items-center justify-center rounded-full bg-[var(--green-dark)] px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[var(--green-medium)] hover:shadow-md"
                   >
                     {category.count} disponíveis

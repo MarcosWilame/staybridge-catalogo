@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { User, MessageCircle, Home } from 'lucide-react';
+import { trackWhatsAppClick } from '../utils/analytics';
 
 export function ProfilePage() {
   return (
@@ -22,6 +23,7 @@ export function ProfilePage() {
               href="https://wa.me/5588997993046"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick('profile_page')}
               className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:px-6 md:py-4"
             >
               <MessageCircle className="w-5 h-5" />

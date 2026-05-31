@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bedminster Layout Concept</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --green-950: #082115;
+        --green-900: #103b27;
+        --green-800: #155b37;
+        --green-700: #1f7a4a;
+        --green-100: #e9f6ee;
+        --green-50: #f6fbf7;
+        --gold: #f3c33d;
+        --gold-dark: #d6a524;
+        --ink: #102017;
+        --muted: #617166;
+        --line: #cfe7d8;
+        --shadow: 0 24px 60px rgba(10, 40, 24, 0.14);
+        --shadow-strong: 0 32px 90px rgba(10, 40, 24, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #ffffff 0%, var(--green-50) 42%, #ffffff 100%);
+        color: var(--ink);
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .shell {
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .display {
+        font-family: "DM Serif Display", Georgia, serif;
+        font-weight: 400;
+        line-height: 0.96;
+      }
+
+      .nav {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 20;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(8, 33, 21, 0.74);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 86px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .brand img {
+        width: 92px;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .nav-cta {
+        border-radius: 999px;
+        background: var(--gold);
+        color: #10150d;
+        padding: 12px 18px;
+      }
+
+      .hero {
+        position: relative;
+        min-height: 780px;
+        overflow: hidden;
+        color: #fff;
+      }
+
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+      }
+
+      .hero-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hero-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(5, 18, 12, 0.92) 0%, rgba(13, 50, 31, 0.72) 48%, rgba(13, 50, 31, 0.16) 100%),
+          linear-gradient(180deg, rgba(8, 33, 21, 0) 58%, var(--green-950) 100%);
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 390px;
+        align-items: end;
+        gap: 46px;
+        min-height: 780px;
+        padding: 170px 0 96px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 9px 13px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        font-weight: 800;
+        backdrop-filter: blur(12px);
+      }
+
+      .hero h1 {
+        max-width: 760px;
+        margin: 24px 0 22px;
+        font-size: clamp(54px, 7vw, 92px);
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+
+      .hero h1 span {
+        color: var(--gold);
+      }
+
+      .hero-copy {
+        max-width: 660px;
+        margin: 0 0 30px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 19px;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 52px;
+        border-radius: 14px;
+        padding: 0 22px;
+        border: 0;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--gold);
+        color: #111509;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+      }
+
+      .btn-glass {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        backdrop-filter: blur(14px);
+      }
+
+      .hero-card {
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 24px;
+        box-shadow: var(--shadow-strong);
+        backdrop-filter: blur(18px);
+      }
+
+      .search-title {
+        margin: 0 0 16px;
+        font-size: 24px;
+      }
+
+      .search-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .search-chip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.14);
+        padding: 15px;
+      }
+
+      .search-chip strong {
+        color: var(--gold);
+      }
+
+      .stats {
+        position: relative;
+        margin-top: -1px;
+        background: linear-gradient(180deg, var(--green-950) 0%, var(--green-900) 72%, var(--green-100) 100%);
+        padding: 18px 0 88px;
+      }
+
+      .stats::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 56px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), transparent);
+        pointer-events: none;
+      }
+
+      .stats-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 22px;
+      }
+
+      .stat-card {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 28px 18px;
+        color: #fff;
+        text-align: center;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+        backdrop-filter: blur(12px);
+      }
+
+      .stat-icon {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--gold);
+        font-size: 24px;
+      }
+
+      .stat-value {
+        font-size: 34px;
+        font-weight: 800;
+      }
+
+      .stat-label {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 13px;
+      }
+
+      .section {
+        padding: 86px 0;
+      }
+
+      .section.soft {
+        background: linear-gradient(180deg, var(--green-100) 0%, #fff 54%, var(--green-50) 100%);
+      }
+
+      .section-head {
+        max-width: 720px;
+        margin: 0 auto 42px;
+        text-align: center;
+      }
+
+      .section-head h2 {
+        margin: 0 0 14px;
+        color: var(--green-950);
+        font-size: clamp(40px, 5vw, 64px);
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 18px;
+      }
+
+      .category-card,
+      .benefit-card,
+      .property-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: var(--shadow);
+      }
+
+      .category-card {
+        min-height: 245px;
+        padding: 26px 18px;
+        text-align: center;
+      }
+
+      .category-card::before,
+      .benefit-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 5px;
+        background: linear-gradient(90deg, var(--green-800), var(--green-700), var(--gold));
+      }
+
+      .cat-icon,
+      .benefit-icon {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 18px;
+        border-radius: 17px;
+        background: linear-gradient(135deg, var(--green-800), var(--green-700));
+        color: #fff;
+        font-size: 25px;
+        box-shadow: 0 18px 34px rgba(20, 83, 45, 0.18);
+      }
+
+      .category-card h3,
+      .benefit-card h3 {
+        margin: 0 0 10px;
+        color: var(--green-950);
+        font-size: 24px;
+      }
+
+      .category-card p,
+      .benefit-card p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .pill {
+        display: inline-flex;
+        border-radius: 999px;
+        background: var(--green-900);
+        color: #fff;
+        padding: 9px 13px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .properties-band {
+        background:
+          linear-gradient(180deg, #fff 0%, var(--green-50) 100%),
+          radial-gradient(circle at 10% 30%, rgba(243, 195, 61, 0.12), transparent 28%);
+      }
+
+      .property-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+
+      .property-card img {
+        width: 100%;
+        height: 230px;
+        object-fit: cover;
+      }
+
+      .property-body {
+        padding: 20px;
+      }
+
+      .property-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        color: var(--green-800);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .property-body h3 {
+        margin: 0 0 10px;
+        font-size: 28px;
+      }
+
+      .property-body p {
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .property-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 18px;
+      }
+
+      .price {
+        color: var(--green-950);
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+
+      .benefit-card {
+        padding: 30px;
+      }
+
+      .detail-preview {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 370px;
+        gap: 24px;
+        align-items: stretch;
+      }
+
+      .detail-copy {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: #fff;
+        padding: 34px;
+        box-shadow: var(--shadow);
+      }
+
+      .detail-copy h2 {
+        margin: 0 0 16px;
+        color: var(--green-950);
+        font-size: 48px;
+      }
+
+      .detail-copy p {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .price-card {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: linear-gradient(180deg, #fff 0%, var(--green-50) 100%);
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .price-card small {
+        color: var(--muted);
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .price-card strong {
+        display: block;
+        margin: 8px 0 22px;
+        color: var(--green-950);
+        font-size: 44px;
+      }
+
+      .footer {
+        background: linear-gradient(90deg, var(--green-950), var(--green-800), #879c3d);
+        color: #fff;
+        padding: 62px 0;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr;
+        gap: 60px;
+      }
+
+      .footer h3 {
+        color: var(--gold);
+      }
+
+      .footer p,
+      .footer li {
+        color: rgba(255, 255, 255, 0.78);
+        line-height: 1.7;
+      }
+
+      @media (max-width: 980px) {
+        .hero-content,
+        .detail-preview {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-card {
+          display: none;
+        }
+
+        .stats-grid,
+        .category-grid,
+        .property-grid,
+        .benefits-grid,
+        .footer-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: min(100% - 28px, 1160px);
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .hero,
+        .hero-content {
+          min-height: 720px;
+        }
+
+        .hero h1 {
+          font-size: 48px;
+        }
+
+        .stats-grid,
+        .category-grid,
+        .property-grid,
+        .benefits-grid,
+        .footer-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="shell nav-inner">
+        <a class="brand" href="#">
+          <img src="../public/img/logo-white.png" alt="Bedminster London" />
+        </a>
+        <nav class="nav-links">
+          <a href="#">Início</a>
+          <a href="#">Unidades</a>
+          <a href="#">Favoritos</a>
+          <a class="nav-cta" href="#">WhatsApp</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-bg">
+          <img src="../public/img/pexels-shambadatta-33257244.jpg" alt="Londres" />
+        </div>
+        <div class="shell hero-content">
+          <div>
+            <span class="eyebrow">Acomodações verificadas em Londres</span>
+            <h1 class="display">Moradia em Londres, <span>sem complicação.</span></h1>
+            <p class="hero-copy">
+              Studios, ensuites e flats prontos para entrar, com bills inclusas,
+              atendimento em português e suporte do primeiro contato até a chave.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#">Ver unidades disponíveis</a>
+              <a class="btn btn-glass" href="#">Falar no WhatsApp</a>
+            </div>
+          </div>
+
+          <aside class="hero-card">
+            <h2 class="display search-title">Busca rápida</h2>
+            <div class="search-grid">
+              <a class="search-chip" href="#"><span>Studios mobiliados</span><strong>3</strong></a>
+              <a class="search-chip" href="#"><span>Ensuites com bills</span><strong>1</strong></a>
+              <a class="search-chip" href="#"><span>Flats completos</span><strong>2</strong></a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="stats">
+        <div class="shell stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">⌂</div>
+            <div class="stat-value">100+</div>
+            <div class="stat-label">Propriedades disponíveis</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">◌</div>
+            <div class="stat-value">500+</div>
+            <div class="stat-label">Brasileiros atendidos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✓</div>
+            <div class="stat-value">98%</div>
+            <div class="stat-label">Taxa de satisfação</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">◷</div>
+            <div class="stat-value">24/7</div>
+            <div class="stat-label">Suporte em português</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section soft">
+        <div class="shell">
+          <div class="section-head">
+            <h2 class="display">Escolha pelo seu momento</h2>
+            <p>Tipos de acomodação separados por estilo de rotina, privacidade e orçamento.</p>
+          </div>
+          <div class="category-grid">
+            <a class="category-card" href="#">
+              <div class="cat-icon">⌂</div>
+              <h3 class="display">Studios</h3>
+              <p>Espaços independentes completos.</p>
+              <span class="pill">3 disponíveis</span>
+            </a>
+            <a class="category-card" href="#">
+              <div class="cat-icon">▭</div>
+              <h3 class="display">Ensuites</h3>
+              <p>Quartos com banheiro privativo.</p>
+              <span class="pill">1 disponível</span>
+            </a>
+            <a class="category-card" href="#">
+              <div class="cat-icon">▦</div>
+              <h3 class="display">Flats</h3>
+              <p>Apartamentos completos.</p>
+              <span class="pill">2 disponíveis</span>
+            </a>
+            <a class="category-card" href="#">
+              <div class="cat-icon">◍</div>
+              <h3 class="display">Singles</h3>
+              <p>Quartos individuais.</p>
+              <span class="pill">1 disponível</span>
+            </a>
+            <a class="category-card" href="#">
+              <div class="cat-icon">∞</div>
+              <h3 class="display">Doubles</h3>
+              <p>Quartos para casais.</p>
+              <span class="pill">0 disponíveis</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section properties-band">
+        <div class="shell">
+          <div class="section-head">
+            <h2 class="display">Unidades em destaque</h2>
+            <p>Cards maiores, mais foto, preço evidente e CTA claro.</p>
+          </div>
+          <div class="property-grid">
+            <article class="property-card">
+              <img src="https://lh3.googleusercontent.com/d/1aTCb5tpqflds8l-C8eXjYJkGFShdJXA3" alt="Studio" />
+              <div class="property-body">
+                <div class="property-meta"><span>Studio</span><span>North London</span></div>
+                <h3 class="display">Studio 8</h3>
+                <p>Studio moderno totalmente mobiliado com bills inclusas.</p>
+                <div class="property-footer">
+                  <span class="price">£350/week</span>
+                  <a class="pill" href="#">Detalhes</a>
+                </div>
+              </div>
+            </article>
+            <article class="property-card">
+              <img src="https://drive.google.com/thumbnail?id=1kqs9FomsylDymaFtxAFgpiY-5MyJ7pUg&sz=w2000" alt="Studio" />
+              <div class="property-body">
+                <div class="property-meta"><span>Studio</span><span>South London</span></div>
+                <h3 class="display">Studio 4</h3>
+                <p>Espaço pronto para entrada, com suporte em português.</p>
+                <div class="property-footer">
+                  <span class="price">£280/week</span>
+                  <a class="pill" href="#">Detalhes</a>
+                </div>
+              </div>
+            </article>
+            <article class="property-card">
+              <img src="../public/img/pexels-shambadatta-33257244.jpg" alt="London" />
+              <div class="property-body">
+                <div class="property-meta"><span>Flat</span><span>Central London</span></div>
+                <h3 class="display">Flat completo</h3>
+                <p>Opção confortável para quem quer chegar com tudo resolvido.</p>
+                <div class="property-footer">
+                  <span class="price">£420/week</span>
+                  <a class="pill" href="#">Detalhes</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section soft">
+        <div class="shell">
+          <div class="section-head">
+            <h2 class="display">Por que escolher a Bedminster</h2>
+            <p>Benefícios com cards mais destacados e menos aparência de bloco genérico.</p>
+          </div>
+          <div class="benefits-grid">
+            <article class="benefit-card">
+              <div class="benefit-icon">◌</div>
+              <h3 class="display">Atendimento em português</h3>
+              <p>Equipe preparada para acompanhar cada etapa da mudança.</p>
+            </article>
+            <article class="benefit-card">
+              <div class="benefit-icon">✓</div>
+              <h3 class="display">Bills inclusas</h3>
+              <p>Água, luz, gás e internet já considerados no preço.</p>
+            </article>
+            <article class="benefit-card">
+              <div class="benefit-icon">↗</div>
+              <h3 class="display">Entrada imediata</h3>
+              <p>Unidades prontas para reduzir burocracia e espera.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell detail-preview">
+          <div class="detail-copy">
+            <h2 class="display">Detalhe da unidade mais limpo</h2>
+            <p>
+              A descrição pode ocupar metade da linha, enquanto preço, disponibilidade e WhatsApp
+              ficam ao lado em um card claro. Os locais próximos entram abaixo como uma fileira.
+            </p>
+          </div>
+          <aside class="price-card">
+            <small>Preço por semana</small>
+            <strong>£350/week</strong>
+            <a class="btn btn-primary" href="#">Falar no WhatsApp</a>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="shell footer-grid">
+        <div>
+          <h3 class="display">BEDMINSTER LONDON</h3>
+          <p>Conectando brasileiros às melhores acomodações em Londres.</p>
+        </div>
+        <div>
+          <h3 class="display">Links</h3>
+          <p>Unidades<br />Depoimentos<br />Favoritos</p>
+        </div>
+        <div>
+          <h3 class="display">Contato</h3>
+          <p>Londres, Reino Unido<br />+44 7000 000000<br />contato@bedminster.com</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

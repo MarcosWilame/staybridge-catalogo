@@ -4,7 +4,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const SUPABASE_TABLE =
   import.meta.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
-const AUTH_STORAGE_KEY = 'staybridge_admin_session';
+const AUTH_STORAGE_KEY = 'bedminster_admin_session';
 
 type SupabasePropertyRow = {
   id: number;

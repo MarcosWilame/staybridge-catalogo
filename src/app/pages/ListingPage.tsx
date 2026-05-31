@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PropertyCard } from '../components/PropertyCard';
-import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
-import { PropertyMap } from '../components/PropertyMap';
 import { Building2, Home, KeyRound, MapPin, SlidersHorizontal, TrainFront, X } from 'lucide-react';
+import { trackWhatsAppClick } from '../utils/analytics';
 
 interface FilterState {
   region: string;
@@ -98,12 +97,6 @@ export function ListingPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('recommended');
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
-  const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(
-    properties[0]
-  );
-
-  const listRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
@@ -111,10 +104,6 @@ export function ListingPage() {
       type: searchParams.get('type') || '',
     }));
   }, [searchParams]);
-
-  useEffect(() => {
-    setSelectedProperty((current) => current || properties[0]);
-  }, [properties]);
 
   const updateFilter = <K extends keyof FilterState>(
     key: K,
@@ -205,10 +194,6 @@ export function ListingPage() {
 
   const visibleProperties = sortedProperties.slice(0, visibleCount);
   const hasMoreProperties = visibleCount < sortedProperties.length;
-
-  const visibleSelectedProperty = sortedProperties.find(
-    (property) => property.id === selectedProperty?.id
-  );
 
   const hasActiveFilters =
     filters.region ||
@@ -446,12 +431,7 @@ export function ListingPage() {
             <FiltersPanel />
           </div>
 
-          <div
-            ref={listRef}
-            className={`lg:col-span-3 grid gap-6 ${
-              isLoading ? '' : 'xl:grid-cols-[minmax(0,1fr)_360px]'
-            }`}
-          >
+          <div className="lg:col-span-3">
             <div className="min-w-0">
               <div className="sticky top-20 z-20 mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:top-24">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -508,19 +488,15 @@ export function ListingPage() {
               {isLoading ? (
                 <LondonPropertiesLoading />
               ) : (
-                <div className="grid content-start gap-4 md:grid-cols-2 lg:max-h-[calc(100vh-17rem)] lg:overflow-y-auto lg:pr-1">
+                <div className="grid content-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {visibleProperties.map((p) => (
-                    <div
-                      key={p.id}
-                      onMouseEnter={() => setSelectedProperty(p)}
-                      onFocus={() => setSelectedProperty(p)}
-                    >
+                    <div key={p.id}>
                       <PropertyCard property={p} />
                     </div>
                   ))}
 
                   {hasMoreProperties && (
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 xl:col-span-3">
                       <button
                         type="button"
                         onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}
@@ -533,16 +509,6 @@ export function ListingPage() {
                 </div>
               )}
             </div>
-
-            {!isLoading && (
-              <div className="xl:sticky xl:top-24 xl:self-start">
-                <PropertyMap
-                  property={visibleSelectedProperty || sortedProperties[0]}
-                  properties={sortedProperties}
-                  onSelectProperty={setSelectedProperty}
-                />
-              </div>
-            )}
           </div>
         </div>
 
@@ -566,6 +532,7 @@ export function ListingPage() {
                 href="https://wa.me/447000000000"
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackWhatsAppClick('listing_empty_state')}
                 className="rounded-xl border border-[var(--green-dark)] px-5 py-3 font-bold text-[var(--green-dark)]"
               >
                 Falar no WhatsApp
