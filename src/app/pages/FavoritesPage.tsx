@@ -31,8 +31,8 @@ export function FavoritesPage() {
   return (
     <div className="min-h-screen bg-[image:var(--page-gradient)] px-4 pb-28 pt-28 md:pb-24">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 overflow-hidden rounded-2xl border border-emerald-100 bg-white/90 p-6 text-center shadow-[0_18px_45px_rgba(15,83,45,0.10)] md:p-10">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--yellow)] text-black shadow-lg shadow-yellow-900/10 md:h-20 md:w-20">
+        <div className="mb-8 overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white/90 p-6 text-center shadow-[var(--surface-shadow)] md:p-10">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--yellow)] text-black shadow-lg shadow-[rgba(184,155,99,0.18)] md:h-20 md:w-20">
             <Heart className="h-8 w-8 md:h-10 md:w-10" />
           </div>
           <h1 className="mb-3 text-3xl font-bold text-[var(--green-dark)] md:text-5xl">
@@ -56,10 +56,10 @@ export function FavoritesPage() {
             ))}
           </div>
         ) : (
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-emerald-100 bg-white text-center shadow-[0_18px_45px_rgba(15,83,45,0.10)]">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white text-center shadow-[var(--surface-shadow)]">
             <div className="h-2 bg-[image:var(--brand-gradient)]" />
             <div className="p-6 md:p-12">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--gray-light)] text-[var(--green-dark)]">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-lg bg-[var(--gray-light)] text-[var(--green-dark)]">
               <Search className="h-7 w-7" />
             </div>
             <h2 className="mb-3 text-2xl font-bold text-[var(--green-dark)] md:text-3xl">

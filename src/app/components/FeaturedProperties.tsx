@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PropertyCard } from './PropertyCard';
 import { useProperties } from '../data/sheetProperties';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Building2 } from 'lucide-react';
 import type { Property } from '../data/properties';
 import { trackEvent } from '../utils/analytics';
 
@@ -61,13 +61,13 @@ export function FeaturedProperties() {
   const visibleProperties = pickFeaturedProperties(featuredProperties);
 
   return (
-    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#ffffff_0%,#f7fbf6_52%,#eef8ee_100%)] py-14 md:py-28">
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#ffffff_0%,color-mix(in_srgb,var(--color3)_32%,#ffffff_68%)_52%,var(--color3)_100%)] py-14 md:py-28">
 
       {/* Background Decorative Elements */}
       <div className="absolute top-10 right-0 w-1/3 h-64 bg-[var(--yellow)]/10 transform skew-y-6 blur-3xl" />
       <div className="absolute bottom-0 left-0 w-1/4 h-52 bg-[var(--green-medium)]/10 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[#eef8ee]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[var(--color3)]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
@@ -75,13 +75,14 @@ export function FeaturedProperties() {
         <div className="mb-10 text-center md:mb-16">
 
           <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full bg-[var(--green-dark)] px-4 py-2 text-xs font-bold text-white shadow-lg md:mb-5 md:px-5 md:text-sm">
-            🇬🇧 PROPRIEDADES EM DESTAQUE
+            <Building2 className="h-4 w-4" />
+            PROPRIEDADES EM DESTAQUE
           </div>
 
           <h2 className="text-3xl font-extrabold leading-tight text-[var(--green-dark)] sm:text-4xl md:text-6xl">
             Sua Nova Vida
             <br />
-            <span className="text-[var(--yellow)]">
+            <span className="text-[var(--green-medium)]">
               Começa Aqui
             </span>
           </h2>
@@ -97,17 +98,15 @@ export function FeaturedProperties() {
           </div>
         </div>
 
-        <div className="mb-10 overflow-hidden md:mb-16">
-          <div className="featured-carousel flex w-max gap-5 py-2 md:gap-8">
-            {[...visibleProperties, ...visibleProperties].map((property, index) => (
-              <div
-                key={`${property.id}-${index}`}
-                className="w-[min(82vw,340px)] shrink-0 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl md:w-[360px]"
-              >
-                <PropertyCard property={property} />
-              </div>
-            ))}
-          </div>
+        <div className="mx-auto mb-10 grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 md:mb-16 lg:grid-cols-3 lg:gap-7">
+          {visibleProperties.map((property) => (
+            <div
+              key={property.id}
+              className="min-w-0 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+            >
+              <PropertyCard property={property} />
+            </div>
+          ))}
         </div>
 
         <div className="flex justify-center">

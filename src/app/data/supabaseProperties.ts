@@ -1,4 +1,5 @@
 import type { Property } from './properties';
+import { formatEuroPrice } from '../utils/price';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -219,11 +220,12 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     region: toStringValue(input.region),
     localArea:
       typeof input.localArea === 'string' ? input.localArea : undefined,
-    price: toStringValue(input.price),
+    price: formatEuroPrice(toStringValue(input.price)),
     description: toStringValue(input.description),
     longDescription: toStringValue(input.longDescription),
     available: toBooleanValue(input.available, true),
     listed: toBooleanValue(input.listed, true),
+    deletedAt: typeof input.deletedAt === 'string' ? input.deletedAt : undefined,
     billsIncluded: toBooleanValue(input.billsIncluded, false),
     bedrooms:
       typeof input.bedrooms === 'number' && Number.isFinite(input.bedrooms)

@@ -4,12 +4,14 @@ import { PropertyCard } from '../components/PropertyCard';
 import { useProperties } from '../data/sheetProperties';
 import { Building2, Home, KeyRound, MapPin, SlidersHorizontal, TrainFront, X } from 'lucide-react';
 import { trackWhatsAppClick } from '../utils/analytics';
+import { getPriceValue } from '../utils/price';
 
 interface FilterState {
   region: string;
   type: string;
-  priceRange: string;
-  availableNow: boolean;
+  minPrice: number;
+  maxPrice: number;
+  availability: string;
 }
 
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
@@ -25,8 +27,8 @@ function LondonPropertiesLoading() {
   ];
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
-      <div className="mb-6 overflow-hidden rounded-2xl bg-[var(--green-dark)] p-5 text-white">
+    <div className="rounded-lg border border-[var(--surface-border)] bg-white p-5 shadow-[var(--surface-shadow)] md:p-6">
+      <div className="mb-6 overflow-hidden rounded-lg bg-[var(--green-dark)] p-5 text-white">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide">
@@ -61,7 +63,7 @@ function LondonPropertiesLoading() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {loadingCards.map((card) => (
-          <div key={card.label} className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+          <div key={card.label} className="overflow-hidden rounded-lg border border-[var(--surface-border)] bg-[var(--gray-light)]">
             <div className="flex h-40 animate-pulse items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
               <Building2 className="h-12 w-12 text-gray-300" />
             </div>
@@ -90,8 +92,9 @@ export function ListingPage() {
   const [filters, setFilters] = useState<FilterState>({
     region: searchParams.get('region') || '',
     type: searchParams.get('type') || '',
-    priceRange: '',
-    availableNow: false,
+    minPrice: 0,
+    maxPrice: 1200,
+    availability: '',
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -116,30 +119,15 @@ export function ListingPage() {
     setFilters({
       region: '',
       type: '',
-      priceRange: '',
-      availableNow: false,
+      minPrice: 0,
+      maxPrice: 1200,
+      availability: '',
     });
   };
 
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE_COUNT);
   }, [filters, sortBy]);
-
-  const parsePriceRange = (range: string) => {
-    if (!range) return [0, Infinity] as const;
-    if (range.includes('+')) {
-      const min = Number(range.replace('+', ''));
-      return [min, Infinity] as const;
-    }
-    const [minStr, maxStr] = range.split('-');
-    return [Number(minStr), Number(maxStr)] as const;
-  };
-
-  const getPriceValue = (price: string) => {
-    const match = price.match(/\d+(?:[.,]\d+)?/);
-    if (!match) return 0;
-    return Number(match[0].replace(',', '.'));
-  };
 
   let filteredProperties = [...properties];
 
@@ -155,18 +143,24 @@ export function ListingPage() {
     );
   }
 
-  if (filters.priceRange) {
-    const [min, max] = parsePriceRange(filters.priceRange);
-    filteredProperties = filteredProperties.filter((p) => {
-      const price = getPriceValue(p.price);
-      return price >= min && price <= max;
-    });
-  }
+  filteredProperties = filteredProperties.filter((p) => {
+    const price = getPriceValue(p.price);
+    return price >= filters.minPrice && price <= filters.maxPrice;
+  });
 
-  if (filters.availableNow) {
+  if (filters.availability) {
     filteredProperties = filteredProperties.filter((p) => {
       const normalized = (p.moveInDate ?? '').trim().toLowerCase();
-      return normalized === 'now' || normalized === 'imediata';
+      if (filters.availability === 'immediate') {
+        return normalized === 'now' || normalized === 'imediata';
+      }
+      if (filters.availability === 'soon') {
+        return normalized === 'em breve';
+      }
+      if (filters.availability === 'arrange') {
+        return normalized === 'a combinar';
+      }
+      return true;
     });
   }
 
@@ -198,8 +192,9 @@ export function ListingPage() {
   const hasActiveFilters =
     filters.region ||
     filters.type ||
-    filters.priceRange ||
-    filters.availableNow;
+    filters.minPrice > 0 ||
+    filters.maxPrice < 1200 ||
+    filters.availability;
 
   const activeFilterChips = [
     filters.region && {
@@ -212,18 +207,20 @@ export function ListingPage() {
       label: filters.type.charAt(0).toUpperCase() + filters.type.slice(1),
       clear: () => updateFilter('type', ''),
     },
-    filters.priceRange && {
-      key: 'priceRange' as const,
-      label:
-        filters.priceRange === '350+'
-          ? '£350+'
-          : `£${filters.priceRange.replace('-', ' - £')}`,
-      clear: () => updateFilter('priceRange', ''),
+    (filters.minPrice > 0 || filters.maxPrice < 1200) && {
+      key: 'minPrice' as const,
+      label: `€${filters.minPrice} - €${filters.maxPrice}`,
+      clear: () => setFilters((prev) => ({ ...prev, minPrice: 0, maxPrice: 1200 })),
     },
-    filters.availableNow && {
-      key: 'availableNow' as const,
-      label: 'Entrada imediata',
-      clear: () => updateFilter('availableNow', false),
+    filters.availability && {
+      key: 'availability' as const,
+      label:
+        filters.availability === 'immediate'
+          ? 'Entrada imediata'
+          : filters.availability === 'soon'
+            ? 'Em breve'
+            : 'A combinar',
+      clear: () => updateFilter('availability', ''),
     },
   ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 
@@ -233,16 +230,40 @@ export function ListingPage() {
     { key: 'flat', label: 'Flat', type: 'flat' },
   ];
 
+  const typeOptions = [
+    { value: 'studio', label: 'Studio' },
+    { value: 'ensuite', label: 'Ensuite' },
+    { value: 'single', label: 'Single' },
+    { value: 'double', label: 'Double' },
+    { value: 'flat', label: 'Flat' },
+  ];
+
+  const regionOptions = [
+    { value: '', label: 'Todas' },
+    { value: 'north', label: 'North' },
+    { value: 'south', label: 'South' },
+    { value: 'east', label: 'East' },
+    { value: 'west', label: 'West' },
+  ];
+  const availabilityOptions = [
+    { value: '', label: 'Todas' },
+    { value: 'immediate', label: 'Entrada imediata' },
+    { value: 'soon', label: 'Em breve' },
+    { value: 'arrange', label: 'A combinar' },
+  ];
+  const minPercent = (filters.minPrice / 1200) * 100;
+  const maxPercent = (filters.maxPrice / 1200) * 100;
+
   const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
-      className={`overflow-y-auto overscroll-contain bg-white ${
+      className={`bg-[#f7faf7] ${
         isMobile
-          ? 'h-full px-5 pb-8 pt-5'
-          : 'max-h-[calc(100vh-7rem)] rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
+          ? 'h-full overflow-y-auto overscroll-contain px-5 pb-8 pt-5'
+          : 'rounded-lg border border-[var(--surface-border)] p-5 shadow-[var(--surface-shadow)] lg:sticky lg:top-24'
       }`}
     >
       <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilters || !isMobile ? 'mb-6' : ''}`}>
-        <h3 className={`${isMobile ? 'sr-only' : 'text-xl font-bold text-[var(--green-dark)] flex items-center gap-2'}`}>
+        <h3 className={`${isMobile ? 'sr-only' : 'text-lg font-extrabold text-[var(--green-dark)] flex items-center gap-2'}`}>
           <SlidersHorizontal className="w-5 h-5" />
           Filtros
         </h3>
@@ -257,105 +278,166 @@ export function ListingPage() {
         )}
       </div>
 
-      {/* REGION */}
-      <div className="space-y-2">
-        <label className="font-bold text-sm">Região</label>
-
-        <label className="flex gap-2 items-center cursor-pointer">
-          <input
-            type="radio"
-            name={`region-${isMobile ? 'mobile' : 'desktop'}`}
-            checked={filters.region === ''}
-            onChange={() => updateFilter('region', '')}
-          />
-          Todas
-        </label>
-
-        {['north', 'south', 'east', 'west'].map((region) => (
-          <label key={region} className="flex gap-2 items-center cursor-pointer">
+      <div className="space-y-5">
+      <div>
+        <label className="mb-2 block text-sm font-extrabold text-gray-900">Faixa de preço</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <span className="mb-1 block text-xs font-bold text-gray-600">De</span>
             <input
-              type="radio"
-              name={`region-${isMobile ? 'mobile' : 'desktop'}`}
-              checked={filters.region === region}
-              onChange={() => updateFilter('region', region)}
+              type="number"
+              min="0"
+              max={filters.maxPrice}
+              value={filters.minPrice}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  minPrice: Math.min(Number(event.target.value), prev.maxPrice),
+                }))
+              }
+              className="w-full rounded-lg border border-[var(--surface-border)] bg-white px-3 py-2 text-sm font-bold outline-none focus:border-[var(--green-dark)]"
             />
-            {region.charAt(0).toUpperCase() + region.slice(1)} London
-          </label>
-        ))}
+          </div>
+          <div>
+            <span className="mb-1 block text-xs font-bold text-gray-600">Até</span>
+            <input
+              type="number"
+              min={filters.minPrice}
+              max="2000"
+              value={filters.maxPrice}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  maxPrice: Math.max(Number(event.target.value), prev.minPrice),
+                }))
+              }
+              className="w-full rounded-lg border border-[var(--surface-border)] bg-white px-3 py-2 text-sm font-bold outline-none focus:border-[var(--green-dark)]"
+            />
+          </div>
+        </div>
+        <div
+          className="price-range-control mt-3"
+          style={
+            {
+              '--min-percent': `${minPercent}%`,
+              '--max-percent': `${maxPercent}%`,
+            } as React.CSSProperties
+          }
+        >
+          <input
+            type="range"
+            min="0"
+            max="1200"
+            step="25"
+            value={filters.minPrice}
+            onChange={(event) =>
+              setFilters((prev) => ({
+                ...prev,
+                minPrice: Math.min(Number(event.target.value), prev.maxPrice),
+              }))
+            }
+            aria-label="Preço mínimo"
+          />
+          <input
+            type="range"
+            min="0"
+            max="1200"
+            step="25"
+            value={filters.maxPrice}
+            onChange={(event) =>
+              setFilters((prev) => ({
+                ...prev,
+                maxPrice: Math.max(Number(event.target.value), prev.minPrice),
+              }))
+            }
+            aria-label="Preço máximo"
+          />
+        </div>
       </div>
 
-      {/* TYPE */}
-      <div className="mt-6 space-y-2">
-        <label className="font-bold text-sm">Tipo</label>
-
-        <label className="flex gap-2 items-center cursor-pointer">
-          <input
-            type="radio"
-            name={`type-${isMobile ? 'mobile' : 'desktop'}`}
-            checked={filters.type === ''}
-            onChange={() => updateFilter('type', '')}
-          />
-          Todos
-        </label>
-
-        {[
-          { value: 'studio', label: 'Studio' },
-          { value: 'ensuite', label: 'Ensuite' },
-          { value: 'single', label: 'Single' },
-          { value: 'double', label: 'Double' },
-          { value: 'flat', label: 'Flat' },
-        ].map((type) => (
-          <label key={type.value} className="flex gap-2 items-center cursor-pointer">
-            <input
-              type="radio"
-              name={`type-${isMobile ? 'mobile' : 'desktop'}`}
-              checked={filters.type === type.value}
-              onChange={() => updateFilter('type', type.value)}
-            />
-            {type.label}
-          </label>
-        ))}
+      <div>
+        <label className="mb-2 block text-sm font-extrabold text-gray-900">Tipo</label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => updateFilter('type', '')}
+            className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
+              filters.type === ''
+                ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white'
+                : 'border-[var(--surface-border)] bg-white text-gray-700'
+            }`}
+          >
+            Todos
+          </button>
+          {typeOptions.map((type) => (
+            <button
+              key={type.value}
+              type="button"
+              onClick={() => updateFilter('type', filters.type === type.value ? '' : type.value)}
+              className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
+                filters.type === type.value
+                  ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white'
+                  : 'border-[var(--surface-border)] bg-white text-gray-700'
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* PRICE */}
-      <div className="mt-6 space-y-2">
-        <label className="font-bold text-sm">Preço</label>
-
-        {[
-          { value: '', label: 'Todos' },
-          { value: '0-150', label: '£0 - £150' },
-          { value: '150-250', label: '£150 - £250' },
-          { value: '250-350', label: '£250 - £350' },
-          { value: '350+', label: '£350+' },
-        ].map((range) => (
-          <label key={range.value} className="flex gap-2 items-center cursor-pointer">
-            <input
-              type="radio"
-              name={`price-${isMobile ? 'mobile' : 'desktop'}`}
-              checked={filters.priceRange === range.value}
-              onChange={() => updateFilter('priceRange', range.value)}
-            />
-            {range.label}
-          </label>
-        ))}
+      <div>
+        <label className="mb-2 block text-sm font-extrabold text-gray-900">Região</label>
+        <div className="grid grid-cols-2 gap-2">
+          {regionOptions.map((region) => (
+            <button
+              key={region.value || 'all'}
+              type="button"
+              onClick={() => updateFilter('region', region.value)}
+              className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
+                filters.region === region.value
+                  ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white'
+                  : 'border-[var(--surface-border)] bg-white text-gray-700'
+              }`}
+            >
+              {region.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ENTRADA IMEDIATA */}
-      <div className="mt-6">
-        <label className="flex gap-2 items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={filters.availableNow}
-            onChange={(e) => updateFilter('availableNow', e.target.checked)}
-          />
-          Entrada imediata
-        </label>
+      <div>
+        <label className="mb-2 block text-sm font-extrabold text-gray-900">Disponibilidade</label>
+        <div className="rounded-lg border border-[var(--surface-border)] bg-white p-2">
+          {availabilityOptions.map((option) => (
+            <button
+              key={option.value || 'all'}
+              type="button"
+              onClick={() => updateFilter('availability', option.value)}
+              className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold transition ${
+                filters.availability === option.value
+                  ? 'bg-[var(--green-light)] text-[var(--green-dark)]'
+                  : 'text-gray-700 hover:bg-[var(--gray-light)]'
+              }`}
+            >
+              <span
+                className={`h-3 w-3 rounded-full border ${
+                  filters.availability === option.value
+                    ? 'border-[var(--green-dark)] bg-[var(--green-dark)]'
+                    : 'border-gray-300'
+                }`}
+              />
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28 pt-28 md:pb-10">
+    <div className="min-h-screen bg-[image:var(--soft-gradient)] pb-28 pt-28 md:pb-10">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -404,10 +486,15 @@ export function ListingPage() {
 
             <button
               type="button"
-              onClick={() => updateFilter('availableNow', !filters.availableNow)}
+              onClick={() =>
+                updateFilter(
+                  'availability',
+                  filters.availability === 'immediate' ? '' : 'immediate'
+                )
+              }
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
-                filters.availableNow
-                  ? 'bg-[var(--yellow)] text-black shadow'
+                filters.availability === 'immediate'
+                  ? 'bg-[var(--green-dark)] text-white shadow'
                   : 'bg-gray-100 text-gray-700'
               }`}
             >
@@ -433,7 +520,7 @@ export function ListingPage() {
 
           <div className="lg:col-span-3">
             <div className="min-w-0">
-              <div className="sticky top-20 z-20 mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:top-24">
+              <div className="sticky top-20 z-20 mb-4 rounded-lg border border-[var(--surface-border)] bg-white/95 p-4 shadow-[var(--surface-shadow)] backdrop-blur lg:top-24">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-gray-500">Resultados</div>
@@ -490,7 +577,7 @@ export function ListingPage() {
               ) : (
                 <div className="grid content-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {visibleProperties.map((p) => (
-                    <div key={p.id}>
+                    <div key={p.id} className="h-full">
                       <PropertyCard property={p} />
                     </div>
                   ))}
@@ -513,7 +600,7 @@ export function ListingPage() {
         </div>
 
         {!isLoading && sortedProperties.length === 0 && (
-          <div className="mt-10 rounded-2xl bg-white p-8 text-center shadow-sm">
+          <div className="mt-10 rounded-lg border border-[var(--surface-border)] bg-white p-8 text-center shadow-[var(--surface-shadow)]">
             <h2 className="mb-2 text-xl font-bold text-gray-900">
               Nenhuma propriedade encontrada
             </h2>
@@ -533,7 +620,7 @@ export function ListingPage() {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => trackWhatsAppClick('listing_empty_state')}
-                className="rounded-xl border border-[var(--green-dark)] px-5 py-3 font-bold text-[var(--green-dark)]"
+                className="rounded-xl bg-[var(--whatsapp)] px-5 py-3 font-bold text-[var(--whatsapp-foreground)] transition-colors hover:bg-[var(--whatsapp-hover)]"
               >
                 Falar no WhatsApp
               </a>

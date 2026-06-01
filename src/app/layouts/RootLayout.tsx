@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { WhatsAppButton } from '../components/WhatsAppButton';
@@ -7,11 +7,14 @@ import { ScrollToTop } from '../components/ScrollToTop';
 import { Analytics } from '../components/Analytics';
 
 export function RootLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+
   return (
     <>
       <Analytics />
 
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[image:var(--page-gradient)]">
         <ScrollToTop />
         <Header />
 
@@ -19,9 +22,9 @@ export function RootLayout() {
           <Outlet />
         </main>
 
-        <Footer />
-        <WhatsAppButton />
-        <MobileBottomNav />
+        {!isAdmin && <Footer />}
+        {!isAdmin && <WhatsAppButton />}
+        {!isAdmin && <MobileBottomNav />}
       </div>
     </>
   );

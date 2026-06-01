@@ -4,16 +4,17 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import {
   MapPin,
   Bed,
-  MessageCircle,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
   Images,
   Clock,
 } from 'lucide-react';
+import { WhatsAppIcon } from './WhatsAppIcon';
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
+import { formatEuroPrice, getPricePeriod } from '../utils/price';
 import { trackPropertyEvent, trackWhatsAppClick } from '../utils/analytics';
 
 interface PropertyCardProps {
@@ -27,6 +28,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const hasCarousel = images.length > 1;
 
   const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
+  const periodLabel =
+    getPricePeriod(property.price) === '/month'
+      ? 'por mês'
+      : getPricePeriod(property.price) === '/day'
+        ? 'por dia'
+        : 'por semana';
+  const priceLabel = formatEuroPrice(property.price).replace(/\/(week|month|day)$/i, '');
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
@@ -58,9 +66,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <div className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
+    <div className="group flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-[var(--surface-shadow-strong)]">
       {/* Image Container */}
-      <div className="relative h-56 overflow-hidden sm:h-64">
+      <div className="relative h-52 shrink-0 overflow-hidden sm:h-56">
         <Link to={`/property/${property.id}`} className="block h-full">
           <ImageWithFallback
             src={currentImage}
@@ -75,7 +83,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             <span
               className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
                 isNow
-                  ? 'bg-[var(--yellow)] text-black animate-pulse'
+                  ? 'bg-[var(--green-light)] text-[var(--green-dark)]'
                   : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1'
               }`}
             >
@@ -98,9 +106,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Price Badge */}
         <div className="absolute bottom-3 right-3">
-          <div className="rounded-xl bg-[var(--green-dark)] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
-            <div className="text-xs opacity-90 font-medium">por semana</div>
-            <div className="text-xl font-bold md:text-2xl">{property.price}</div>
+          <div className="rounded-lg bg-[var(--green-dark)] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
+            <div className="text-xs opacity-90 font-medium">{periodLabel}</div>
+            <div className="text-xl font-bold md:text-2xl">{priceLabel}</div>
           </div>
         </div>
 
@@ -136,7 +144,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-4 md:p-5">
+      <div className="flex flex-1 flex-col p-4 md:p-5">
         {/* Type and Region */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
@@ -151,18 +159,18 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Title */}
         <Link to={`/property/${property.id}`} onClick={handleDetailsClick}>
-          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[var(--green-dark)] transition-colors leading-tight">
+          <h3 className="mb-2 min-h-[48px] text-lg font-bold leading-tight text-gray-900 transition-colors hover:text-[var(--green-dark)] line-clamp-2">
             {property.title}
           </h3>
         </Link>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+        <p className="mb-4 min-h-[44px] text-sm leading-relaxed text-gray-600 line-clamp-2">
           {property.description}
         </p>
 
         {/* Features */}
-        <div className="mb-4 max-h-[48px] space-y-1 overflow-hidden">
+        <div className="mb-4 min-h-[48px] max-h-[48px] space-y-1 overflow-hidden">
           {getPropertyAttributes(property).slice(0, 4).map((attribute) => {
             const Icon = attribute.icon;
 
@@ -179,21 +187,21 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="mt-auto flex gap-2">
           <Link
             to={`/property/${property.id}`}
             onClick={handleDetailsClick}
-            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[var(--yellow-dark)] md:px-4"
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--green-light)] px-3 py-2.5 text-sm font-bold text-[var(--green-dark)] transition-all duration-300 hover:scale-105 hover:bg-[var(--yellow-dark)] md:px-4"
           >
             <span className="truncate">Ver Detalhes</span>
             <ArrowRight className="h-4 w-4 shrink-0" />
           </Link>
           <button
             onClick={handleWhatsApp}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2.5 font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[var(--green-medium)] md:px-4"
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--whatsapp)] px-3 py-2.5 font-semibold text-[var(--whatsapp-foreground)] transition-all duration-300 hover:scale-105 hover:bg-[var(--whatsapp-hover)] md:px-4"
             title="Falar no WhatsApp"
           >
-            <MessageCircle className="w-5 h-5" />
+            <WhatsAppIcon className="w-5 h-5" />
           </button>
         </div>
       </div>

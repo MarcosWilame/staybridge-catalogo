@@ -29,13 +29,13 @@ export function Testimonials() {
     <section className="relative overflow-hidden bg-[var(--green-light)] py-14 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-10 text-center md:mb-16">
-          <div className="mb-4 inline-flex rounded-full bg-[#143725] px-4 py-2 text-xs font-bold text-white md:text-sm">
+          <div className="mb-4 inline-flex rounded-full bg-[var(--green-dark)] px-4 py-2 text-xs font-bold text-white md:text-sm">
             DEPOIMENTOS
           </div>
-          <h2 className="mb-4 text-3xl font-extrabold leading-tight text-[#143725] md:text-5xl">
+          <h2 className="mb-4 text-3xl font-extrabold leading-tight text-[var(--green-dark)] md:text-5xl">
             Histórias de quem
             <br />
-            <span className="text-[#0f8f5f]">já se mudou</span>
+            <span className="text-[var(--green-medium)]">já se mudou</span>
           </h2>
           <p className="mx-auto max-w-2xl text-gray-600 md:text-lg">
             Relatos curtos, sem exagero, de brasileiros que encontraram moradia em Londres.
@@ -46,15 +46,15 @@ export function Testimonials() {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="relative rounded-lg border border-gray-200 bg-[#fbfcfa] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#0f8f5f]/40 hover:shadow-lg md:p-7"
+              className="relative rounded-lg border border-[var(--surface-border)] bg-white p-5 shadow-[var(--surface-shadow)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-[var(--surface-shadow-strong)] md:p-7"
             >
-              <div className="absolute right-5 top-5 text-[#d8e3d5]">
+              <div className="absolute right-5 top-5 text-[var(--green-dark)]/12">
                 <Quote className="h-10 w-10" />
               </div>
 
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-[#f4c542] text-[#f4c542]" />
+                  <Star key={i} className="h-4 w-4 fill-[var(--rating-star)] text-[var(--rating-star)] drop-shadow-[0_1px_2px_rgba(216,155,34,0.24)]" />
                 ))}
               </div>
 
@@ -63,7 +63,7 @@ export function Testimonials() {
               </p>
 
               <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#143725] text-sm font-bold text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--green-dark)] text-sm font-bold text-white">
                   {testimonial.initials}
                 </div>
                 <div>

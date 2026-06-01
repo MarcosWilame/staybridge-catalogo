@@ -8,16 +8,16 @@ import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { isFavoriteProperty, toggleFavoriteProperty } from '../utils/favorites';
 import { trackPropertyEvent, trackWhatsAppClick } from '../utils/analytics';
+import { formatEuroPrice } from '../utils/price';
 
 import {
   ArrowLeft,
   MapPin,
   Bed,
   CheckCircle,
-  MessageCircle,
   Heart,
   Calendar,
-  PoundSterling,
+  Euro,
   ChevronLeft,
   ChevronRight,
   Play,
@@ -29,6 +29,7 @@ import {
   Coffee,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 
 interface PropertyAttribute {
   icon: LucideIcon;
@@ -237,7 +238,7 @@ export function PropertyDetailsPage() {
     <div className="min-h-screen bg-[image:var(--page-gradient)] pb-32 pt-28 md:pb-8">
 
       {/* BREADCRUMB + BACK */}
-      <div className="border-b border-emerald-100 bg-white/80 py-4 backdrop-blur">
+      <div className="border-b border-[var(--surface-border)] bg-white/80 py-4 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Breadcrumb */}
@@ -384,7 +385,7 @@ export function PropertyDetailsPage() {
         </div>
 
         {/* CONTENT GRID */}
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8">
 
           {/* MAIN */}
           <div className="space-y-8">
@@ -452,7 +453,7 @@ export function PropertyDetailsPage() {
             </div>
 
             {/* DESCRIPTION */}
-            <div className="grid overflow-hidden rounded-2xl border border-emerald-100 bg-white/95 shadow-sm md:grid-cols-2">
+            <div className="grid overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white/95 shadow-[var(--surface-shadow)] md:grid-cols-2">
               <div className="p-5 md:p-6">
                 <h2 className="mb-4 text-2xl font-bold text-[var(--green-dark)]">
                   Descrição
@@ -463,13 +464,13 @@ export function PropertyDetailsPage() {
                 </p>
               </div>
 
-              <div className="border-t border-emerald-100 bg-[var(--gray-light)] p-5 md:border-l md:border-t-0 md:p-6">
+              <div className="border-t border-[var(--surface-border)] bg-[var(--gray-light)] p-5 md:border-l md:border-t-0 md:p-6">
                 <div className="mb-2 text-sm font-bold text-[var(--gray-medium)]">
                   Preço por semana
                 </div>
                 <div className="mb-4 flex items-start text-4xl font-extrabold text-[var(--green-dark)] md:text-5xl">
-                  <PoundSterling className="mt-1 h-7 w-7 md:h-8 md:w-8" />
-                  {property.price}
+                  <Euro className="mt-1 h-7 w-7 md:h-8 md:w-8" />
+                  {formatEuroPrice(property.price).replace(/^€/, '')}
                 </div>
                 <div
                   className={`mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${
@@ -483,9 +484,9 @@ export function PropertyDetailsPage() {
                 </div>
                 <button
                   onClick={handleWhatsApp}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] py-3.5 font-bold text-white transition-colors hover:bg-[var(--green-medium)] md:py-4"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--whatsapp)] py-3.5 font-bold text-[var(--whatsapp-foreground)] transition-colors hover:bg-[var(--whatsapp-hover)] md:py-4"
                 >
-                  <MessageCircle className="w-6 h-6" />
+                  <WhatsAppIcon className="w-6 h-6" />
                   Falar no WhatsApp
                 </button>
                 <a
@@ -493,7 +494,7 @@ export function PropertyDetailsPage() {
                   target="_blank"
                   rel="noreferrer"
                   onClick={handleMapClick}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white py-3.5 font-bold text-[var(--green-dark)] transition-colors hover:bg-[var(--gray-light)] md:py-4"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--surface-border)] bg-white py-3.5 font-bold text-[var(--green-dark)] transition-colors hover:bg-[var(--gray-light)] md:py-4"
                 >
                   <MapPin className="w-6 h-6" />
                   Abrir endereço no mapa
@@ -501,7 +502,7 @@ export function PropertyDetailsPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-emerald-100 bg-white/95 p-5 shadow-sm md:p-6">
+            <div className="rounded-lg border border-[var(--surface-border)] bg-white/95 p-5 shadow-[var(--surface-shadow)] md:p-6">
               <div className="mx-auto mb-6 max-w-4xl text-center">
                 <div>
                   <h2 className="text-2xl font-bold text-[var(--green-dark)]">
@@ -523,7 +524,7 @@ export function PropertyDetailsPage() {
                       href={item.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="group rounded-xl border border-emerald-100 bg-[var(--gray-light)] p-4 text-left transition-all hover:border-[var(--green-medium)]/50 hover:bg-white hover:shadow-md"
+                      className="group rounded-lg border border-[var(--surface-border)] bg-[var(--gray-light)] p-4 text-left transition-all hover:border-[var(--green-dark)] hover:bg-white hover:shadow-[var(--surface-shadow)]"
                     >
                       <div className="mb-3 flex items-center gap-3">
                         <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-[var(--green-medium)] transition-colors group-hover:bg-[var(--green-medium)] group-hover:text-white">

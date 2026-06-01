@@ -16,7 +16,7 @@ export function PropertyCategories() {
       description: 'Espaços independentes completos',
       count: countByCategory('studio'),
       color: 'from-blue-500 to-blue-600',
-      accent: 'border-blue-100 hover:border-blue-300',
+      accent: 'category-accent-blue',
       category: 'studio',
     },
     {
@@ -25,7 +25,7 @@ export function PropertyCategories() {
       description: 'Quartos com banheiro privativo',
       count: countByCategory('ensuite'),
       color: 'from-purple-500 to-purple-600',
-      accent: 'border-purple-100 hover:border-purple-300',
+      accent: 'category-accent-teal',
       category: 'ensuite',
     },
     {
@@ -34,7 +34,7 @@ export function PropertyCategories() {
       description: 'Apartamentos completos',
       count: countByCategory('flat'),
       color: 'from-green-500 to-green-600',
-      accent: 'border-emerald-100 hover:border-emerald-300',
+      accent: 'category-accent-stone',
       category: 'flat',
     },
     {
@@ -43,7 +43,7 @@ export function PropertyCategories() {
       description: 'Quartos individuais',
       count: countByCategory('single'),
       color: 'from-orange-500 to-orange-600',
-      accent: 'border-orange-100 hover:border-orange-300',
+      accent: 'category-accent-sage',
       category: 'single',
     },
     {
@@ -51,16 +51,15 @@ export function PropertyCategories() {
       icon: Users,
       description: 'Quartos para casais',
       count: countByCategory('double'),
-      color: 'from-[var(--green-medium)] to-[var(--yellow-dark)]',
-      accent: 'border-amber-100 hover:border-[var(--yellow-dark)]',
+      color: 'from-amber-500 to-amber-600',
+      accent: 'category-accent-gold',
       category: 'double',
     },
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,#edf7ed_0%,#f7fbf6_42%,#ffffff_100%)] py-12 md:py-20">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#edf7ed] to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-white" />
+    <section className="relative overflow-hidden bg-[image:linear-gradient(180deg,var(--color3)_0%,color-mix(in_srgb,var(--color3)_46%,#ffffff_54%)_48%,#ffffff_100%)] pb-14 pt-10 md:pb-24 md:pt-14">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-white" />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="mb-10 text-center md:mb-14">
@@ -80,9 +79,8 @@ export function PropertyCategories() {
             return (
               <div
                 key={category.name}
-                className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white p-5 text-center shadow-[0_18px_40px_rgba(15,83,45,0.10)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_26px_55px_rgba(15,83,45,0.18)] md:p-8 lg:rounded-3xl ${category.accent}`}
+                className={`home-category-card group relative flex flex-col overflow-hidden rounded-lg p-5 text-center transition-all duration-300 hover:-translate-y-2 md:p-8 ${category.accent}`}
               >
-                <div className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${category.color}`} />
                 <div
                   className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${category.color} shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-16 md:w-16 md:rounded-2xl`}
                 >

@@ -1,7 +1,36 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Property } from '../data/properties';
-import { Plus, Trash2, Download, Save, X, Check, Cloud, AlertCircle, Lock, LogIn, LogOut, Eye, EyeOff, Search } from 'lucide-react';
+import {
+  AlertCircle,
+  Bath,
+  BedDouble,
+  Building2,
+  CalendarDays,
+  Check,
+  Cloud,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  Home,
+  ImagePlus,
+  ListChecks,
+  Lock,
+  LogIn,
+  MapPin,
+  Navigation,
+  Plus,
+  Euro,
+  Save,
+  Search,
+  Train,
+  Trash2,
+  UploadCloud,
+  Users,
+  Video,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import {
   deletePropertyFromSupabase,
@@ -11,15 +40,20 @@ import {
   replacePropertiesInSupabase,
   savePropertyToSupabase,
   signInAdmin,
-  signOutAdmin,
   type SupabaseAuthSession,
 } from '../data/supabaseProperties';
+import { buildEuroPrice, formatEuroPrice, getPricePeriod, getPriceValue } from '../utils/price';
+import {
+  getRecoveryDaysLeft,
+  isInRecovery,
+  isRecoveryExpired,
+} from '../utils/recovery';
 
 const INITIAL_FORM: Omit<Property, 'id'> = {
   image: '',
   images: [],
   video: '',
-  type: '',
+  type: 'Studio',
   title: '',
   region: '',
   price: '',
@@ -42,10 +76,129 @@ const INITIAL_FORM: Omit<Property, 'id'> = {
   people: 1,
 };
 
-type AdminStatusFilter = 'all' | 'listed' | 'hidden';
+type AdminStatusFilter = 'all' | 'listed' | 'hidden' | 'trash';
+type AdminAvailabilityFilter = 'all' | 'available' | 'unavailable';
+
+const adminInputClass =
+  'w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none transition focus:border-[var(--green-dark)] focus:ring-2 focus:ring-[var(--green-dark)]/15';
+
+const adminTextAreaClass =
+  'w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none transition focus:border-[var(--green-dark)] focus:ring-2 focus:ring-[var(--green-dark)]/15';
+
+const adminLabelClass = 'mb-2 flex items-center gap-2 text-sm font-bold text-gray-800';
+
+const CATEGORY_OPTIONS = [
+  { value: 'studio', label: 'Studio' },
+  { value: 'ensuite', label: 'Ensuite' },
+  { value: 'single', label: 'Single Room' },
+  { value: 'double', label: 'Double Room' },
+  { value: 'flat', label: 'Flat' },
+];
+
+const AMENITY_OPTIONS = [
+  'Wi-Fi',
+  'Mobiliado',
+  'Bills inclusas',
+  'Banheiro privativo',
+  'Cozinha equipada',
+  'Lavanderia',
+  'Cama',
+  'Guarda-roupa',
+  'Mesa de estudos',
+  'TV',
+  'Jardim',
+  'Estacionamento',
+];
+
+const MOVE_IN_OPTIONS = ['Imediata', 'A combinar', 'Em breve'];
+
+const PRICE_PERIOD_OPTIONS = [
+  { value: '/week', label: 'por semana' },
+  { value: '/month', label: 'por mês' },
+  { value: '/day', label: 'por dia' },
+];
+
+const STATION_SUGGESTIONS = [
+  'Dollis Hill Station',
+  'Willesden Green Station',
+  'Kilburn Station',
+  'Neasden Station',
+  'Cricklewood Station',
+  'Wembley Park Station',
+  'Stratford Station',
+  'Canada Water Station',
+  'London Bridge Station',
+  'Elephant & Castle Station',
+];
+
+function getCategoryLabel(category: string) {
+  return CATEGORY_OPTIONS.find((option) => option.value === category)?.label || category;
+}
+
+function getStationMapQuery(formData: Omit<Property, 'id'>) {
+  return [
+    'train station tube station near',
+    formData.address,
+    formData.postcode,
+    formData.region,
+    'London',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function AdminFieldLabel({
+  icon: Icon,
+  children,
+}: {
+  icon: LucideIcon;
+  children: ReactNode;
+}) {
+  return (
+    <label className={adminLabelClass}>
+      <Icon className="h-4 w-4 text-[var(--green-dark)]" />
+      {children}
+    </label>
+  );
+}
+
+function AdminSwitch({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-bold transition ${
+        checked
+          ? 'border-[var(--green-dark)] bg-[var(--green-light)] text-[var(--green-dark)]'
+          : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--green-dark)]'
+      }`}
+      aria-pressed={checked}
+    >
+      <span>{label}</span>
+      <span
+        className={`flex h-6 w-11 items-center rounded-full p-1 transition ${
+          checked ? 'bg-[var(--green-dark)]' : 'bg-gray-300'
+        }`}
+      >
+        <span
+          className={`h-4 w-4 rounded-full bg-white transition ${
+            checked ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
 
 export function AdminPage() {
-  const navigate = useNavigate();
   const [session, setSession] = useState<SupabaseAuthSession | null>(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -59,9 +212,12 @@ export function AdminPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Property, 'id'>>(INITIAL_FORM);
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all');
+  const [adminTypeFilter, setAdminTypeFilter] = useState('');
+  const [adminRegionFilter, setAdminRegionFilter] = useState('');
+  const [adminAvailabilityFilter, setAdminAvailabilityFilter] =
+    useState<AdminAvailabilityFilter>('all');
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [imageInput, setImageInput] = useState('');
-  const [amenityInput, setAmenityInput] = useState('');
   const [stationInput, setStationInput] = useState('');
   const formRef = useRef<HTMLDivElement | null>(null);
 
@@ -95,7 +251,17 @@ export function AdminPage() {
 
       try {
         const remoteProperties = await loadPropertiesFromSupabase(session.access_token);
-        setProperties(remoteProperties);
+        const expiredRecoveryItems = remoteProperties.filter(isRecoveryExpired);
+
+        if (expiredRecoveryItems.length) {
+          await Promise.all(
+            expiredRecoveryItems.map((property) =>
+              deletePropertyFromSupabase(property.id, session.access_token)
+            )
+          );
+        }
+
+        setProperties(remoteProperties.filter((property) => !isRecoveryExpired(property)));
         setSyncError('');
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Erro ao sincronizar com Supabase';
@@ -125,22 +291,29 @@ export function AdminPage() {
     }
   };
 
-  const handleSignOut = () => {
-    signOutAdmin();
-    setSession(null);
-    setProperties([]);
-    setShowForm(false);
-    setSyncMessage('');
-    setSyncError('');
-  };
-
   const nextId = Math.max(0, ...properties.map(p => p.id)) + 1;
-  const listedCount = properties.filter((property) => property.listed !== false).length;
-  const hiddenCount = properties.length - listedCount;
+  const activeProperties = properties.filter(
+    (property) => !isInRecovery(property) && !isRecoveryExpired(property)
+  );
+  const recoveryProperties = properties.filter(isInRecovery);
+  const listedCount = activeProperties.filter((property) => property.listed !== false).length;
+  const hiddenCount = activeProperties.length - listedCount;
+  const availableCount = activeProperties.filter((property) => property.available).length;
+  const unavailableCount = activeProperties.length - availableCount;
+  const adminRegionOptions = Array.from(
+    new Set(activeProperties.map((property) => property.region).filter(Boolean))
+  ).sort();
   const normalizedAdminSearch = adminSearchQuery.trim().toLowerCase();
-  const visibleAdminProperties = properties.filter((property) => {
+  const adminPropertiesForStatus =
+    statusFilter === 'trash' ? recoveryProperties : activeProperties;
+  const visibleAdminProperties = adminPropertiesForStatus.filter((property) => {
+    if (statusFilter === 'trash') return true;
     if (statusFilter === 'listed' && property.listed === false) return false;
     if (statusFilter === 'hidden' && property.listed !== false) return false;
+    if (adminTypeFilter && property.category !== adminTypeFilter) return false;
+    if (adminRegionFilter && property.region !== adminRegionFilter) return false;
+    if (adminAvailabilityFilter === 'available' && !property.available) return false;
+    if (adminAvailabilityFilter === 'unavailable' && property.available) return false;
 
     if (!normalizedAdminSearch) return true;
 
@@ -155,6 +328,14 @@ export function AdminPage() {
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(normalizedAdminSearch));
   });
+  const visibleAmenityOptions = Array.from(new Set([...AMENITY_OPTIONS, ...formData.amenities]));
+  const stationMapQuery = getStationMapQuery(formData);
+  const stationMapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(
+    stationMapQuery
+  )}&z=14&output=embed`;
+  const stationSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    stationMapQuery
+  )}`;
 
   const handleAddImage = () => {
     if (imageInput.trim()) {
@@ -178,20 +359,47 @@ export function AdminPage() {
     });
   };
 
-  const handleAddAmenity = () => {
-    if (amenityInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        amenities: [...prev.amenities, amenityInput.trim()]
-      }));
-      setAmenityInput('');
-    }
-  };
-
-  const handleRemoveAmenity = (index: number) => {
+  const handleToggleAmenity = (amenity: string) => {
     setFormData(prev => ({
       ...prev,
-      amenities: prev.amenities.filter((_, i) => i !== index)
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter((item) => item !== amenity)
+        : [...prev.amenities, amenity]
+    }));
+  };
+
+  const handleSetCoverImage = (index: number) => {
+    setFormData(prev => {
+      const selected = prev.images[index];
+      if (!selected) return prev;
+
+      return {
+        ...prev,
+        image: selected,
+        images: [selected, ...prev.images.filter((_, i) => i !== index)],
+      };
+    });
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      type: getCategoryLabel(category),
+    }));
+  };
+
+  const handlePriceAmountChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      price: buildEuroPrice(value, getPricePeriod(prev.price)),
+    }));
+  };
+
+  const handlePricePeriodChange = (period: string) => {
+    setFormData(prev => ({
+      ...prev,
+      price: buildEuroPrice(getPriceValue(prev.price), period),
     }));
   };
 
@@ -218,8 +426,16 @@ export function AdminPage() {
       return;
     }
 
+    if (getPriceValue(formData.price) <= 0) {
+      alert('Informe um preço em euro maior que zero');
+      return;
+    }
+
     const propertyToSave: Property = {
       ...formData,
+      type: getCategoryLabel(formData.category),
+      price: formatEuroPrice(formData.price),
+      deletedAt: undefined,
       id: editingId !== null ? editingId : nextId,
     };
 
@@ -241,7 +457,7 @@ export function AdminPage() {
           : [...prev, savedProperty]
       );
 
-      setSyncMessage('✓ Imóvel salvo online no Supabase');
+      setSyncMessage('Imóvel salvo online no Supabase');
 
       setSyncError('');
       resetForm();
@@ -255,36 +471,80 @@ export function AdminPage() {
 
   const handleEditProperty = (property: Property) => {
     const { id, ...rest } = property;
-    setFormData(rest);
+    setFormData({ ...rest, price: formatEuroPrice(rest.price) });
     setEditingId(id);
     setShowForm(true);
     scrollToForm();
   };
 
-  const handleDeleteProperty = async (id: number) => {
-    if (!confirm('Deseja deletar este imóvel?')) {
-      return;
-    }
+  const handleAddSuggestedStation = (station: string) => {
+    setFormData(prev => ({
+      ...prev,
+      nearbyStations: prev.nearbyStations.includes(station)
+        ? prev.nearbyStations
+        : [...prev.nearbyStations, station],
+    }));
+  };
+
+  const handleConfirmDeleteProperty = async (property: Property) => {
+    if (!confirm(`Mover "${property.title}" para a lixeira por ate 3 semanas?`)) return;
 
     try {
       if (!hasSupabaseConfig() || !session) {
         throw new Error('Supabase nao configurado');
       }
 
-      await deletePropertyFromSupabase(id, session.access_token);
+      const savedProperty = await savePropertyToSupabase(
+        {
+          ...property,
+          listed: false,
+          deletedAt: new Date().toISOString(),
+        },
+        session.access_token
+      );
 
-      setProperties((prev) => prev.filter((property) => property.id !== id));
+      setProperties((prev) =>
+        prev.map((item) => (item.id === property.id ? savedProperty : item))
+      );
       setSyncError('');
-      setSyncMessage('✓ Imóvel removido com sucesso');
+      setSyncMessage('Imovel movido para a lixeira por ate 3 semanas');
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao deletar imóvel';
+      const message = error instanceof Error ? error.message : 'Erro ao deletar imovel';
       setSyncError(message);
       alert(message);
     }
   };
 
-  const handleConfirmDeleteProperty = async (property: Property) => {
+  const handleRestoreProperty = async (property: Property) => {
+    try {
+      if (!hasSupabaseConfig() || !session) {
+        throw new Error('Supabase nao configurado');
+      }
+
+      const savedProperty = await savePropertyToSupabase(
+        {
+          ...property,
+          listed: true,
+          deletedAt: undefined,
+        },
+        session.access_token
+      );
+
+      setProperties((prev) =>
+        prev.map((item) => (item.id === property.id ? savedProperty : item))
+      );
+      setSyncError('');
+      setSyncMessage('Imovel restaurado');
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao restaurar imovel';
+      setSyncError(message);
+      alert(message);
+    }
+  };
+
+  const handlePermanentDeleteProperty = async (property: Property) => {
     const confirmation = window.prompt(
       `Esta acao remove definitivamente o imovel #${property.id} - ${property.title}.\nDigite DELETAR para confirmar.`
     );
@@ -300,10 +560,11 @@ export function AdminPage() {
 
       setProperties((prev) => prev.filter((item) => item.id !== property.id));
       setSyncError('');
-      setSyncMessage('Imovel removido com sucesso');
+      setSyncMessage('Imovel excluido definitivamente');
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao deletar imovel';
+      const message =
+        error instanceof Error ? error.message : 'Erro ao excluir definitivamente';
       setSyncError(message);
       alert(message);
     }
@@ -342,13 +603,18 @@ export function AdminPage() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = (options: { closeForm?: boolean } = {}) => {
     setFormData(INITIAL_FORM);
     setImageInput('');
-    setAmenityInput('');
     setStationInput('');
     setEditingId(null);
-    setShowForm(false);
+    setShowForm(options.closeForm ?? false);
+  };
+
+  const openNewPropertyForm = () => {
+    resetForm({ closeForm: true });
+    setShowForm(true);
+    scrollToForm();
   };
 
   const handleDownloadJson = () => {
@@ -360,7 +626,7 @@ export function AdminPage() {
     a.download = 'properties.json';
     a.click();
     URL.revokeObjectURL(url);
-    setSyncMessage('✓ JSON exportado com sucesso!');
+    setSyncMessage('JSON exportado com sucesso');
     setTimeout(() => setSyncMessage(''), 3000);
   };
 
@@ -386,7 +652,7 @@ export function AdminPage() {
           session.access_token
         );
         setProperties(savedProperties);
-        setSyncMessage('✓ JSON importado e publicado no Supabase');
+        setSyncMessage('JSON importado e publicado no Supabase');
         setTimeout(() => setSyncMessage(''), 3000);
 
         alert('JSON carregado com sucesso!');
@@ -402,9 +668,9 @@ export function AdminPage() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-28 pb-20">
+      <div className="min-h-screen bg-[image:var(--soft-gradient)] pt-28 pb-20">
         <div className="mx-auto max-w-md px-4">
-          <div className="rounded-2xl bg-white p-6 text-center shadow-lg">
+          <div className="rounded-lg border border-[var(--surface-border)] bg-white p-6 text-center shadow-[var(--surface-shadow)]">
             <p className="font-semibold text-gray-700">Verificando acesso...</p>
           </div>
         </div>
@@ -414,11 +680,11 @@ export function AdminPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-28 pb-20">
+      <div className="min-h-screen bg-[image:var(--soft-gradient)] pt-28 pb-20">
         <div className="mx-auto max-w-md px-4">
           <form
             onSubmit={handleSignIn}
-            className="rounded-2xl bg-white p-6 shadow-lg"
+            className="rounded-lg border border-[var(--surface-border)] bg-white p-6 shadow-[var(--surface-shadow)]"
           >
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--green-dark)] text-white">
@@ -478,13 +744,23 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28 pb-20">
+    <div className="min-h-screen bg-[image:var(--soft-gradient)] pt-28 pb-20">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin - Gerenciar Imóveis</h1>
-          <p className="text-gray-600">Adicione, edite ou remova propriedades</p>
+        <div className="mb-6 overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)]">
+          <div className="border-l-4 border-[var(--green-dark)] px-5 py-5 md:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-md border border-[var(--surface-border)] bg-[var(--gray-light)] px-3 py-1 text-xs font-black uppercase tracking-wide text-[var(--green-dark)]">
+                  <Building2 className="h-4 w-4" />
+                  Painel administrativo
+                </div>
+                <h1 className="text-4xl font-extrabold text-[var(--green-dark)] mb-2">Gerenciar Imóveis</h1>
+                <p className="text-gray-600">Adicione, edite, oculte ou remova propriedades do catálogo.</p>
+              </div>
+            </div>
+          </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 border-t border-[var(--surface-border)] bg-[var(--gray-light)] px-5 py-3 text-sm md:px-6">
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-semibold text-gray-700 shadow-sm">
               <Cloud className="h-4 w-4" />
               Fonte ativa: Supabase
@@ -506,15 +782,10 @@ export function AdminPage() {
           </div>
         </div>
 
-        {/* ACTIONS */}
-        <div className="mb-6 flex flex-wrap gap-3">
+        <div className="mb-6 flex flex-col gap-3 rounded-lg border border-[var(--surface-border)] bg-white p-4 shadow-[var(--surface-shadow)] sm:flex-row sm:flex-wrap">
           <button
-            onClick={() => {
-              resetForm();
-              setShowForm(true);
-              scrollToForm();
-            }}
-            className="inline-flex items-center gap-2 bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[var(--green-medium)]"
+            onClick={openNewPropertyForm}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-4 py-2 font-bold text-white shadow-sm transition hover:bg-[var(--green-medium)] sm:w-auto"
           >
             <Plus className="w-5 h-5" />
             Novo Imóvel
@@ -522,52 +793,40 @@ export function AdminPage() {
 
           <button
             onClick={handleDownloadJson}
-            className="inline-flex items-center gap-2 border border-[var(--green-dark)] text-[var(--green-dark)] px-4 py-2 rounded-lg font-semibold hover:bg-[var(--green-dark)] hover:text-white"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--green-dark)] px-4 py-2 font-bold text-[var(--green-dark)] transition hover:bg-[var(--green-dark)] hover:text-white sm:w-auto"
           >
             <Download className="w-5 h-5" />
             Exportar JSON
           </button>
 
-          <label className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 cursor-pointer">
+          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--surface-border)] bg-[var(--gray-light)] px-4 py-2 font-bold text-gray-700 transition hover:bg-white sm:w-auto">
             <input
               type="file"
               accept=".json"
               onChange={handleLoadJson}
               className="hidden"
             />
+            <UploadCloud className="h-5 w-5" />
             Importar JSON
           </label>
 
           {syncMessage && (
-            <div className="ml-auto inline-flex items-center gap-2 text-green-600 font-semibold">
+            <div className="inline-flex items-center gap-2 font-semibold text-[var(--green-dark)] sm:ml-auto">
               <Check className="w-5 h-5" />
               {syncMessage}
             </div>
           )}
 
-          <button
-            onClick={() => navigate('/unidades')}
-            className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 ml-auto"
-          >
-            Voltar
-          </button>
-
-          <button
-            onClick={handleSignOut}
-            className="inline-flex items-center gap-2 border border-red-200 text-red-700 px-4 py-2 rounded-lg font-semibold hover:bg-red-50"
-          >
-            <LogOut className="w-5 h-5" />
-            Sair
-          </button>
         </div>
 
-        <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-6 rounded-lg border border-[var(--surface-border)] bg-white p-4 shadow-[var(--surface-shadow)]">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               {[
-                { value: 'all' as const, label: `Todos (${properties.length})` },
+                { value: 'all' as const, label: `Todos (${activeProperties.length})` },
                 { value: 'listed' as const, label: `No site (${listedCount})` },
                 { value: 'hidden' as const, label: `Ocultos (${hiddenCount})` },
+                { value: 'trash' as const, label: `Lixeira (${recoveryProperties.length})` },
               ].map((option) => (
                 <button
                   key={option.value}
@@ -584,7 +843,47 @@ export function AdminPage() {
               ))}
             </div>
 
-            <div className="relative w-full lg:max-w-md">
+            <div className="grid gap-3 md:grid-cols-3">
+              <select
+                value={adminTypeFilter}
+                onChange={(event) => setAdminTypeFilter(event.target.value)}
+                className={adminInputClass}
+              >
+                <option value="">Todos os tipos</option>
+                {CATEGORY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={adminRegionFilter}
+                onChange={(event) => setAdminRegionFilter(event.target.value)}
+                className={adminInputClass}
+              >
+                <option value="">Todas as regiões</option>
+                {adminRegionOptions.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={adminAvailabilityFilter}
+                onChange={(event) =>
+                  setAdminAvailabilityFilter(event.target.value as AdminAvailabilityFilter)
+                }
+                className={adminInputClass}
+              >
+                <option value="all">Todas disponibilidades</option>
+                <option value="available">Disponíveis ({availableCount})</option>
+                <option value="unavailable">Indisponíveis ({unavailableCount})</option>
+              </select>
+            </div>
+
+            <div className="relative w-full">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="search"
@@ -611,172 +910,180 @@ export function AdminPage() {
         {showForm && (
           <div
             ref={formRef}
-            className={`scroll-mt-28 mb-8 rounded-2xl bg-white p-6 shadow-lg transition-all ${
+            className={`scroll-mt-28 mb-8 overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow-strong)] transition-all ${
               editingId !== null
-                ? 'ring-2 ring-blue-300 ring-offset-2'
+                ? 'ring-2 ring-[var(--yellow)] ring-offset-2'
                 : 'ring-1 ring-gray-100'
             }`}
           >
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div
-                  className={`mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                    editingId !== null
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'bg-green-50 text-green-700'
-                  }`}
-                >
-                  {editingId !== null ? `Editando #${editingId}` : 'Novo cadastro'}
+            <div className="border-b border-[var(--surface-border)] bg-white">
+              <div className="border-l-4 border-[var(--green-dark)] px-5 py-5 md:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-md border border-[var(--surface-border)] bg-[var(--gray-light)] px-3 py-1 text-xs font-black uppercase tracking-wide text-[var(--green-dark)]">
+                      <Building2 className="h-4 w-4" />
+                      {editingId !== null ? `Editando #${editingId}` : 'Novo cadastro'}
+                    </div>
+                    <h2 className="text-3xl font-extrabold text-[var(--green-dark)]">
+                      {editingId ? 'Editar Imóvel' : 'Novo Imóvel'}
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {editingId !== null
+                        ? 'Altere os dados e clique em Atualizar Imovel.'
+                        : 'Preencha os dados principais para criar um novo imovel.'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => resetForm({ closeForm: true })}
+                    className="self-start rounded-full bg-[var(--gray-light)] p-2 text-[var(--green-dark)] hover:bg-[var(--green-light)] sm:self-auto"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                {editingId ? 'Editar Imóvel' : 'Novo Imóvel'}
-                </h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  {editingId !== null
-                    ? 'Altere os dados e clique em Atualizar Imovel.'
-                    : 'Preencha os dados principais para criar um novo imovel.'}
-                </p>
               </div>
-              <button
-                onClick={resetForm}
-                className="self-start rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 sm:self-auto"
-              >
-                <X className="w-6 h-6" />
-              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 p-5 md:grid-cols-2 md:p-6">
+              <h3 className="md:col-span-2 text-lg font-extrabold text-[var(--green-dark)]">
+                Dados principais
+              </h3>
               {/* TITLE */}
               <div>
-                <label className="block text-sm font-bold mb-2">Título *</label>
+                <AdminFieldLabel icon={FileText}>Título *</AdminFieldLabel>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   placeholder="Ex: Studio 1 - NW10 2EL"
                 />
               </div>
 
               {/* TYPE */}
               <div>
-                <label className="block text-sm font-bold mb-2">Tipo *</label>
-                <input
-                  type="text"
-                  value={formData.type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ex: Studio, Single Room, 2 Bedroom Flat"
-                />
-              </div>
-
-              {/* CATEGORY */}
-              <div>
-                <label className="block text-sm font-bold mb-2">Categoria</label>
+                <AdminFieldLabel icon={Building2}>Tipo *</AdminFieldLabel>
                 <select
                   value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className={adminInputClass}
                 >
-                  <option value="studio">Studio</option>
-                  <option value="ensuite">Ensuite</option>
-                  <option value="single">Single</option>
-                  <option value="double">Double</option>
-                  <option value="flat">Flat</option>
+                  {CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* REGION */}
               <div>
-                <label className="block text-sm font-bold mb-2">Região</label>
+                <AdminFieldLabel icon={MapPin}>Região</AdminFieldLabel>
                 <input
                   type="text"
                   value={formData.region}
                   onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   placeholder="Ex: North London"
                 />
               </div>
 
               {/* POSTCODE */}
               <div>
-                <label className="block text-sm font-bold mb-2">Postcode</label>
+                <AdminFieldLabel icon={Navigation}>Postcode</AdminFieldLabel>
                 <input
                   type="text"
                   value={formData.postcode}
                   onChange={(e) => setFormData(prev => ({ ...prev, postcode: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   placeholder="Ex: NW10 2EL"
                 />
               </div>
 
               {/* ADDRESS */}
               <div>
-                <label className="block text-sm font-bold mb-2">Endereço</label>
+                <AdminFieldLabel icon={MapPin}>Endereço</AdminFieldLabel>
                 <input
                   type="text"
                   value={formData.address}
                   onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   placeholder="Ex: 1 Meyrick Road NW10 2EL"
                 />
               </div>
 
               {/* BEDROOMS */}
               <div>
-                <label className="block text-sm font-bold mb-2">Quartos</label>
+                <AdminFieldLabel icon={BedDouble}>Quartos</AdminFieldLabel>
                 <input
                   type="number"
                   value={formData.bedrooms || 0}
                   onChange={(e) => setFormData(prev => ({ ...prev, bedrooms: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   min="0"
                 />
               </div>
 
               {/* BATHROOMS */}
               <div>
-                <label className="block text-sm font-bold mb-2">Banheiros</label>
+                <AdminFieldLabel icon={Bath}>Banheiros</AdminFieldLabel>
                 <input
                   type="number"
                   value={formData.bathrooms || 0}
                   onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   min="0"
                 />
               </div>
 
+              <h3 className="md:col-span-2 border-t border-[var(--surface-border)] pt-5 text-lg font-extrabold text-[var(--green-dark)]">
+                Preço e disponibilidade
+              </h3>
+
               {/* PRICE */}
               <div>
-                <label className="block text-sm font-bold mb-2">Preço</label>
-                <input
-                  type="text"
-                  value={formData.price}
-                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ex: £350/week"
-                />
+                <AdminFieldLabel icon={Euro}>Preço</AdminFieldLabel>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_150px]">
+                  <input
+                    type="number"
+                    value={getPriceValue(formData.price) || ''}
+                    onChange={(e) => handlePriceAmountChange(e.target.value)}
+                    className={adminInputClass}
+                    min="0"
+                    placeholder="350"
+                  />
+                  <select
+                    value={getPricePeriod(formData.price)}
+                    onChange={(e) => handlePricePeriodChange(e.target.value)}
+                    className={adminInputClass}
+                  >
+                    {PRICE_PERIOD_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* DEPOSIT */}
               <div>
-                <label className="block text-sm font-bold mb-2">Depósito</label>
+                <AdminFieldLabel icon={Euro}>Depósito</AdminFieldLabel>
                 <input
                   type="number"
                   value={formData.deposit || 0}
                   onChange={(e) => setFormData(prev => ({ ...prev, deposit: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   min="0"
                 />
               </div>
 
               {/* FURNISHING */}
               <div>
-                <label className="block text-sm font-bold mb-2">Mobiliado</label>
+                <AdminFieldLabel icon={Home}>Mobiliado</AdminFieldLabel>
                 <select
                   value={formData.furnishing}
                   onChange={(e) => setFormData(prev => ({ ...prev, furnishing: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                 >
                   <option value="Mobiliado">Mobiliado</option>
                   <option value="Não Mobiliado">Não Mobiliado</option>
@@ -785,134 +1092,110 @@ export function AdminPage() {
               </div>
 
               {/* MOVE IN DATE */}
-              <div>
-                <label className="block text-sm font-bold mb-2">Data de Entrada</label>
-                <input
-                  type="text"
-                  value={formData.moveInDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, moveInDate: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ex: Imediata ou 30/05/2026"
-                />
+              <div className="md:col-span-2">
+                <AdminFieldLabel icon={CalendarDays}>Data de Entrada</AdminFieldLabel>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {MOVE_IN_OPTIONS.map((option) => (
+                    <label
+                      key={option}
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                        formData.moveInDate === option
+                          ? 'border-[var(--green-dark)] bg-[var(--green-light)] text-[var(--green-dark)]'
+                          : 'border-gray-200 bg-white text-gray-800 hover:border-[var(--green-dark)] hover:bg-emerald-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="moveInDate"
+                        checked={formData.moveInDate === option}
+                        onChange={() => setFormData(prev => ({ ...prev, moveInDate: option }))}
+                        className="h-4 w-4 accent-[var(--green-dark)]"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
               </div>
 
               {/* PEOPLE */}
               <div>
-                <label className="block text-sm font-bold mb-2">Pessoas</label>
+                <AdminFieldLabel icon={Users}>Pessoas</AdminFieldLabel>
                 <input
                   type="number"
                   value={formData.people || 1}
                   onChange={(e) => setFormData(prev => ({ ...prev, people: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   min="1"
                 />
               </div>
 
-              {/* AVAILABLE */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold">
-                  <input
-                    type="checkbox"
-                    checked={formData.available}
-                    onChange={(e) => setFormData(prev => ({ ...prev, available: e.target.checked }))}
-                  />
-                  Disponível
-                </label>
-              </div>
+              <AdminSwitch
+                checked={formData.available}
+                label="Disponível"
+                onChange={(checked) => setFormData(prev => ({ ...prev, available: checked }))}
+              />
 
-              {/* LISTED */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold">
-                  <input
-                    type="checkbox"
-                    checked={formData.listed !== false}
-                    onChange={(e) => setFormData(prev => ({ ...prev, listed: e.target.checked }))}
-                  />
-                  Mostrar no site
-                </label>
-              </div>
+              <AdminSwitch
+                checked={formData.listed !== false}
+                label="Mostrar no site"
+                onChange={(checked) => setFormData(prev => ({ ...prev, listed: checked }))}
+              />
 
-              {/* BILLS INCLUDED */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold">
-                  <input
-                    type="checkbox"
-                    checked={formData.billsIncluded}
-                    onChange={(e) => setFormData(prev => ({ ...prev, billsIncluded: e.target.checked }))}
-                  />
-                  Bills Inclusas
-                </label>
-              </div>
+              <AdminSwitch
+                checked={formData.billsIncluded}
+                label="Bills inclusas"
+                onChange={(checked) => setFormData(prev => ({ ...prev, billsIncluded: checked }))}
+              />
 
-              {/* COORDINATES */}
-              <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">Latitude</label>
-                  <input
-                    type="number"
-                    value={formData.coordinates.lat || 0}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      coordinates: { ...prev.coordinates, lat: Number(e.target.value) }
-                    }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    step="0.001"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Longitude</label>
-                  <input
-                    type="number"
-                    value={formData.coordinates.lng || 0}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      coordinates: { ...prev.coordinates, lng: Number(e.target.value) }
-                    }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    step="0.001"
-                  />
-                </div>
-              </div>
+            </div>
+
+            <div className="border-t border-[var(--surface-border)] px-5 pt-6 md:px-6">
+              <h3 className="text-lg font-extrabold text-[var(--green-dark)]">Descrição</h3>
             </div>
 
             {/* DESCRIPTION */}
-            <div className="mt-6">
-              <label className="block text-sm font-bold mb-2">Descrição</label>
+            <div className="mt-4 px-5 md:px-6">
+              <AdminFieldLabel icon={FileText}>Descrição</AdminFieldLabel>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20"
+                className={`${adminTextAreaClass} h-20`}
                 placeholder="Descrição curta"
               />
             </div>
 
             {/* LONG DESCRIPTION */}
-            <div className="mt-4">
-              <label className="block text-sm font-bold mb-2">Descrição Longa</label>
+            <div className="mt-4 px-5 md:px-6">
+              <AdminFieldLabel icon={FileText}>Descrição Longa</AdminFieldLabel>
               <textarea
                 value={formData.longDescription}
                 onChange={(e) => setFormData(prev => ({ ...prev, longDescription: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 h-28"
+                className={`${adminTextAreaClass} h-28`}
                 placeholder="Descrição detalhada"
               />
             </div>
 
+            <div className="border-t border-[var(--surface-border)] px-5 pt-6 md:px-6">
+              <h3 className="text-lg font-extrabold text-[var(--green-dark)]">Mídia</h3>
+            </div>
+
             {/* IMAGES */}
-            <div className="mt-6">
-              <label className="block text-sm font-bold mb-3">Imagens</label>
+            <div className="mt-4 px-5 md:px-6">
+              <AdminFieldLabel icon={ImagePlus}>Imagens</AdminFieldLabel>
               <div className="flex gap-2 mb-4">
                 <input
                   type="text"
                   value={imageInput}
                   onChange={(e) => setImageInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddImage()}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                  className={adminInputClass}
                   placeholder="URL da imagem"
                 />
                 <button
                   onClick={handleAddImage}
-                  className="bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg font-semibold"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[var(--green-dark)] px-4 py-2 font-bold text-white hover:bg-[var(--green-medium)]"
                 >
+                  <Plus className="h-4 w-4" />
                   Adicionar
                 </button>
               </div>
@@ -922,8 +1205,22 @@ export function AdminPage() {
                   <div key={idx} className="relative group">
                     <ImageWithFallback
                       src={img}
-                      className="w-full h-24 object-cover rounded-lg border border-gray-300"
+                      className="w-full h-24 object-cover rounded-lg border border-[var(--surface-border)]"
                     />
+                    {formData.image === img && (
+                      <span className="absolute left-2 top-2 rounded-full bg-[var(--yellow)] px-2 py-1 text-[10px] font-black text-black">
+                        Capa
+                      </span>
+                    )}
+                    {formData.image !== img && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetCoverImage(idx)}
+                        className="absolute bottom-2 left-2 right-2 rounded-md bg-white/95 px-2 py-1 text-xs font-bold text-[var(--green-dark)] opacity-0 shadow transition group-hover:opacity-100"
+                      >
+                        Usar como capa
+                      </button>
+                    )}
                     <button
                       onClick={() => handleRemoveImage(idx)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
@@ -936,99 +1233,162 @@ export function AdminPage() {
             </div>
 
             {/* VIDEO */}
-            <div className="mt-6">
-              <label className="block text-sm font-bold mb-2">Vídeo (URL)</label>
+            <div className="mt-6 px-5 md:px-6">
+              <AdminFieldLabel icon={Video}>Vídeo (URL)</AdminFieldLabel>
               <input
                 type="text"
                 value={formData.video || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, video: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className={adminInputClass}
                 placeholder="URL do vídeo (Google Drive ou YouTube)"
               />
             </div>
 
             {/* AMENITIES */}
-            <div className="mt-6">
-              <label className="block text-sm font-bold mb-3">Comodidades</label>
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={amenityInput}
-                  onChange={(e) => setAmenityInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddAmenity()}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ex: Wi-Fi, Mobiliado"
-                />
-                <button
-                  onClick={handleAddAmenity}
-                  className="bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg font-semibold"
-                >
-                  Adicionar
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {formData.amenities.map((amenity, idx) => (
-                  <div key={idx} className="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2">
-                    <span>{amenity}</span>
-                    <button
-                      onClick={() => handleRemoveAmenity(idx)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+            <div className="mt-6 px-5 md:px-6">
+              <AdminFieldLabel icon={ListChecks}>Comodidades</AdminFieldLabel>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleAmenityOptions.map((amenity) => (
+                  <label
+                    key={amenity}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 transition hover:border-[var(--green-dark)] hover:bg-emerald-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.amenities.includes(amenity)}
+                      onChange={() => handleToggleAmenity(amenity)}
+                      className="h-4 w-4 accent-[var(--green-dark)]"
+                    />
+                    {amenity}
+                  </label>
                 ))}
               </div>
             </div>
 
             {/* NEARBY STATIONS */}
-            <div className="mt-6">
-              <label className="block text-sm font-bold mb-3">Estações Próximas</label>
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={stationInput}
-                  onChange={(e) => setStationInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddStation()}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ex: Central Station"
-                />
-                <button
-                  onClick={handleAddStation}
-                  className="bg-[var(--green-dark)] text-white px-4 py-2 rounded-lg font-semibold"
-                >
-                  Adicionar
-                </button>
+            <div className="mt-6 px-5 md:px-6">
+              <AdminFieldLabel icon={Train}>Estações Próximas</AdminFieldLabel>
+              <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                {STATION_SUGGESTIONS.map((station) => (
+                  <button
+                    key={station}
+                    type="button"
+                    onClick={() => handleAddSuggestedStation(station)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                      formData.nearbyStations.includes(station)
+                        ? 'border-[var(--green-dark)] bg-[var(--green-light)] text-[var(--green-dark)]'
+                        : 'border-[var(--surface-border)] bg-white text-gray-700 hover:border-[var(--green-dark)]'
+                    }`}
+                  >
+                    {station.replace(' Station', '')}
+                  </button>
+                ))}
               </div>
-
-              <div className="flex flex-wrap gap-2">
-                {formData.nearbyStations.map((station, idx) => (
-                  <div key={idx} className="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2">
-                    <span>{station}</span>
+              <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+                <div>
+                  <div className="flex gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={stationInput}
+                      onChange={(e) => setStationInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddStation()}
+                      className={adminInputClass}
+                      placeholder="Ex: Dollis Hill Station"
+                    />
                     <button
-                      onClick={() => handleRemoveStation(idx)}
-                      className="text-red-500 hover:text-red-700"
+                      onClick={handleAddStation}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[var(--green-dark)] px-4 py-2 font-bold text-white hover:bg-[var(--green-medium)]"
                     >
-                      <X className="w-4 h-4" />
+                      <Plus className="h-4 w-4" />
+                      Adicionar
                     </button>
                   </div>
-                ))}
+
+                  <div className="flex flex-wrap gap-2">
+                    {formData.nearbyStations.map((station, idx) => (
+                      <div key={idx} className="flex items-center gap-2 rounded-full bg-[var(--gray-light)] px-3 py-1">
+                        <span>{station}</span>
+                        <button
+                          onClick={() => handleRemoveStation(idx)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)]">
+                  <iframe
+                    title="Mapa para consultar estações próximas"
+                    src={stationMapUrl}
+                    className="h-44 w-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  <a
+                    href={stationSearchUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-2 border-t border-[var(--surface-border)] bg-[var(--gray-light)] px-3 py-2 text-sm font-bold text-[var(--green-dark)] hover:bg-[var(--green-light)]"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Ver estações no mapa
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-[var(--surface-border)] px-5 pt-6 md:px-6">
+              <h3 className="mb-4 text-lg font-extrabold text-[var(--green-dark)]">Pré-visualização</h3>
+              <div className="max-w-md overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)]">
+                <div className="h-40 bg-[var(--gray-light)]">
+                  {formData.image ? (
+                    <ImageWithFallback
+                      src={formData.image}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm font-bold text-gray-500">
+                      Imagem de capa
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-[var(--green-light)] px-3 py-1 text-xs font-bold text-[var(--green-dark)]">
+                      {getCategoryLabel(formData.category)}
+                    </span>
+                    <span className="text-sm font-bold text-[var(--green-dark)]">
+                      {formatEuroPrice(formData.price)}
+                    </span>
+                  </div>
+                  <h4 className="line-clamp-2 text-lg font-extrabold text-gray-900">
+                    {formData.title || 'Título do imóvel'}
+                  </h4>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {formData.region || 'Região'} {formData.postcode ? `- ${formData.postcode}` : ''}
+                  </p>
+                  <p className="mt-3 line-clamp-2 text-sm text-gray-600">
+                    {formData.description || 'Descrição curta do imóvel.'}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* SAVE BUTTON */}
-            <div className="mt-8 flex gap-3">
+            <div className="mt-8 flex flex-col gap-3 border-t border-[var(--surface-border)] bg-[var(--gray-light)] p-5 sm:flex-row md:p-6">
               <button
                 onClick={handleSaveProperty}
-                className="flex items-center gap-2 bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-bold hover:bg-[var(--green-medium)]"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-6 py-3 font-bold text-white hover:bg-[var(--green-medium)]"
               >
                 <Save className="w-5 h-5" />
                 {editingId ? 'Atualizar' : 'Criar'} Imóvel
               </button>
               <button
-                onClick={resetForm}
-                className="px-6 py-3 border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-100"
+                onClick={() => resetForm({ closeForm: true })}
+                className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-bold text-gray-700 hover:bg-gray-100"
               >
                 Cancelar
               </button>
@@ -1041,8 +1401,12 @@ export function AdminPage() {
           {visibleAdminProperties.map((property) => (
             <div
               key={property.id}
-              className={`bg-white rounded-2xl overflow-hidden shadow-lg transition hover:shadow-xl ${
-                property.listed === false ? 'opacity-75 ring-2 ring-gray-200' : ''
+              className={`overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)] transition hover:shadow-[var(--surface-shadow-strong)] ${
+                isInRecovery(property)
+                  ? 'ring-2 ring-red-100'
+                  : property.listed === false
+                    ? 'opacity-75 ring-2 ring-gray-200'
+                    : ''
               }`}
             >
               <div className="relative h-40 overflow-hidden">
@@ -1055,12 +1419,16 @@ export function AdminPage() {
                 </div>
                 <div
                   className={`absolute top-2 right-2 rounded-full px-3 py-1 text-xs font-bold shadow ${
-                    property.listed === false
+                    isInRecovery(property)
+                      ? 'bg-red-50 text-red-700'
+                      : property.listed === false
                       ? 'bg-gray-900 text-white'
-                      : 'bg-green-100 text-green-800'
+                      : 'bg-[var(--green-light)] text-[var(--green-dark)]'
                   }`}
                 >
-                  {property.listed === false ? 'Oculto' : 'No site'}
+                  {isInRecovery(property)
+                    ? `${getRecoveryDaysLeft(property)} dias`
+                    : property.listed === false ? 'Oculto' : 'No site'}
                 </div>
               </div>
 
@@ -1069,57 +1437,78 @@ export function AdminPage() {
                 <p className="text-sm text-gray-600 mb-3">{property.region}</p>
 
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-[var(--green-dark)]">{property.price}</span>
+                  <span className="font-bold text-[var(--green-dark)]">{formatEuroPrice(property.price)}</span>
                   <span className="text-xs bg-gray-100 px-2 py-1 rounded">{property.category}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleToggleListed(property)}
-                    className={`col-span-2 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold ${
-                      property.listed === false
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }`}
-                  >
-                    {property.listed === false ? (
-                      <>
-                        <Eye className="h-4 w-4" />
-                        Ativar no site
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="h-4 w-4" />
-                        Ocultar do site
-                      </>
-                    )}
-                  </button>
+                {isInRecovery(property) ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleRestoreProperty(property)}
+                      className="rounded-lg bg-[var(--green-dark)] py-2 text-sm font-semibold text-white hover:bg-[var(--green-medium)]"
+                    >
+                      Restaurar
+                    </button>
+                    <button
+                      onClick={() => handlePermanentDeleteProperty(property)}
+                      className="flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-white py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Excluir
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleToggleListed(property)}
+                      className={`col-span-2 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold ${
+                        property.listed === false
+                          ? 'bg-[var(--green-dark)] text-white hover:bg-[var(--green-medium)]'
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      {property.listed === false ? (
+                        <>
+                          <Eye className="h-4 w-4" />
+                          Ativar no site
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="h-4 w-4" />
+                          Ocultar do site
+                        </>
+                      )}
+                    </button>
 
-                  <button
-                    onClick={() => handleEditProperty(property)}
-                    className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleConfirmDeleteProperty(property)}
-                    className="flex-1 border border-red-200 bg-white py-2 rounded-lg font-semibold text-red-700 hover:bg-red-50 text-sm flex items-center justify-center gap-1"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Deletar
-                  </button>
-                </div>
+                    <button
+                      onClick={() => handleEditProperty(property)}
+                      className="flex-1 rounded-lg border border-[var(--green-dark)] bg-white py-2 text-sm font-semibold text-[var(--green-dark)] hover:bg-[var(--green-dark)] hover:text-white"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleConfirmDeleteProperty(property)}
+                      className="flex-1 border border-red-200 bg-white py-2 rounded-lg font-semibold text-red-700 hover:bg-red-50 text-sm flex items-center justify-center gap-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Deletar
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        {properties.length > 0 && visibleAdminProperties.length === 0 && !showForm && (
+        {adminPropertiesForStatus.length > 0 && visibleAdminProperties.length === 0 && !showForm && (
           <div className="py-12 text-center">
             <p className="mb-4 text-gray-600">Nenhum imovel encontrado com esses filtros</p>
             <button
               onClick={() => {
                 setStatusFilter('all');
+                setAdminTypeFilter('');
+                setAdminRegionFilter('');
+                setAdminAvailabilityFilter('all');
                 setAdminSearchQuery('');
               }}
               className="rounded-lg bg-[var(--green-dark)] px-6 py-3 font-bold text-white"
@@ -1129,13 +1518,12 @@ export function AdminPage() {
           </div>
         )}
 
-        {properties.length === 0 && !showForm && (
+        {activeProperties.length === 0 && statusFilter !== 'trash' && !showForm && (
           <div className="text-center py-12">
             <p className="text-gray-600 mb-4">Nenhum imóvel adicionado ainda</p>
             <button
               onClick={() => {
-                resetForm();
-                setShowForm(true);
+                openNewPropertyForm();
               }}
               className="bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-bold"
             >

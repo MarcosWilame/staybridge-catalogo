@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { trackEvent, trackWhatsAppClick } from '../utils/analytics';
+import { WhatsAppIcon } from './WhatsAppIcon';
 
 export function Hero() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export function Hero() {
           alt="Rua residencial em Londres"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#06110c]/88 via-[#123321]/58 to-[#06110c]/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color1)]/90 via-[var(--color2)]/62 to-[var(--color1)]/24" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--green-dark)]/70 via-transparent to-transparent" />
       </div>
 
@@ -78,9 +79,9 @@ export function Hero() {
 
             <button
               onClick={handleWhatsApp}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/12 px-6 py-3.5 font-bold text-white shadow-lg shadow-black/20 backdrop-blur-md transition-all hover:bg-white/20 hover:scale-[1.02] sm:w-auto sm:px-8 sm:py-4"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--whatsapp)] px-6 py-3.5 font-bold text-[var(--whatsapp-foreground)] shadow-lg shadow-[rgba(37,211,102,0.22)] transition-all hover:scale-[1.02] hover:bg-[var(--whatsapp-hover)] sm:w-auto sm:px-8 sm:py-4"
             >
-              <MessageCircle className="w-5 h-5" />
+              <WhatsAppIcon className="w-5 h-5" />
               Falar no WhatsApp
             </button>
           </motion.div>
@@ -101,8 +102,7 @@ export function Hero() {
       </div>
 
       {/* DECOR */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[var(--green-dark)]" />
-      <div className="absolute bottom-0 right-0 w-1/3 h-56 bg-gradient-to-tl from-[var(--green-dark)]/20 to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[image:linear-gradient(180deg,rgba(36,55,87,0)_0%,rgba(36,55,87,0.7)_100%)]" />
     </div>
   );
 }

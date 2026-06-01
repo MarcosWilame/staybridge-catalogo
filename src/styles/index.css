@@ -5,12 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --border: 220 13% 91%;
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-}
-
 html,
 body,
 #root {
@@ -40,4 +34,219 @@ body,
     animation: none;
     overflow-x: auto;
   }
+}
+
+.price-range-control {
+  --min-percent: 0%;
+  --max-percent: 100%;
+  position: relative;
+  height: 34px;
+}
+
+.price-range-control::before,
+.price-range-control::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 15px;
+  height: 5px;
+  border-radius: 999px;
+}
+
+.price-range-control::before {
+  background: color-mix(in srgb, var(--color4) 72%, #ffffff 28%);
+}
+
+.price-range-control::after {
+  left: var(--min-percent);
+  right: calc(100% - var(--max-percent));
+  background: var(--green-dark);
+}
+
+.price-range-control input[type='range'] {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 34px;
+  appearance: none;
+  background: transparent;
+  accent-color: var(--green-dark);
+}
+
+.price-range-control input[type='range']::-webkit-slider-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  appearance: none;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: var(--green-dark);
+  box-shadow: 0 3px 10px rgba(36, 55, 87, 0.28);
+}
+
+.price-range-control input[type='range']::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: var(--green-dark);
+  box-shadow: 0 3px 10px rgba(36, 55, 87, 0.28);
+}
+
+.home-stat-card {
+  border: 1px solid rgba(218, 213, 183, 0.34);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.045)),
+    rgba(36, 55, 87, 0.68);
+  box-shadow: 0 18px 42px rgba(17, 31, 52, 0.22);
+}
+
+.home-stat-card:hover {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)),
+    rgba(36, 55, 87, 0.86);
+}
+
+.home-benefit-card {
+  --card-accent: var(--green-dark);
+  --card-shadow: rgba(36, 55, 87, 0.16);
+  border: 1px solid color-mix(in srgb, var(--card-accent) 30%, var(--surface-border) 70%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.7) 100%),
+    color-mix(in srgb, var(--card-accent) 8%, var(--color3) 92%);
+  box-shadow: 0 16px 36px rgba(36, 55, 87, 0.1);
+}
+
+.home-benefit-card:hover {
+  border-color: color-mix(in srgb, var(--card-accent) 58%, var(--surface-border) 42%);
+  box-shadow: 0 24px 54px var(--card-shadow);
+}
+
+.benefit-accent-blue {
+  --card-accent: #2563eb;
+  --card-shadow: rgba(37, 99, 235, 0.22);
+}
+
+.benefit-accent-teal {
+  --card-accent: #0891b2;
+  --card-shadow: rgba(8, 145, 178, 0.22);
+}
+
+.benefit-accent-gold {
+  --card-accent: #d97706;
+  --card-shadow: rgba(217, 119, 6, 0.22);
+}
+
+.benefit-accent-stone {
+  --card-accent: #57534e;
+  --card-shadow: rgba(87, 83, 78, 0.2);
+}
+
+.benefit-accent-sage {
+  --card-accent: #0f766e;
+  --card-shadow: rgba(15, 118, 110, 0.22);
+}
+
+.benefit-accent-whatsapp {
+  --card-accent: var(--whatsapp);
+  --card-shadow: rgba(37, 211, 102, 0.2);
+}
+
+.home-category-card {
+  --card-accent: var(--green-dark);
+  border: 1px solid color-mix(in srgb, var(--color4) 72%, transparent);
+  background:
+    linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--card-accent) 5%, #ffffff 95%) 54%, color-mix(in srgb, var(--color3) 44%, #ffffff 56%) 100%);
+  box-shadow: 0 18px 38px rgba(36, 55, 87, 0.12);
+}
+
+.home-category-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--card-accent), color-mix(in srgb, var(--card-accent) 35%, #ffffff 65%));
+}
+
+.home-category-card:hover {
+  border-color: color-mix(in srgb, var(--card-accent) 56%, var(--surface-border) 44%);
+  box-shadow: 0 24px 55px color-mix(in srgb, var(--card-accent) 22%, transparent);
+}
+
+.category-accent-blue {
+  --card-accent: #2563eb;
+}
+
+.category-accent-teal {
+  --card-accent: #9333ea;
+}
+
+.category-accent-stone {
+  --card-accent: #16a34a;
+}
+
+.category-accent-sage {
+  --card-accent: #ea580c;
+}
+
+.category-accent-gold {
+  --card-accent: #d97706;
+}
+
+.text-gray-900,
+.text-gray-800,
+.text-black {
+  color: var(--color1);
+}
+
+.text-gray-700,
+.text-gray-600 {
+  color: color-mix(in srgb, var(--color1) 48%, var(--color5) 52%);
+}
+
+.text-gray-500 {
+  color: color-mix(in srgb, var(--color1) 34%, var(--color5) 66%);
+}
+
+.text-gray-400,
+.text-gray-300 {
+  color: color-mix(in srgb, var(--color4) 82%, #ffffff 18%);
+}
+
+.bg-\[var\(--green-dark\)\] .text-gray-400,
+.bg-\[var\(--green-dark\)\] .text-gray-300,
+footer .text-gray-400,
+footer .text-gray-300 {
+  color: color-mix(in srgb, var(--color4) 74%, #ffffff 26%);
+}
+
+.bg-white {
+  background-color: var(--card);
+}
+
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-200 {
+  background-color: var(--gray-light);
+}
+
+.bg-gray-900 {
+  background-color: var(--color1);
+}
+
+.border-gray-100,
+.border-gray-200,
+.border-gray-300,
+.border-emerald-100 {
+  border-color: var(--surface-border);
+}
+
+.hover\:bg-emerald-50:hover,
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover,
+.hover\:bg-gray-200:hover {
+  background-color: color-mix(in srgb, var(--color3) 46%, #ffffff 54%);
 }

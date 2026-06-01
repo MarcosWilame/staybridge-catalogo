@@ -12,6 +12,7 @@ export interface Property {
   longDescription: string;
   available: boolean;
   listed?: boolean;
+  deletedAt?: string;
   billsIncluded: boolean;
   bedrooms?: number;
   bathrooms?: number;
@@ -60,7 +61,7 @@ export const properties: Property[] = [
   type: 'Studio',
   title: 'Studio 8 - NW10 2EL',
   region: 'North London',
-  price: '£350/week',
+  price: '€350/week',
 
   description:
     'Studio moderno em Dollis Hill.',
@@ -117,7 +118,7 @@ export const properties: Property[] = [
   type: 'Studio',
   title: 'Studio 4 - SW16 5BA',
   region: 'South London',
-  price: '£280/week',
+  price: '€280/week',
   description: 'Studio moderno em Streatham.',
   longDescription:
     'Studio moderno totalmente mobiliado com bills inclusas.',
@@ -164,7 +165,7 @@ export const properties: Property[] = [
 
   region: 'North London',
 
-  price: '£160/week',
+  price: '€160/week',
 
   description:
     'Quarto individual confortável em Neasden.',
@@ -229,7 +230,7 @@ export const properties: Property[] = [
   type: 'Ensuite',
   title: 'Ensuite 4 - SW16 5BJ',
   region: 'South London',
-  price: '£270/week',
+  price: '€270/week',
 
   description:
     'Ensuite moderna em Streatham.',
@@ -307,7 +308,7 @@ images: [
 
   region: 'South London',
 
-  price: '£650/week',
+  price: '€650/week',
 
   description:
     'Flat completo com 2 quartos em Croydon.',
@@ -374,7 +375,7 @@ images: [
   type: '2 bedroom flat',
   title: '2 Bedroom Flat - Harrow',
   region: 'Harrow',
-  price: '£650/week',
+  price: '€650/week',
 
   description: 'Flat com 2 quartos, sala, cozinha e 1 banheiro.',
   longDescription:

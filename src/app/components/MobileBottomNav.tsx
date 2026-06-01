@@ -22,7 +22,7 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-emerald-100 bg-white/95 shadow-2xl backdrop-blur md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--surface-border)] bg-white/95 shadow-2xl backdrop-blur md:hidden">
       <div className="grid grid-cols-4 items-stretch pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
 
         {navItems.map((item) => {

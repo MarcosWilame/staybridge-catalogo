@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Mail, Phone, MessageCircle, Globe } from 'lucide-react';
+import { MapPin, Mail, Phone, Globe } from 'lucide-react';
 import { useState } from 'react';
 import { trackEvent, trackWhatsAppClick } from '../utils/analytics';
+import { WhatsAppIcon } from './WhatsAppIcon';
 
 function FacebookIcon({ className = 'h-5 w-5' }: { className?: string }) {
   return (
@@ -42,7 +43,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackEvent('social_click', { network: 'facebook', source: 'footer' })}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--yellow)] hover:text-black"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 font-semibold text-white transition-all duration-300 hover:bg-[#1877f2] hover:text-white"
               >
                 <FacebookIcon />
                 Facebook
@@ -52,9 +53,9 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('footer')}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--yellow)] hover:text-black"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--whatsapp)] px-4 py-2.5 font-bold text-[var(--whatsapp-foreground)] shadow-lg shadow-[rgba(37,211,102,0.18)] transition-all duration-300 hover:bg-[var(--whatsapp-hover)] hover:text-[var(--whatsapp-foreground)]"
               >
-                <MessageCircle className="h-5 w-5" />
+                <WhatsAppIcon className="h-5 w-5" />
                 WhatsApp
               </a>
             </div>

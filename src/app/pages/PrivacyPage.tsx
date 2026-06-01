@@ -24,7 +24,7 @@ const privacySections = [
 export function PrivacyPage() {
   return (
     <main className="bg-[var(--gray-light)] px-4 pb-20 pt-32 sm:px-6 lg:px-8">
-      <section className="mx-auto max-w-4xl rounded-lg border border-emerald-100 bg-white p-6 shadow-sm md:p-10">
+      <section className="mx-auto max-w-4xl rounded-lg border border-[var(--surface-border)] bg-white p-6 shadow-[var(--surface-shadow)] md:p-10">
         <p className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--green-medium)]">
           Política de Privacidade
         </p>

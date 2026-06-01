@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
-import { User, MessageCircle, Home } from 'lucide-react';
+import { User, Home } from 'lucide-react';
 import { trackWhatsAppClick } from '../utils/analytics';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 
 export function ProfilePage() {
   return (
     <div className="min-h-screen bg-[var(--gray-light)] px-4 pb-28 pt-28 md:pb-24">
       <div className="mx-auto max-w-4xl">
-        <div className="rounded-2xl bg-white p-6 text-center shadow-lg md:p-12">
+        <div className="rounded-lg border border-[var(--surface-border)] bg-white p-6 text-center shadow-[var(--surface-shadow)] md:p-12">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--green-dark)]/20 md:h-20 md:w-20">
             <User className="h-8 w-8 text-[var(--green-dark)] md:h-10 md:w-10" />
           </div>
@@ -24,9 +25,9 @@ export function ProfilePage() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackWhatsAppClick('profile_page')}
-              className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:px-6 md:py-4"
+              className="flex items-center justify-center gap-2 rounded-lg bg-[var(--whatsapp)] px-5 py-3.5 font-bold text-[var(--whatsapp-foreground)] transition-all duration-300 hover:bg-[var(--whatsapp-hover)] md:px-6 md:py-4"
             >
-              <MessageCircle className="w-5 h-5" />
+              <WhatsAppIcon className="w-5 h-5" />
               Falar no WhatsApp
             </a>
             <Link

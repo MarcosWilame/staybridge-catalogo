@@ -5,12 +5,13 @@ import {
   loadPropertiesFromSupabase,
   normalizeProperties,
 } from './supabaseProperties';
+import { isInRecovery, isRecoveryExpired } from '../utils/recovery';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
 
 function isListedProperty(property: Property) {
-  return property.listed !== false;
+  return property.listed !== false && !isInRecovery(property) && !isRecoveryExpired(property);
 }
 
 function getLocalProperties() {

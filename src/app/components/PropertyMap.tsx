@@ -64,8 +64,8 @@ export function PropertyMap({
   )}&z=13&output=embed`;
 
   return (
-    <div className={`overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-lg md:rounded-2xl ${className}`}>
-      <div className="border-b border-emerald-100 bg-white/90 p-4 md:p-5">
+    <div className={`overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)] ${className}`}>
+      <div className="border-b border-[var(--surface-border)] bg-white/90 p-4 md:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-[var(--green-dark)] font-bold">
