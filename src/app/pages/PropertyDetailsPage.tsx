@@ -186,7 +186,7 @@ export function PropertyDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-32 pt-20 md:pb-8">
+    <div className="min-h-screen bg-white pb-44 pt-20 md:pb-8">
 
       {/* BREADCRUMB + BACK */}
       <div className="bg-[var(--gray-light)] py-4">
@@ -476,6 +476,28 @@ export function PropertyDetailsPage() {
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold text-gray-500">
+              Preço por semana
+            </div>
+            <div className="flex items-baseline gap-1 text-2xl font-bold leading-tight text-[var(--green-dark)]">
+              <span>£</span>
+              <span className="truncate">{property.price}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleWhatsApp}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-5 py-3 font-bold text-black shadow-lg"
+          >
+            <MessageCircle className="h-5 w-5" />
+            WhatsApp
+          </button>
         </div>
       </div>
 

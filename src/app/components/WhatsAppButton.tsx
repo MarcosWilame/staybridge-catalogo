@@ -1,7 +1,15 @@
 import { MessageCircle } from 'lucide-react';
 import { motion } from "framer-motion";
+import { useLocation } from 'react-router-dom';
 
 export function WhatsAppButton() {
+  const location = useLocation();
+  const isCatalogFlow =
+    location.pathname === '/properties' ||
+    location.pathname.startsWith('/property/');
+
+  if (isCatalogFlow) return null;
+
   const handleClick = () => {
     window.open('https://wa.me/5588997993046', '_blank');
   };

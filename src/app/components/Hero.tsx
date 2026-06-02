@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { ArrowRight, Bed, Building2, Home, MessageCircle, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function Hero() {
@@ -13,6 +13,13 @@ export function Hero() {
   const goToProperties = () => {
     navigate('/properties');
   };
+
+  const quickLinks = [
+    { label: 'Entrada imediata', path: '/properties?availableNow=1', icon: Zap },
+    { label: 'Studios', path: '/properties?type=studio', icon: Home },
+    { label: 'Ensuites', path: '/properties?type=ensuite', icon: Bed },
+    { label: 'Flats', path: '/properties?type=flat', icon: Building2 },
+  ];
 
   return (
     <div id="hero" className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[90vh]">
@@ -100,11 +107,39 @@ export function Hero() {
             </button>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-5 rounded-2xl bg-black/35 p-3 backdrop-blur-[2px] sm:mt-6 sm:inline-block"
+          >
+            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-white/75">
+              Buscar rápido
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              {quickLinks.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => navigate(item.path)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-[var(--green-dark)] shadow-sm transition hover:bg-[var(--yellow)]"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+
           {/* TRUST */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.55 }}
             className="mt-8 flex flex-wrap gap-2 text-sm text-white sm:mt-12 sm:gap-3"
           >
             <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">

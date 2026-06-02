@@ -92,7 +92,7 @@ export function ListingPage() {
     region: searchParams.get('region') || '',
     type: searchParams.get('type') || '',
     priceRange: '',
-    availableNow: false,
+    availableNow: searchParams.get('availableNow') === '1',
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -109,6 +109,7 @@ export function ListingPage() {
       ...prev,
       region: searchParams.get('region') || '',
       type: searchParams.get('type') || '',
+      availableNow: searchParams.get('availableNow') === '1',
     }));
   }, [searchParams]);
 
@@ -248,6 +249,38 @@ export function ListingPage() {
     { key: 'flat', label: 'Flat', type: 'flat' },
   ];
 
+  const regionOptions = [
+    { value: '', label: 'Todas' },
+    { value: 'north', label: 'North' },
+    { value: 'south', label: 'South' },
+    { value: 'east', label: 'East' },
+    { value: 'west', label: 'West' },
+  ];
+
+  const typeOptions = [
+    { value: '', label: 'Todos' },
+    { value: 'studio', label: 'Studio' },
+    { value: 'ensuite', label: 'Ensuite' },
+    { value: 'single', label: 'Single' },
+    { value: 'double', label: 'Double' },
+    { value: 'flat', label: 'Flat' },
+  ];
+
+  const priceOptions = [
+    { value: '', label: 'Todos' },
+    { value: '0-150', label: '£0 - £150' },
+    { value: '150-250', label: '£150 - £250' },
+    { value: '250-350', label: '£250 - £350' },
+    { value: '350+', label: '£350+' },
+  ];
+
+  const mobileFilterButtonClass = (isActive: boolean) =>
+    `rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
+      isActive
+        ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
+        : 'border-gray-200 bg-gray-50 text-gray-700'
+    }`;
+
   const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
       className={`overflow-y-auto overscroll-contain bg-white ${
@@ -276,95 +309,135 @@ export function ListingPage() {
       <div className="space-y-2">
         <label className="font-bold text-sm">Região</label>
 
-        <label className="flex gap-2 items-center cursor-pointer">
-          <input
-            type="radio"
-            name={`region-${isMobile ? 'mobile' : 'desktop'}`}
-            checked={filters.region === ''}
-            onChange={() => updateFilter('region', '')}
-          />
-          Todas
-        </label>
-
-        {['north', 'south', 'east', 'west'].map((region) => (
-          <label key={region} className="flex gap-2 items-center cursor-pointer">
-            <input
-              type="radio"
-              name={`region-${isMobile ? 'mobile' : 'desktop'}`}
-              checked={filters.region === region}
-              onChange={() => updateFilter('region', region)}
-            />
-            {region.charAt(0).toUpperCase() + region.slice(1)} London
-          </label>
-        ))}
+        {isMobile ? (
+          <div className="grid grid-cols-2 gap-2">
+            {regionOptions.map((region) => (
+              <button
+                key={region.value || 'all'}
+                type="button"
+                onClick={() => updateFilter('region', region.value)}
+                className={mobileFilterButtonClass(filters.region === region.value)}
+              >
+                {region.value ? `${region.label} London` : region.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            {regionOptions.map((region) => (
+              <label key={region.value || 'all'} className="flex gap-2 items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={`region-${isMobile ? 'mobile' : 'desktop'}`}
+                  checked={filters.region === region.value}
+                  onChange={() => updateFilter('region', region.value)}
+                />
+                {region.value ? `${region.label} London` : region.label}
+              </label>
+            ))}
+          </>
+        )}
       </div>
 
       {/* TYPE */}
       <div className="mt-6 space-y-2">
         <label className="font-bold text-sm">Tipo</label>
 
-        <label className="flex gap-2 items-center cursor-pointer">
-          <input
-            type="radio"
-            name={`type-${isMobile ? 'mobile' : 'desktop'}`}
-            checked={filters.type === ''}
-            onChange={() => updateFilter('type', '')}
-          />
-          Todos
-        </label>
-
-        {[
-          { value: 'studio', label: 'Studio' },
-          { value: 'ensuite', label: 'Ensuite' },
-          { value: 'single', label: 'Single' },
-          { value: 'double', label: 'Double' },
-          { value: 'flat', label: 'Flat' },
-        ].map((type) => (
-          <label key={type.value} className="flex gap-2 items-center cursor-pointer">
-            <input
-              type="radio"
-              name={`type-${isMobile ? 'mobile' : 'desktop'}`}
-              checked={filters.type === type.value}
-              onChange={() => updateFilter('type', type.value)}
-            />
-            {type.label}
-          </label>
-        ))}
+        {isMobile ? (
+          <div className="grid grid-cols-2 gap-2">
+            {typeOptions.map((type) => (
+              <button
+                key={type.value || 'all'}
+                type="button"
+                onClick={() => updateFilter('type', type.value)}
+                className={mobileFilterButtonClass(filters.type === type.value)}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            {typeOptions.map((type) => (
+              <label key={type.value || 'all'} className="flex gap-2 items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={`type-${isMobile ? 'mobile' : 'desktop'}`}
+                  checked={filters.type === type.value}
+                  onChange={() => updateFilter('type', type.value)}
+                />
+                {type.label}
+              </label>
+            ))}
+          </>
+        )}
       </div>
 
       {/* PRICE */}
       <div className="mt-6 space-y-2">
         <label className="font-bold text-sm">Preço</label>
 
-        {[
-          { value: '', label: 'Todos' },
-          { value: '0-150', label: '£0 - £150' },
-          { value: '150-250', label: '£150 - £250' },
-          { value: '250-350', label: '£250 - £350' },
-          { value: '350+', label: '£350+' },
-        ].map((range) => (
-          <label key={range.value} className="flex gap-2 items-center cursor-pointer">
-            <input
-              type="radio"
-              name={`price-${isMobile ? 'mobile' : 'desktop'}`}
-              checked={filters.priceRange === range.value}
-              onChange={() => updateFilter('priceRange', range.value)}
-            />
-            {range.label}
-          </label>
-        ))}
+        {isMobile ? (
+          <div className="grid grid-cols-2 gap-2">
+            {priceOptions.map((range) => (
+              <button
+                key={range.value || 'all'}
+                type="button"
+                onClick={() => updateFilter('priceRange', range.value)}
+                className={mobileFilterButtonClass(filters.priceRange === range.value)}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            {priceOptions.map((range) => (
+              <label key={range.value || 'all'} className="flex gap-2 items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name={`price-${isMobile ? 'mobile' : 'desktop'}`}
+                  checked={filters.priceRange === range.value}
+                  onChange={() => updateFilter('priceRange', range.value)}
+                />
+                {range.label}
+              </label>
+            ))}
+          </>
+        )}
       </div>
 
       {/* ENTRADA IMEDIATA */}
       <div className="mt-6">
-        <label className="flex gap-2 items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={filters.availableNow}
-            onChange={(e) => updateFilter('availableNow', e.target.checked)}
-          />
-          Entrada imediata
-        </label>
+        {isMobile ? (
+          <button
+            type="button"
+            onClick={() => updateFilter('availableNow', !filters.availableNow)}
+            className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
+              filters.availableNow
+                ? 'border-[var(--yellow)] bg-[var(--yellow)] text-black shadow-sm'
+                : 'border-gray-200 bg-gray-50 text-gray-700'
+            }`}
+          >
+            Entrada imediata
+            <span
+              className={`h-5 w-5 rounded-full border-2 ${
+                filters.availableNow
+                  ? 'border-black bg-black shadow-[inset_0_0_0_4px_var(--yellow)]'
+                  : 'border-gray-300 bg-white'
+              }`}
+            />
+          </button>
+        ) : (
+          <label className="flex gap-2 items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.availableNow}
+              onChange={(e) => updateFilter('availableNow', e.target.checked)}
+            />
+            Entrada imediata
+          </label>
+        )}
       </div>
     </div>
   );
@@ -372,7 +445,7 @@ export function ListingPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-28 pt-28 md:pb-10">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-5">
           <div>
             <h1 className="text-3xl font-bold mb-2">Propriedades</h1>
             <p>
@@ -384,19 +457,39 @@ export function ListingPage() {
               </p>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowMobileFilters(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-4 py-3 text-sm font-bold text-white shadow-md lg:hidden"
-            aria-label="Abrir filtros"
-          >
-            <SlidersHorizontal className="h-5 w-5" />
-            Filtrar propriedades
-          </button>
         </div>
 
         <div className="sticky top-20 z-30 -mx-4 mb-5 border-y border-gray-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:hidden">
+          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-4 py-3 text-sm font-bold text-white shadow-sm"
+              aria-label="Abrir filtros"
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+              <span>Filtros</span>
+              {activeFilterChips.length > 0 && (
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs text-[var(--green-dark)]">
+                  {activeFilterChips.length}
+                </span>
+              )}
+            </button>
+
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as SortOption)}
+              className="max-w-[10rem] rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-700 shadow-sm focus:border-[var(--green-dark)] focus:outline-none"
+              aria-label="Ordenar propriedades"
+            >
+              <option value="recommended">Recomendados</option>
+              <option value="price-asc">Menor preço</option>
+              <option value="price-desc">Maior preço</option>
+              <option value="available">Entrada imediata</option>
+              <option value="type">Tipo</option>
+            </select>
+          </div>
+
           <div className="flex gap-2 overflow-x-auto pb-1">
             {quickMobileFilters.map((filter) => {
               const isActive = filters.type === filter.type;
@@ -453,7 +546,7 @@ export function ListingPage() {
             }`}
           >
             <div className="min-w-0">
-              <div className="sticky top-20 z-20 mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:top-24">
+              <div className="mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:z-20">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-gray-500">Resultados</div>
@@ -464,7 +557,7 @@ export function ListingPage() {
                     </div>
                   </div>
 
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="hidden items-center gap-2 text-sm font-semibold text-gray-700 lg:flex">
                     Ordenar por
                     <select
                       value={sortBy}
@@ -574,16 +667,6 @@ export function ListingPage() {
           </div>
         )}
       </div>
-
-      {/* MOBILE BUTTON */}
-      <button
-        type="button"
-        onClick={() => setShowMobileFilters(true)}
-        className="fixed bottom-40 right-4 z-50 rounded-full bg-[var(--green-dark)] p-3 text-white shadow-2xl lg:hidden"
-        aria-label="Abrir filtros"
-      >
-        <SlidersHorizontal className="h-6 w-6" />
-      </button>
 
       {showMobileFilters && (
         <div
