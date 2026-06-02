@@ -17,12 +17,15 @@ import {
   Heart,
   Share2,
   Calendar,
-  PoundSterling,
   Home,
   ChevronLeft,
   ChevronRight,
   Play,
   Clock,
+  Bus,
+  ShoppingBasket,
+  Pill,
+  TrainFront,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -73,6 +76,37 @@ function getMediaItems(property: Property): MediaItem[] {
       embedSrc: getVideoEmbedUrl(property.video),
     },
   ];
+}
+
+function formatWeeklyPrice(price: string) {
+  const cleanedPrice = price.trim();
+  const amountMatch = cleanedPrice.match(/£?\s*\d+(?:[.,]\d+)?/);
+  const amount = amountMatch
+    ? amountMatch[0].replace(/^£?\s*/, '')
+    : cleanedPrice.replace(/\/?\s*week/i, '').replace(/^£\s*/, '');
+
+  return amount.startsWith('£') ? amount : `£${amount}`;
+}
+
+function getNearbyIcon(label: string) {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes('bus')) return Bus;
+  if (
+    normalized.includes('sainsbury') ||
+    normalized.includes('market') ||
+    normalized.includes('supermarket')
+  ) {
+    return ShoppingBasket;
+  }
+  if (normalized.includes('pharmacy') || normalized.includes('farmácia')) {
+    return Pill;
+  }
+  if (normalized.includes('station') || normalized.includes('junction')) {
+    return TrainFront;
+  }
+
+  return MapPin;
 }
 
 export function PropertyDetailsPage() {
@@ -129,6 +163,10 @@ export function PropertyDetailsPage() {
   const { label: availabilityLabel, isNow } = property
     ? getAvailabilityInfo(property.moveInDate)
     : { label: '', isNow: false };
+  const weeklyPrice = property ? formatWeeklyPrice(property.price) : '';
+  const nearbyHighlights = property
+    ? property.nearbyStations.filter((item) => item.trim().length > 0)
+    : [];
 
   const handleWhatsApp = () => {
     if (!property) return;
@@ -425,6 +463,35 @@ export function PropertyDetailsPage() {
               </p>
             </div>
 
+            {nearbyHighlights.length > 0 && (
+              <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
+                <div className="mb-4 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-[var(--green-dark)]" />
+                  <h2 className="text-2xl font-bold text-[var(--green-dark)]">
+                    Pontos próximos
+                  </h2>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {nearbyHighlights.map((item) => {
+                    const Icon = getNearbyIcon(item);
+
+                    return (
+                      <div
+                        key={item}
+                        className="flex items-center gap-3 rounded-xl bg-[var(--gray-light)] px-4 py-3 text-sm font-semibold text-gray-800"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--green-dark)]/10 text-[var(--green-dark)]">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span className="break-words">{item}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <PropertyMap property={property} />
           </div>
 
@@ -434,11 +501,12 @@ export function PropertyDetailsPage() {
 
               <div className="rounded-2xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] p-5 text-white md:p-6">
 
-                <div className="text-sm mb-2">Preço por semana</div>
+                <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/80">
+                  Week
+                </div>
 
-                <div className="mb-4 flex items-start text-4xl font-bold md:text-5xl">
-                  <PoundSterling className="mt-1 h-7 w-7 md:h-8 md:w-8" />
-                  {property.price}
+                <div className="mb-4 text-4xl font-bold md:text-5xl">
+                  {weeklyPrice}
                 </div>
 
                 {/* Availability in sidebar */}
@@ -482,12 +550,11 @@ export function PropertyDetailsPage() {
       <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold text-gray-500">
-              Preço por semana
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Week
             </div>
-            <div className="flex items-baseline gap-1 text-2xl font-bold leading-tight text-[var(--green-dark)]">
-              <span>£</span>
-              <span className="truncate">{property.price}</span>
+            <div className="text-2xl font-bold leading-tight text-[var(--green-dark)]">
+              <span className="truncate">{weeklyPrice}</span>
             </div>
           </div>
 

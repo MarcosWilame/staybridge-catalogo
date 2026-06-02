@@ -20,6 +20,53 @@ interface PropertyCardProps {
   property: Property;
 }
 
+function formatWeeklyPrice(price: string) {
+  const cleanedPrice = price.trim();
+  const amountMatch = cleanedPrice.match(/£?\s*\d+(?:[.,]\d+)?/);
+  const amount = amountMatch
+    ? amountMatch[0].replace(/^£?\s*/, '')
+    : cleanedPrice.replace(/\/?\s*week/i, '').replace(/^£\s*/, '');
+
+  return amount.startsWith('£') ? amount : `£${amount}`;
+}
+
+const postcodeAreaByDistrict: Record<string, string> = {
+  HA2: 'Harrow',
+  NW2: 'Neasden',
+  NW10: 'Dollis Hill',
+  SE25: 'Croydon',
+  SW16: 'Streatham',
+};
+
+function extractPostcodeDistrict(property: Property) {
+  const postcodeSource = [property.postcode, property.title, property.address]
+    .filter(Boolean)
+    .join(' ');
+  const match = postcodeSource.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\s*\d[A-Z]{2}\b/i);
+
+  return match?.[1]?.toUpperCase() || '';
+}
+
+function extractAreaFromText(property: Property) {
+  const textSource = [property.description, property.longDescription]
+    .filter(Boolean)
+    .join(' ');
+  const match = textSource.match(/\b(?:em|in)\s+([A-ZÀ-Ý][\wÀ-ÿ'-]+(?:\s+[A-ZÀ-Ý][\wÀ-ÿ'-]+){0,2})/);
+
+  return match?.[1]?.replace(/\.$/, '').trim() || '';
+}
+
+function getAreaPreview(property: Property) {
+  const postcodeDistrict = extractPostcodeDistrict(property);
+  const postcodeArea = postcodeAreaByDistrict[postcodeDistrict];
+  const textArea = extractAreaFromText(property);
+  const station = property.nearbyStations?.[0]
+    ?.replace(/\s+Station$/i, '')
+    .trim();
+
+  return property.localArea || textArea || station || postcodeArea || property.region;
+}
+
 export function PropertyCard({ property }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = useMemo(
@@ -28,6 +75,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
   );
   const currentImage = images[currentImageIndex] || property.image;
   const hasCarousel = images.length > 1;
+  const weeklyPrice = formatWeeklyPrice(property.price);
+  const areaPreview = getAreaPreview(property);
 
   const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
 
@@ -60,9 +109,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
   }, [currentImageIndex, hasCarousel, images]);
 
   return (
-    <div className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
+    <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
       {/* Image Container */}
-      <div className="relative h-56 overflow-hidden sm:h-64">
+      <div className="relative h-56 shrink-0 overflow-hidden sm:h-64">
         <Link to={`/property/${property.id}`} className="block h-full">
           <ImageWithFallback
             src={getOptimizedImageUrl(currentImage, 'card')}
@@ -103,8 +152,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
         {/* Price Badge */}
         <div className="absolute bottom-3 right-3 hidden sm:block">
           <div className="rounded-xl bg-[var(--green-dark)] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
-            <div className="text-xs opacity-90 font-medium">por semana</div>
-            <div className="text-xl font-bold md:text-2xl">{property.price}</div>
+            <div className="text-xs font-medium uppercase tracking-wide opacity-90">Week</div>
+            <div className="text-xl font-bold md:text-2xl">{weeklyPrice}</div>
           </div>
         </div>
 
@@ -140,7 +189,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-4 md:p-5">
+      <div className="flex flex-1 flex-col p-4 md:p-5">
         {/* Type and Region */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
@@ -149,7 +198,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </span>
           <span className="inline-flex min-w-0 max-w-[45%] items-center gap-1 text-gray-600 text-sm font-medium">
             <MapPin className="w-4 h-4 text-gray-400" />
-            <span className="line-clamp-1 break-words">{property.region}</span>
+            <span className="line-clamp-1 break-words">{areaPreview}</span>
           </span>
         </div>
 
@@ -162,9 +211,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         <div className="mb-3 flex items-end justify-between gap-3 rounded-xl bg-[var(--green-dark)]/5 px-3 py-2 sm:hidden">
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-gray-500">por semana</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Week</div>
             <div className="truncate text-2xl font-extrabold leading-tight text-[var(--green-dark)]">
-              {property.price}
+              {weeklyPrice}
             </div>
           </div>
           {property.available && (
@@ -203,7 +252,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="mt-auto flex gap-2">
           <Link
             to={`/property/${property.id}`}
             className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] md:hover:scale-105 md:px-4"
