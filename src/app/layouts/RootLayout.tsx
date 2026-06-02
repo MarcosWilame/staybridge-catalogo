@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { WhatsAppButton } from '../components/WhatsAppButton';
@@ -13,6 +14,7 @@ export function RootLayout() {
   return (
     <>
       <Analytics />
+      <VercelAnalytics />
 
       <div className="min-h-screen bg-[image:var(--page-gradient)]">
         <ScrollToTop />
