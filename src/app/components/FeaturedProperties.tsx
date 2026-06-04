@@ -1,8 +1,10 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { PropertyCard } from './PropertyCard';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 function pickFirstUnused(
   properties: Property[],
@@ -50,11 +52,116 @@ function pickFeaturedProperties(properties: Property[]) {
   return selected;
 }
 
+function hasDisplayImage(property: Property) {
+  return getPropertyImageCandidates(property).length > 0;
+}
+
+function getPropertyImageCandidates(property: Property) {
+  const candidates = [property.image, ...(property.images || [])]
+    .map((image) => image?.trim())
+    .filter((image): image is string => Boolean(image));
+
+  return Array.from(new Set(candidates)).filter((image) => {
+    const normalized = image.toLowerCase();
+
+    return (
+      /^https?:\/\//.test(normalized) &&
+      !normalized.includes('undefined') &&
+      !normalized.includes('null') &&
+      !/\.(mp4|mov|webm|avi)(\?|#|$)/.test(normalized)
+    );
+  });
+}
+
+function canLoadImage(src: string) {
+  return new Promise<boolean>((resolve) => {
+    const image = new Image();
+    const timeout = window.setTimeout(() => resolve(false), 5000);
+
+    image.onload = () => {
+      window.clearTimeout(timeout);
+      resolve(Boolean(image.naturalWidth && image.naturalHeight));
+    };
+
+    image.onerror = () => {
+      window.clearTimeout(timeout);
+      resolve(false);
+    };
+
+    image.src = getOptimizedImageUrl(src, 'card');
+  });
+}
+
+async function propertyHasLoadableImage(property: Property) {
+  for (const image of getPropertyImageCandidates(property)) {
+    if (await canLoadImage(image)) return true;
+  }
+
+  return false;
+}
+
 export function FeaturedProperties() {
   const { properties } = useProperties();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [verifiedImageIds, setVerifiedImageIds] = useState<Set<number>>(new Set());
 
-  const availableProperties = properties.filter((property) => property.available);
-  const visibleProperties = pickFeaturedProperties(availableProperties);
+  const availableProperties = useMemo(
+    () => properties.filter((property) => property.available && hasDisplayImage(property)),
+    [properties]
+  );
+  const imageReadyProperties = useMemo(
+    () => availableProperties.filter((property) => verifiedImageIds.has(property.id)),
+    [availableProperties, verifiedImageIds]
+  );
+  const featuredProperties = useMemo(
+    () => pickFeaturedProperties(imageReadyProperties),
+    [imageReadyProperties]
+  );
+  const carouselProperties = featuredProperties.length
+    ? Array.from(
+        { length: Math.min(3, featuredProperties.length) },
+        (_, index) => featuredProperties[(activeIndex + index) % featuredProperties.length]
+      )
+    : [];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    setVerifiedImageIds(new Set());
+
+    availableProperties.forEach((property) => {
+      propertyHasLoadableImage(property).then((hasImage) => {
+        if (!isMounted || !hasImage) return;
+
+        setVerifiedImageIds((current) => {
+          if (current.has(property.id)) return current;
+
+          const next = new Set(current);
+          next.add(property.id);
+          return next;
+        });
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [availableProperties]);
+
+  useEffect(() => {
+    if (featuredProperties.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % featuredProperties.length);
+    }, 4200);
+
+    return () => window.clearInterval(timer);
+  }, [featuredProperties.length]);
+
+  useEffect(() => {
+    if (activeIndex < featuredProperties.length) return;
+    setActiveIndex(0);
+  }, [activeIndex, featuredProperties.length]);
 
   return (
     <section className="bg-gray-50 py-12 md:py-16">
@@ -75,7 +182,7 @@ export function FeaturedProperties() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[var(--green-dark)] shadow-sm">
-              {availableProperties.length} opções disponíveis
+              {imageReadyProperties.length} opções disponíveis
             </div>
             <Link
               to="/properties"
@@ -87,16 +194,36 @@ export function FeaturedProperties() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-          {visibleProperties.map((property) => (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          {carouselProperties.map((property, index) => (
             <div
-              key={property.id}
-              className="h-full transform transition-all duration-300 hover:-translate-y-1"
+              key={`${property.id}-${activeIndex}`}
+              className={`h-full transform transition-all duration-500 hover:-translate-y-1 ${
+                index > 0 ? 'hidden md:block' : ''
+              }`}
             >
               <PropertyCard property={property} />
             </div>
           ))}
         </div>
+
+        {featuredProperties.length > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-2">
+            {featuredProperties.slice(0, 6).map((property, index) => (
+              <button
+                key={property.id}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                className={`h-2.5 rounded-full transition-all ${
+                  index === activeIndex
+                    ? 'w-8 bg-[var(--green-dark)]'
+                    : 'w-2.5 bg-gray-300 hover:bg-gray-400'
+                }`}
+                aria-label={`Ver acomodacao ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

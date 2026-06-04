@@ -4,18 +4,36 @@ import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
 import { PropertyMap } from '../components/PropertyMap';
-import { Building2, Home, KeyRound, MapPin, SlidersHorizontal, TrainFront, X } from 'lucide-react';
+import { getAvailabilityInfo } from '../utils/availability';
+import {
+  Banknote,
+  Building2,
+  CheckCircle2,
+  Home,
+  KeyRound,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  TrainFront,
+  Users,
+  X,
+} from 'lucide-react';
 
 interface FilterState {
+  search: string;
   region: string;
   type: string;
   priceRange: string;
   availableNow: boolean;
+  billsIncluded: boolean;
+  people: string;
 }
 
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
 
 const INITIAL_VISIBLE_COUNT = 12;
+const PRICE_STEP = 25;
+const DEFAULT_MAX_PRICE = 700;
 
 function LondonPropertiesLoading() {
   const loadingCards = [
@@ -85,14 +103,17 @@ function LondonPropertiesLoading() {
 }
 
 export function ListingPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { properties, isLoading, error } = useProperties();
 
   const [filters, setFilters] = useState<FilterState>({
+    search: searchParams.get('search') || '',
     region: searchParams.get('region') || '',
     type: searchParams.get('type') || '',
-    priceRange: '',
+    priceRange: searchParams.get('price') || '',
     availableNow: searchParams.get('availableNow') === '1',
+    billsIncluded: searchParams.get('billsIncluded') === '1',
+    people: searchParams.get('people') || '',
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -107,9 +128,13 @@ export function ListingPage() {
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
+      search: searchParams.get('search') || '',
       region: searchParams.get('region') || '',
       type: searchParams.get('type') || '',
+      priceRange: searchParams.get('price') || '',
       availableNow: searchParams.get('availableNow') === '1',
+      billsIncluded: searchParams.get('billsIncluded') === '1',
+      people: searchParams.get('people') || '',
     }));
   }, [searchParams]);
 
@@ -117,20 +142,47 @@ export function ListingPage() {
     setSelectedProperty((current) => current || properties[0]);
   }, [properties]);
 
+  const syncSearchParams = (nextFilters: FilterState) => {
+    const nextParams = new URLSearchParams();
+
+    if (nextFilters.search.trim()) nextParams.set('search', nextFilters.search.trim());
+    if (nextFilters.region) nextParams.set('region', nextFilters.region);
+    if (nextFilters.type) nextParams.set('type', nextFilters.type);
+    if (nextFilters.priceRange) nextParams.set('price', nextFilters.priceRange);
+    if (nextFilters.availableNow) nextParams.set('availableNow', '1');
+    if (nextFilters.billsIncluded) nextParams.set('billsIncluded', '1');
+    if (nextFilters.people) nextParams.set('people', nextFilters.people);
+
+    setSearchParams(nextParams, { replace: true });
+  };
+
   const updateFilter = <K extends keyof FilterState>(
     key: K,
-    value: FilterState[K]
+    value: FilterState[K],
+    options: { syncUrl?: boolean } = {}
   ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      if (options.syncUrl !== false) {
+        syncSearchParams(next);
+      }
+      return next;
+    });
   };
 
   const clearFilters = () => {
-    setFilters({
+    const emptyFilters = {
+      search: '',
       region: '',
       type: '',
       priceRange: '',
       availableNow: false,
-    });
+      billsIncluded: false,
+      people: '',
+    };
+
+    setFilters(emptyFilters);
+    syncSearchParams(emptyFilters);
   };
 
   useEffect(() => {
@@ -139,6 +191,9 @@ export function ListingPage() {
 
   const parsePriceRange = (range: string) => {
     if (!range) return [0, Infinity] as const;
+    if (/^\d+$/.test(range)) {
+      return [0, Number(range)] as const;
+    }
     if (range.includes('+')) {
       const min = Number(range.replace('+', ''));
       return [min, Infinity] as const;
@@ -153,7 +208,63 @@ export function ListingPage() {
     return Number(match[0].replace(',', '.'));
   };
 
+  const availableMaxPrice = Math.max(
+    DEFAULT_MAX_PRICE,
+    Math.ceil(Math.max(0, ...properties.map((p) => getPriceValue(p.price))) / PRICE_STEP) *
+      PRICE_STEP
+  );
+
+  const selectedMaxPrice = /^\d+$/.test(filters.priceRange)
+    ? Math.min(Number(filters.priceRange), availableMaxPrice)
+    : availableMaxPrice;
+
+  const getPriceRangeValue = (value: number | string) => {
+    const nextValue = Number(value);
+    return nextValue >= availableMaxPrice ? '' : String(nextValue);
+  };
+
+  const commitMaxPrice = (value: number | string) => {
+    const next = { ...filters, priceRange: getPriceRangeValue(value) };
+    setFilters(next);
+    syncSearchParams(next);
+  };
+
+  const getSliderPriceFromPointer = (clientX: number, track: HTMLDivElement) => {
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const rawValue = ratio * availableMaxPrice;
+    return Math.max(PRICE_STEP, Math.round(rawValue / PRICE_STEP) * PRICE_STEP);
+  };
+
+  const getPriceFilterLabel = (range: string) => {
+    if (/^\d+$/.test(range)) return `Ate £${range}`;
+    if (range === '350+') return '£350+';
+    return `£${range.replace('-', ' - £')}`;
+  };
+
+  const matchesSearch = (property: Property, query: string) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return true;
+
+    return [
+      property.title,
+      property.region,
+      property.localArea,
+      property.postcode,
+      property.address,
+      property.type,
+      property.description,
+      ...property.nearbyStations,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+  };
+
   let filteredProperties = [...properties];
+
+  if (filters.search.trim()) {
+    filteredProperties = filteredProperties.filter((p) => matchesSearch(p, filters.search));
+  }
 
   if (filters.region) {
     filteredProperties = filteredProperties.filter((p) =>
@@ -177,8 +288,19 @@ export function ListingPage() {
 
   if (filters.availableNow) {
     filteredProperties = filteredProperties.filter((p) => {
-      const normalized = (p.moveInDate ?? '').trim().toLowerCase();
-      return normalized === 'now' || normalized === 'imediata';
+      return getAvailabilityInfo(p.moveInDate).isNow;
+    });
+  }
+
+  if (filters.billsIncluded) {
+    filteredProperties = filteredProperties.filter((p) => p.billsIncluded);
+  }
+
+  if (filters.people) {
+    filteredProperties = filteredProperties.filter((p) => {
+      const capacity = Number(p.people || 0);
+      if (filters.people === '4+') return capacity >= 4;
+      return capacity >= Number(filters.people);
     });
   }
 
@@ -192,8 +314,8 @@ export function ListingPage() {
     }
 
     if (sortBy === 'available') {
-      const aNow = ['now', 'imediata'].includes((a.moveInDate ?? '').trim().toLowerCase());
-      const bNow = ['now', 'imediata'].includes((b.moveInDate ?? '').trim().toLowerCase());
+      const aNow = getAvailabilityInfo(a.moveInDate).isNow;
+      const bNow = getAvailabilityInfo(b.moveInDate).isNow;
       return Number(bNow) - Number(aNow);
     }
 
@@ -212,12 +334,20 @@ export function ListingPage() {
   );
 
   const hasActiveFilters =
+    filters.search ||
     filters.region ||
     filters.type ||
     filters.priceRange ||
-    filters.availableNow;
+    filters.availableNow ||
+    filters.billsIncluded ||
+    filters.people;
 
   const activeFilterChips = [
+    filters.search && {
+      key: 'search' as const,
+      label: filters.search,
+      clear: () => updateFilter('search', ''),
+    },
     filters.region && {
       key: 'region' as const,
       label: `${filters.region.charAt(0).toUpperCase() + filters.region.slice(1)} London`,
@@ -230,16 +360,23 @@ export function ListingPage() {
     },
     filters.priceRange && {
       key: 'priceRange' as const,
-      label:
-        filters.priceRange === '350+'
-          ? '£350+'
-          : `£${filters.priceRange.replace('-', ' - £')}`,
+      label: getPriceFilterLabel(filters.priceRange),
       clear: () => updateFilter('priceRange', ''),
     },
     filters.availableNow && {
       key: 'availableNow' as const,
       label: 'Entrada imediata',
       clear: () => updateFilter('availableNow', false),
+    },
+    filters.billsIncluded && {
+      key: 'billsIncluded' as const,
+      label: 'Bills inclusas',
+      clear: () => updateFilter('billsIncluded', false),
+    },
+    filters.people && {
+      key: 'people' as const,
+      label: filters.people === '4+' ? '4+ pessoas' : `${filters.people}+ pessoa${filters.people === '1' ? '' : 's'}`,
+      clear: () => updateFilter('people', ''),
     },
   ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 
@@ -266,12 +403,12 @@ export function ListingPage() {
     { value: 'flat', label: 'Flat' },
   ];
 
-  const priceOptions = [
-    { value: '', label: 'Todos' },
-    { value: '0-150', label: '£0 - £150' },
-    { value: '150-250', label: '£150 - £250' },
-    { value: '250-350', label: '£250 - £350' },
-    { value: '350+', label: '£350+' },
+  const peopleOptions = [
+    { value: '', label: 'Qualquer' },
+    { value: '1', label: '1 pessoa' },
+    { value: '2', label: '2 pessoas' },
+    { value: '3', label: '3 pessoas' },
+    { value: '4+', label: '4+ pessoas' },
   ];
 
   const mobileFilterButtonClass = (isActive: boolean) =>
@@ -280,6 +417,125 @@ export function ListingPage() {
         ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
         : 'border-gray-200 bg-gray-50 text-gray-700'
     }`;
+
+  const PriceSliderFilter = ({ isMobile = false }: { isMobile?: boolean }) => {
+    const [draftPrice, setDraftPrice] = useState(selectedMaxPrice);
+    const isDraggingRef = useRef(false);
+    const draftProgress = (draftPrice / availableMaxPrice) * 100;
+    const hasPriceFilter = draftPrice < availableMaxPrice;
+
+    useEffect(() => {
+      if (!isDraggingRef.current) {
+        setDraftPrice(selectedMaxPrice);
+      }
+    }, [selectedMaxPrice]);
+
+    const setDraftFromPointer = (clientX: number, track: HTMLDivElement) => {
+      const nextPrice = getSliderPriceFromPointer(clientX, track);
+      setDraftPrice(nextPrice);
+      return nextPrice;
+    };
+
+    const commitDraft = (value: number) => {
+      isDraggingRef.current = false;
+      setDraftPrice(value);
+      commitMaxPrice(value);
+    };
+
+    return (
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <label
+            htmlFor={`price-${isMobile ? 'mobile' : 'desktop'}`}
+            className="flex items-center gap-2 font-bold text-sm"
+          >
+            <Banknote className="h-4 w-4" />
+            Valor
+          </label>
+          <span className="shrink-0 rounded-full bg-[var(--green-dark)]/10 px-3 py-1 text-sm font-bold text-[var(--green-dark)]">
+            {hasPriceFilter ? `Ate £${draftPrice}` : 'Qualquer'}
+          </span>
+        </div>
+
+        <div
+          id={`price-${isMobile ? 'mobile' : 'desktop'}`}
+          role="slider"
+          tabIndex={0}
+          aria-valuemin={PRICE_STEP}
+          aria-valuemax={availableMaxPrice}
+          aria-valuenow={draftPrice}
+          aria-valuetext={hasPriceFilter ? `Ate £${draftPrice} por semana` : 'Qualquer valor'}
+          className="group relative h-10 cursor-grab touch-none select-none active:cursor-grabbing"
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            isDraggingRef.current = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setDraftFromPointer(event.clientX, event.currentTarget);
+          }}
+          onPointerMove={(event) => {
+            if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+            setDraftFromPointer(event.clientX, event.currentTarget);
+          }}
+          onPointerUp={(event) => {
+            const nextPrice = setDraftFromPointer(event.clientX, event.currentTarget);
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+            commitDraft(nextPrice);
+          }}
+          onPointerCancel={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+            commitDraft(draftPrice);
+          }}
+          onKeyDown={(event) => {
+            const nextValue =
+              event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                ? draftPrice + PRICE_STEP
+                : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+                  ? draftPrice - PRICE_STEP
+                  : event.key === 'Home'
+                    ? PRICE_STEP
+                    : event.key === 'End'
+                      ? availableMaxPrice
+                      : draftPrice;
+
+            if (nextValue === draftPrice && !['Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            const clampedValue = Math.min(availableMaxPrice, Math.max(PRICE_STEP, nextValue));
+            commitDraft(clampedValue);
+          }}
+        >
+          <div className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-gray-200" />
+          <div
+            className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-[var(--green-dark)]"
+            style={{ width: `${draftProgress}%` }}
+          />
+          <div
+            className="absolute top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-[var(--green-dark)] shadow-md ring-1 ring-[var(--green-dark)] transition-transform group-active:scale-110"
+            style={{ left: `${draftProgress}%` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
+          <span>£{PRICE_STEP}</span>
+          <span>£{availableMaxPrice}+</span>
+        </div>
+
+        {filters.priceRange && (
+          <button
+            type="button"
+            onClick={() => updateFilter('priceRange', '')}
+            className="text-sm font-semibold text-gray-600 hover:text-[var(--green-dark)]"
+          >
+            Limpar valor
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
@@ -303,6 +559,29 @@ export function ListingPage() {
             Limpar
           </button>
         )}
+      </div>
+
+      <PriceSliderFilter isMobile={isMobile} />
+
+      <div className="mb-6">
+        <label
+          htmlFor={`search-${isMobile ? 'mobile' : 'desktop'}`}
+          className="mb-2 flex items-center gap-2 font-bold text-sm"
+        >
+          <Search className="h-4 w-4" />
+          Buscar
+        </label>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            id={`search-${isMobile ? 'mobile' : 'desktop'}`}
+            type="search"
+            value={filters.search}
+            onChange={(event) => updateFilter('search', event.target.value)}
+            placeholder="Bairro, postcode ou estacao"
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-3 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
+          />
+        </div>
       </div>
 
       {/* REGION */}
@@ -373,70 +652,90 @@ export function ListingPage() {
         )}
       </div>
 
-      {/* PRICE */}
-      <div className="mt-6 space-y-2">
-        <label className="font-bold text-sm">Preço</label>
+      <div className="mt-6 space-y-3">
+        <div className="flex items-center gap-2 font-bold text-sm">
+          <Users className="h-4 w-4" />
+          Capacidade
+        </div>
 
         {isMobile ? (
           <div className="grid grid-cols-2 gap-2">
-            {priceOptions.map((range) => (
+            {peopleOptions.map((option) => (
               <button
-                key={range.value || 'all'}
+                key={option.value || 'any'}
                 type="button"
-                onClick={() => updateFilter('priceRange', range.value)}
-                className={mobileFilterButtonClass(filters.priceRange === range.value)}
+                onClick={() => updateFilter('people', option.value)}
+                className={mobileFilterButtonClass(filters.people === option.value)}
               >
-                {range.label}
+                {option.label}
               </button>
             ))}
           </div>
         ) : (
-          <>
-            {priceOptions.map((range) => (
-              <label key={range.value || 'all'} className="flex gap-2 items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name={`price-${isMobile ? 'mobile' : 'desktop'}`}
-                  checked={filters.priceRange === range.value}
-                  onChange={() => updateFilter('priceRange', range.value)}
-                />
-                {range.label}
-              </label>
+          <select
+            value={filters.people}
+            onChange={(event) => updateFilter('people', event.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
+          >
+            {peopleOptions.map((option) => (
+              <option key={option.value || 'any'} value={option.value}>
+                {option.label}
+              </option>
             ))}
-          </>
+          </select>
         )}
       </div>
 
       {/* ENTRADA IMEDIATA */}
-      <div className="mt-6">
+      <div className="mt-6 space-y-3">
         {isMobile ? (
-          <button
-            type="button"
-            onClick={() => updateFilter('availableNow', !filters.availableNow)}
-            className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
-              filters.availableNow
-                ? 'border-[var(--yellow)] bg-[var(--yellow)] text-black shadow-sm'
-                : 'border-gray-200 bg-gray-50 text-gray-700'
-            }`}
-          >
-            Entrada imediata
-            <span
-              className={`h-5 w-5 rounded-full border-2 ${
+          <>
+            <button
+              type="button"
+              onClick={() => updateFilter('availableNow', !filters.availableNow)}
+              className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
                 filters.availableNow
-                  ? 'border-black bg-black shadow-[inset_0_0_0_4px_var(--yellow)]'
-                  : 'border-gray-300 bg-white'
+                  ? 'border-[var(--yellow)] bg-[var(--yellow)] text-black shadow-sm'
+                  : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
-            />
-          </button>
+            >
+              Entrada imediata
+              <CheckCircle2 className={`h-5 w-5 ${filters.availableNow ? 'text-black' : 'text-gray-300'}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('billsIncluded', !filters.billsIncluded)}
+              className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
+                filters.billsIncluded
+                  ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
+                  : 'border-gray-200 bg-gray-50 text-gray-700'
+              }`}
+            >
+              Bills inclusas
+              <Banknote className={`h-5 w-5 ${filters.billsIncluded ? 'text-white' : 'text-gray-300'}`} />
+            </button>
+          </>
         ) : (
-          <label className="flex gap-2 items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.availableNow}
-              onChange={(e) => updateFilter('availableNow', e.target.checked)}
-            />
-            Entrada imediata
-          </label>
+          <>
+            <label className="flex gap-2 items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.availableNow}
+                onChange={(e) => updateFilter('availableNow', e.target.checked)}
+              />
+              Entrada imediata
+            </label>
+
+            <label className="flex gap-2 items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.billsIncluded}
+                onChange={(e) => updateFilter('billsIncluded', e.target.checked)}
+              />
+              Bills inclusas
+            </label>
+          </>
         )}
       </div>
     </div>

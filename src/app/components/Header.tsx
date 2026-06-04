@@ -83,14 +83,14 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
 
           {/* Logo */}
           <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
             <img
               src="/img/logo-white.png"
               alt="Staybridge London"
-              className="h-16 w-auto object-contain md:h-[68px]"
+              className="h-20 w-auto object-contain md:h-[86px]"
               style={{ mixBlendMode: 'screen' }}
             />
           </NavLink>
