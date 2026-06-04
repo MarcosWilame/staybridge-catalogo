@@ -12,6 +12,7 @@ export interface Property {
   longDescription: string;
   available: boolean;
   listed?: boolean;
+  deletedAt?: string;
   billsIncluded: boolean;
   bedrooms?: number;
   bathrooms?: number;

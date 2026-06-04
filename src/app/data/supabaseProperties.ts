@@ -1,9 +1,12 @@
 import type { Property } from './properties';
+import { formatEuroPrice } from '../utils/price';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const SUPABASE_TABLE =
   import.meta.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
+const SUPABASE_STORAGE_BUCKET =
+  import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'property-images';
 const AUTH_STORAGE_KEY = 'staybridge_admin_session';
 
 type SupabasePropertyRow = {
@@ -11,7 +14,30 @@ type SupabasePropertyRow = {
   data: unknown;
 };
 
-type PropertyInput = Partial<Property> & { id?: number };
+type SupabaseStorageObject = {
+  name: string;
+  id?: string | null;
+  updated_at?: string | null;
+  created_at?: string | null;
+  metadata?: {
+    mimetype?: string;
+    mimeType?: string;
+    size?: number;
+  } | null;
+};
+
+export type StorageImageItem = {
+  name: string;
+  path: string;
+  url: string;
+};
+
+export type StorageFolderItem = {
+  name: string;
+  path: string;
+};
+
+type PropertyInput = Partial<Property> & { id?: number | string };
 
 export type SupabaseAuthSession = {
   access_token: string;
@@ -90,6 +116,319 @@ async function requestAuth<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+function getSupabaseHostname() {
+  try {
+    return SUPABASE_URL ? new URL(SUPABASE_URL).hostname : '';
+  } catch {
+    return '';
+  }
+}
+
+function sanitizeStoragePath(value: string) {
+  return value
+    .replace(/\\/g, '/')
+    .split('/')
+    .map((part) =>
+      part
+        .trim()
+        .replace(/[^a-zA-Z0-9._-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+    )
+    .filter(Boolean)
+    .join('/');
+}
+
+function encodeStoragePath(value: string) {
+  return value.split('/').map(encodeURIComponent).join('/');
+}
+
+function getStoragePublicUrl(objectPath: string) {
+  return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/${encodeStoragePath(objectPath)}`;
+}
+
+async function listStorageObjects(prefix: string, accessToken: string) {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase nao configurado');
+  }
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/list/${SUPABASE_STORAGE_BUCKET}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        limit: 100,
+        offset: 0,
+        prefix,
+        sortBy: { column: 'name', order: 'asc' },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Falha ao buscar imagens (${response.status})`);
+  }
+
+  return (await response.json()) as SupabaseStorageObject[];
+}
+
+function isStorageFolder(item: SupabaseStorageObject) {
+  return !item.id && !item.metadata;
+}
+
+function isStorageImage(item: SupabaseStorageObject, objectPath: string) {
+  const mimeType = item.metadata?.mimetype || item.metadata?.mimeType || '';
+
+  return (
+    mimeType.startsWith('image/') ||
+    /\.(avif|gif|jpe?g|png|webp)$/i.test(objectPath)
+  );
+}
+
+export async function listPropertyStorageFolder({
+  accessToken,
+  prefix = '',
+}: {
+  accessToken: string;
+  prefix?: string;
+}) {
+  const items = await listStorageObjects(prefix, accessToken);
+  const folders: StorageFolderItem[] = [];
+  const images: StorageImageItem[] = [];
+
+  for (const item of items) {
+    const objectPath = [prefix, item.name].filter(Boolean).join('/');
+
+    if (isStorageFolder(item)) {
+      folders.push({
+        name: item.name,
+        path: objectPath,
+      });
+      continue;
+    }
+
+    if (!isStorageImage(item, objectPath)) continue;
+
+    images.push({
+      name: item.name,
+      path: objectPath,
+      url: getStoragePublicUrl(objectPath),
+    });
+  }
+
+  return { folders, images };
+}
+
+export async function listPropertyImagesInStorageFolder({
+  accessToken,
+  prefix = '',
+  limit = 300,
+}: {
+  accessToken: string;
+  prefix?: string;
+  limit?: number;
+}) {
+  const results: StorageImageItem[] = [];
+
+  const walk = async (folderPrefix: string, depth: number) => {
+    if (results.length >= limit || depth > 8) return;
+
+    const { folders, images } = await listPropertyStorageFolder({
+      accessToken,
+      prefix: folderPrefix,
+    });
+
+    for (const image of images) {
+      if (results.length >= limit) break;
+      results.push(image);
+    }
+
+    for (const folder of folders) {
+      if (results.length >= limit) break;
+      await walk(folder.path, depth + 1);
+    }
+  };
+
+  await walk(prefix, 0);
+  return results;
+}
+
+export async function searchPropertyImagesInStorage({
+  accessToken,
+  query,
+  limit = 60,
+}: {
+  accessToken: string;
+  query: string;
+  limit?: number;
+}) {
+  const normalizedQuery = query.trim().toLowerCase();
+  const results: StorageImageItem[] = [];
+
+  const walk = async (prefix: string, depth: number) => {
+    if (results.length >= limit || depth > 8) return;
+
+    const items = await listStorageObjects(prefix, accessToken);
+
+    for (const item of items) {
+      if (results.length >= limit) break;
+
+      const objectPath = [prefix, item.name].filter(Boolean).join('/');
+
+      if (isStorageFolder(item)) {
+        await walk(objectPath, depth + 1);
+        continue;
+      }
+
+      if (!isStorageImage(item, objectPath)) continue;
+      if (normalizedQuery && !objectPath.toLowerCase().includes(normalizedQuery)) {
+        continue;
+      }
+
+      results.push({
+        name: item.name,
+        path: objectPath,
+        url: getStoragePublicUrl(objectPath),
+      });
+    }
+  };
+
+  await walk('', 0);
+  return results;
+}
+
+export async function uploadPropertyImageToStorage({
+  file,
+  propertyId,
+  accessToken,
+  batchId,
+  relativePath,
+}: {
+  file: File;
+  propertyId: number;
+  accessToken: string;
+  batchId: string;
+  relativePath?: string;
+}) {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase nao configurado');
+  }
+
+  const cleanRelativePath =
+    sanitizeStoragePath(relativePath || file.name) || `image-${Date.now()}`;
+  const objectPath = `property-${propertyId}/${batchId}/${cleanRelativePath}`;
+  const encodedPath = encodeStoragePath(objectPath);
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${encodedPath}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': file.type || 'application/octet-stream',
+        'Cache-Control': '31536000',
+        'x-upsert': 'true',
+      },
+      body: file,
+    }
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Falha ao enviar imagem (${response.status})`);
+  }
+
+  return getStoragePublicUrl(objectPath);
+}
+
+export async function uploadLibraryImageToStorage({
+  file,
+  accessToken,
+  relativePath,
+}: {
+  file: File;
+  accessToken: string;
+  relativePath?: string;
+}) {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase nao configurado');
+  }
+
+  const cleanRelativePath =
+    sanitizeStoragePath(relativePath || file.name) || `image-${Date.now()}`;
+  const objectPath = `library/${cleanRelativePath}`;
+  const encodedPath = encodeStoragePath(objectPath);
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${encodedPath}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': file.type || 'application/octet-stream',
+        'Cache-Control': '31536000',
+        'x-upsert': 'true',
+      },
+      body: file,
+    }
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Falha ao enviar imagem (${response.status})`);
+  }
+
+  return getStoragePublicUrl(objectPath);
+}
+
+export async function uploadPropertyVideoToStorage({
+  file,
+  propertyId,
+  accessToken,
+}: {
+  file: File;
+  propertyId: number;
+  accessToken: string;
+}) {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase nao configurado');
+  }
+
+  const cleanFileName = sanitizeStoragePath(file.name) || `video-${Date.now()}`;
+  const objectPath = `videos/property-${propertyId}/${cleanFileName}`;
+  const encodedPath = encodeStoragePath(objectPath);
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${encodedPath}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': file.type || 'application/octet-stream',
+        'Cache-Control': '31536000',
+        'x-upsert': 'true',
+      },
+      body: file,
+    }
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Falha ao enviar video (${response.status})`);
+  }
+
+  return getStoragePublicUrl(objectPath);
+}
+
 function persistSession(session: SupabaseAuthSession) {
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
 }
@@ -150,10 +489,21 @@ function toStringValue(value: unknown, fallback = '') {
 }
 
 function toBooleanValue(value: unknown, fallback = false) {
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', 'yes', 'sim', '1'].includes(normalized)) return true;
+    if (['false', 'no', 'nao', 'não', '0'].includes(normalized)) return false;
+  }
+
   return typeof value === 'boolean' ? value : fallback;
 }
 
 function toNumberValue(value: unknown, fallback = 0) {
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
@@ -161,6 +511,85 @@ function toStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
     : [];
+}
+
+export function normalizeImageUrl(value: string) {
+  const trimmed = value.trim();
+  const supabaseHostname = getSupabaseHostname();
+
+  if (!trimmed) return '';
+  if (
+    !isAllowedMediaUrl(trimmed, [
+      'drive.google.com',
+      'googleusercontent.com',
+      'images.unsplash.com',
+      'res.cloudinary.com',
+      'supabase.co',
+      ...(supabaseHostname ? [supabaseHostname] : []),
+    ])
+  ) {
+    return '';
+  }
+
+  const driveFileId = getGoogleDriveFileId(trimmed);
+
+  if (driveFileId && trimmed.includes('drive.google.com')) {
+    return `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w2000`;
+  }
+
+  return trimmed;
+}
+
+export function normalizeVideoUrl(value: string) {
+  const trimmed = value.trim();
+  const supabaseHostname = getSupabaseHostname();
+
+  if (!trimmed) return '';
+  if (
+    !isAllowedMediaUrl(trimmed, [
+      'drive.google.com',
+      'youtube.com',
+      'www.youtube.com',
+      'youtu.be',
+      'supabase.co',
+      ...(supabaseHostname ? [supabaseHostname] : []),
+    ])
+  ) {
+    return '';
+  }
+
+  const driveFileId = getGoogleDriveFileId(trimmed);
+
+  if (driveFileId && trimmed.includes('drive.google.com')) {
+    return `https://drive.google.com/file/d/${driveFileId}/preview`;
+  }
+
+  return trimmed;
+}
+
+function getGoogleDriveFileId(url: string) {
+  return (
+    url.match(/drive\.google\.com\/file\/d\/([^/?#]+)/)?.[1] ||
+    url.match(/[?&]id=([^&#]+)/)?.[1] ||
+    ''
+  );
+}
+
+function isAllowedMediaUrl(value: string, allowedHosts: string[]) {
+  if (value.startsWith('data:image/')) return true;
+
+  try {
+    const url = new URL(value);
+    return allowedHosts.some(
+      (host) => url.hostname === host || url.hostname.endsWith(`.${host}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function toImageArray(value: unknown) {
+  return toStringArray(value).map(normalizeImageUrl).filter(Boolean);
 }
 
 function toCoordinates(value: unknown) {
@@ -176,30 +605,44 @@ function toCoordinates(value: unknown) {
   };
 }
 
-function sanitizeProperty(input: PropertyInput): Property | null {
-  const id = typeof input.id === 'number' && Number.isFinite(input.id)
-    ? input.id
-    : null;
+function normalizeCategory(category: unknown, type: unknown) {
+  const raw = toStringValue(category || type, 'studio').trim().toLowerCase();
 
-  if (id === null) {
+  if (raw.includes('ensuite')) return 'ensuite';
+  if (raw.includes('single')) return 'single';
+  if (raw.includes('double')) return 'double';
+  if (raw.includes('flat') || raw.includes('bedroom')) return 'flat';
+  if (raw.includes('studio')) return 'studio';
+
+  return raw || 'studio';
+}
+
+export function normalizeProperty(input: PropertyInput): Property | null {
+  const id = toNumberValue(input.id, Number.NaN);
+
+  if (!Number.isFinite(id)) {
     return null;
   }
 
+  const image = normalizeImageUrl(toStringValue(input.image));
+  const images = toImageArray(input.images);
+
   return {
     id,
-    image: toStringValue(input.image),
-    images: toStringArray(input.images),
-    video: toStringValue(input.video),
+    image: image || images[0] || '',
+    images: images.length ? images : image ? [image] : [],
+    video: normalizeVideoUrl(toStringValue(input.video)),
     type: toStringValue(input.type),
     title: toStringValue(input.title),
     region: toStringValue(input.region),
     localArea:
       typeof input.localArea === 'string' ? input.localArea : undefined,
-    price: toStringValue(input.price),
+    price: formatEuroPrice(toStringValue(input.price)),
     description: toStringValue(input.description),
     longDescription: toStringValue(input.longDescription),
     available: toBooleanValue(input.available, true),
     listed: toBooleanValue(input.listed, true),
+    deletedAt: typeof input.deletedAt === 'string' ? input.deletedAt : undefined,
     billsIncluded: toBooleanValue(input.billsIncluded, false),
     bedrooms:
       typeof input.bedrooms === 'number' && Number.isFinite(input.bedrooms)
@@ -209,7 +652,7 @@ function sanitizeProperty(input: PropertyInput): Property | null {
       typeof input.bathrooms === 'number' && Number.isFinite(input.bathrooms)
         ? input.bathrooms
         : 0,
-    category: toStringValue(input.category, 'studio'),
+    category: normalizeCategory(input.category, input.type),
     amenities: toStringArray(input.amenities),
     deposit:
       typeof input.deposit === 'number' && Number.isFinite(input.deposit)
@@ -226,6 +669,18 @@ function sanitizeProperty(input: PropertyInput): Property | null {
         ? input.people
         : 1,
   };
+}
+
+export function normalizeProperties(input: unknown) {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((item) =>
+      item && typeof item === 'object'
+        ? normalizeProperty(item as PropertyInput)
+        : null
+    )
+    .filter((property): property is Property => Boolean(property));
 }
 
 function toRecord(property: Property) {
@@ -245,7 +700,7 @@ function fromRow(row: SupabasePropertyRow) {
       ? (row.data as PropertyInput)
       : { id: row.id };
 
-  return sanitizeProperty({
+  return normalizeProperty({
     ...rawData,
     id:
       typeof rawData.id === 'number' && Number.isFinite(rawData.id)
@@ -270,6 +725,12 @@ export async function savePropertyToSupabase(
   property: Property,
   accessToken?: string
 ) {
+  const normalizedProperty = normalizeProperty(property);
+
+  if (!normalizedProperty) {
+    throw new Error('Imovel invalido');
+  }
+
   const rows = await requestJson<SupabasePropertyRow[]>(
     `${SUPABASE_TABLE}?on_conflict=id`,
     {
@@ -277,12 +738,12 @@ export async function savePropertyToSupabase(
       headers: {
         Prefer: 'resolution=merge-duplicates,return=representation',
       },
-      body: JSON.stringify([toRecord(property)]),
+      body: JSON.stringify([toRecord(normalizedProperty)]),
     },
     accessToken
   );
 
-  return rows.map(fromRow).find((item): item is Property => Boolean(item)) || property;
+  return rows.map(fromRow).find((item): item is Property => Boolean(item)) || normalizedProperty;
 }
 
 export async function deletePropertyFromSupabase(
@@ -295,16 +756,18 @@ export async function deletePropertyFromSupabase(
 }
 
 export async function replacePropertiesInSupabase(
-  properties: Property[],
+  properties: unknown,
   accessToken?: string
 ) {
+  const normalizedProperties = normalizeProperties(properties);
+
+  if (!normalizedProperties.length) {
+    throw new Error('Nenhum imovel valido para importar');
+  }
+
   await requestJson<null>(`${SUPABASE_TABLE}?id=gt.0`, {
     method: 'DELETE',
   }, accessToken);
-
-  if (!properties.length) {
-    return [];
-  }
 
   const rows = await requestJson<SupabasePropertyRow[]>(
     `${SUPABASE_TABLE}`,
@@ -313,7 +776,7 @@ export async function replacePropertiesInSupabase(
       headers: {
         Prefer: 'return=representation',
       },
-      body: JSON.stringify(properties.map(toRecord)),
+      body: JSON.stringify(normalizedProperties.map(toRecord)),
     },
     accessToken
   );

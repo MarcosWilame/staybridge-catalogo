@@ -17,3 +17,51 @@ body,
   max-width: 100%;
   overflow-x: hidden;
 }
+
+.price-range-control {
+  --min-percent: 0%;
+  --max-percent: 100%;
+  position: relative;
+  height: 44px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.price-range-control::before,
+.price-range-control::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20px;
+  height: 5px;
+  border-radius: 999px;
+}
+
+.price-range-control::before {
+  background: color-mix(in srgb, var(--color4) 72%, #ffffff 28%);
+}
+
+.price-range-control::after {
+  left: var(--min-percent);
+  right: calc(100% - var(--max-percent));
+  background: var(--green-dark);
+}
+
+.price-range-thumb {
+  position: absolute;
+  top: 22px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border: 4px solid white;
+  border-radius: 999px;
+  background: var(--green-dark);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 3px 10px rgba(26, 77, 46, 0.28);
+}
+
+.price-range-control:active {
+  cursor: grabbing;
+}

@@ -49,6 +49,18 @@
   --black: #0a0a0a;
   --gray-light: #f5f5f5;
   --gray-medium: #e0e0e0;
+  --color1: var(--green-dark);
+  --color2: var(--green-medium);
+  --color3: #f7f4df;
+  --color4: #d4b034;
+  --color5: #4b5563;
+  --whatsapp: #25d366;
+  --whatsapp-hover: #1ebe5d;
+  --whatsapp-foreground: #073b1d;
+  --soft-gradient: linear-gradient(180deg, #ffffff 0%, #f7f7f0 54%, #eef3ec 100%);
+  --surface-border: rgba(26, 77, 46, 0.16);
+  --surface-shadow: 0 16px 42px rgba(26, 77, 46, 0.12);
+  --surface-shadow-strong: 0 22px 58px rgba(26, 77, 46, 0.18);
 }
 
 .dark {
