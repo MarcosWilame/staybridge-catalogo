@@ -1,14 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ArrowRight } from 'lucide-react';
+import { openWhatsApp } from '../config/contact';
+import { trackEvent } from '../utils/analytics';
 
 export function CTASection() {
   const navigate = useNavigate();
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/5588997993046', '_blank');
+    trackEvent('whatsapp_click', { source: 'home_cta' });
+    openWhatsApp();
   };
 
   const goToProperties = () => {
+    trackEvent('properties_cta_click', { source: 'home_cta' });
     navigate('/properties');
   };
 

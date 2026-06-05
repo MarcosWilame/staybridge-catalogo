@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -13,6 +14,9 @@
   ],
   "functions": {
     "api/public-properties.js": {
+      "maxDuration": 10
+    },
+    "api/sitemap.xml.js": {
       "maxDuration": 10
     }
   }

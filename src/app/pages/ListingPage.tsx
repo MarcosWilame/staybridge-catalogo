@@ -1,10 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
 import { PropertyMap } from '../components/PropertyMap';
 import { getAvailabilityInfo } from '../utils/availability';
+import { WHATSAPP_URL } from '../config/contact';
+import { SEO } from '../components/SEO';
+import { trackEvent } from '../utils/analytics';
+import {
+  MAX_COMPARE_ITEMS,
+  getCompareProperties,
+  getLowestComparePrice,
+  toggleCompareId,
+} from '../utils/compare';
 import {
   Banknote,
   Building2,
@@ -12,6 +21,7 @@ import {
   Home,
   KeyRound,
   MapPin,
+  Scale,
   Search,
   SlidersHorizontal,
   TrainFront,
@@ -119,6 +129,9 @@ export function ListingPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('recommended');
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [compareMessage, setCompareMessage] = useState('');
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(
     properties[0]
   );
@@ -166,6 +179,12 @@ export function ListingPage() {
       if (options.syncUrl !== false) {
         syncSearchParams(next);
       }
+      if (key !== 'search') {
+        trackEvent('property_filter_change', {
+          filter: String(key),
+          value: String(value),
+        });
+      }
       return next;
     });
   };
@@ -183,6 +202,7 @@ export function ListingPage() {
 
     setFilters(emptyFilters);
     syncSearchParams(emptyFilters);
+    trackEvent('property_filters_clear');
   };
 
   useEffect(() => {
@@ -227,6 +247,10 @@ export function ListingPage() {
     const next = { ...filters, priceRange: getPriceRangeValue(value) };
     setFilters(next);
     syncSearchParams(next);
+    trackEvent('property_filter_change', {
+      filter: 'priceRange',
+      value: next.priceRange || 'any',
+    });
   };
 
   const getSliderPriceFromPointer = (clientX: number, track: HTMLDivElement) => {
@@ -328,6 +352,7 @@ export function ListingPage() {
 
   const visibleProperties = sortedProperties.slice(0, visibleCount);
   const hasMoreProperties = visibleCount < sortedProperties.length;
+  const compareProperties = getCompareProperties(properties, compareIds);
 
   const visibleSelectedProperty = sortedProperties.find(
     (property) => property.id === selectedProperty?.id
@@ -415,8 +440,52 @@ export function ListingPage() {
     `rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
       isActive
         ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
-        : 'border-gray-200 bg-gray-50 text-gray-700'
+      : 'border-gray-200 bg-gray-50 text-gray-700'
     }`;
+
+  const toggleCompareProperty = (property: Property) => {
+    setCompareIds((currentIds) => {
+      const result = toggleCompareId(currentIds, property.id);
+
+      if (result.status === 'removed') {
+        if (result.ids.length === 0) setIsCompareOpen(false);
+        trackEvent('compare_remove', {
+          property_id: property.id,
+          count: result.ids.length,
+        });
+        return result.ids;
+      }
+
+      if (result.status === 'limit') {
+        setCompareMessage(`Compare ate ${MAX_COMPARE_ITEMS} imoveis por vez`);
+        window.setTimeout(() => setCompareMessage(''), 2200);
+        trackEvent('compare_limit_reached', {
+          property_id: property.id,
+          count: result.ids.length,
+        });
+        return result.ids;
+      }
+
+      setCompareMessage('');
+      setIsCompareOpen(true);
+      trackEvent('compare_add', {
+        property_id: property.id,
+        property_type: property.type,
+        region: property.region,
+        count: result.ids.length,
+      });
+      return result.ids;
+    });
+  };
+
+  const clearCompare = () => {
+    trackEvent('compare_clear', {
+      count: compareIds.length,
+    });
+    setCompareIds([]);
+    setIsCompareOpen(false);
+    setCompareMessage('');
+  };
 
   const PriceSliderFilter = ({ isMobile = false }: { isMobile?: boolean }) => {
     const [draftPrice, setDraftPrice] = useState(selectedMaxPrice);
@@ -741,8 +810,155 @@ export function ListingPage() {
     </div>
   );
 
+  const ComparePanel = () => {
+    if (compareProperties.length === 0) return null;
+
+    const rows = [
+      {
+        label: 'Valor',
+        getValue: (property: Property) => property.price || '-',
+      },
+      {
+        label: 'Tipo',
+        getValue: (property: Property) => property.type || '-',
+      },
+      {
+        label: 'Regiao',
+        getValue: (property: Property) => property.localArea || property.region || '-',
+      },
+      {
+        label: 'Capacidade',
+        getValue: (property: Property) =>
+          `${property.people || 1} pessoa${Number(property.people || 1) === 1 ? '' : 's'}`,
+      },
+      {
+        label: 'Bills',
+        getValue: (property: Property) => (property.billsIncluded ? 'Inclusas' : 'Consultar'),
+      },
+      {
+        label: 'Entrada',
+        getValue: (property: Property) => getAvailabilityInfo(property.moveInDate).label,
+      },
+    ];
+
+    const lowestPrice = getLowestComparePrice(compareProperties);
+
+    return (
+      <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-[0_-16px_40px_rgba(0,0,0,0.16)] md:bottom-0">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                trackEvent('compare_panel_toggle', {
+                  open: !isCompareOpen,
+                  count: compareProperties.length,
+                });
+                setIsCompareOpen((open) => !open);
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-[var(--green-dark)] px-4 py-2.5 text-sm font-bold text-white"
+            >
+              <Scale className="h-4 w-4" />
+              Comparar {compareProperties.length}/{MAX_COMPARE_ITEMS}
+            </button>
+
+            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
+              {compareProperties.map((property) => (
+                <div
+                  key={property.id}
+                  className="inline-flex max-w-[220px] shrink-0 items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-bold text-gray-800"
+                >
+                  <span className="truncate">{property.title}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleCompareProperty(property)}
+                    className="rounded-full bg-white p-1 text-gray-500 hover:text-red-600"
+                    aria-label="Remover da comparacao"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={clearCompare}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-red-200 hover:text-red-700"
+            >
+              Limpar
+            </button>
+          </div>
+
+          {compareMessage && (
+            <div className="mt-2 text-sm font-bold text-red-700">
+              {compareMessage}
+            </div>
+          )}
+
+          {isCompareOpen && (
+            <div className="mt-3 max-h-[55vh] overflow-auto rounded-xl border border-gray-200 bg-white">
+              <div
+                className="grid min-w-[760px]"
+                style={{
+                  gridTemplateColumns: `150px repeat(${compareProperties.length}, minmax(180px, 1fr))`,
+                }}
+              >
+                <div className="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 p-3 text-sm font-black text-gray-600">
+                  Imovel
+                </div>
+                {compareProperties.map((property) => {
+                  const price = getPriceValue(property.price);
+                  const isBestPrice = price > 0 && price === lowestPrice;
+
+                  return (
+                    <div key={property.id} className="border-b border-gray-200 p-3">
+                      <div className="mb-2 aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
+                        <img
+                          src={property.image}
+                          alt={property.title}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="line-clamp-2 text-sm font-black text-gray-900">
+                        {property.title}
+                      </div>
+                      {isBestPrice && compareProperties.length > 1 && (
+                        <div className="mt-2 inline-flex rounded-full bg-[var(--yellow)] px-2 py-1 text-[11px] font-black text-black">
+                          Melhor valor
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {rows.map((row) => (
+                  <Fragment key={row.label}>
+                    <div className="sticky left-0 z-10 border-r border-gray-200 bg-gray-50 p-3 text-sm font-black text-gray-700">
+                      {row.label}
+                    </div>
+                    {compareProperties.map((property) => (
+                      <div key={`${property.id}-${row.label}`} className="border-t border-gray-100 p-3 text-sm font-semibold text-gray-700">
+                        {row.getValue(property)}
+                      </div>
+                    ))}
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-28 pt-28 md:pb-10">
+      <SEO
+        title="Imoveis e quartos em Londres"
+        description="Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e entrada imediata."
+      />
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-5">
           <div>
@@ -907,7 +1123,12 @@ export function ListingPage() {
                       onMouseEnter={() => setSelectedProperty(p)}
                       onFocus={() => setSelectedProperty(p)}
                     >
-                      <PropertyCard property={p} />
+                      <PropertyCard
+                        property={p}
+                        isCompareSelected={compareIds.includes(p.id)}
+                        isCompareDisabled={compareIds.length >= MAX_COMPARE_ITEMS}
+                        onToggleCompare={toggleCompareProperty}
+                      />
                     </div>
                   ))}
 
@@ -955,9 +1176,10 @@ export function ListingPage() {
                 Limpar filtros
               </button>
               <a
-                href="https://wa.me/447000000000"
+                href={WHATSAPP_URL}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackEvent('whatsapp_click', { source: 'empty_results' })}
                 className="rounded-xl border border-[var(--green-dark)] px-5 py-3 font-bold text-[var(--green-dark)]"
               >
                 Falar no WhatsApp
@@ -1003,6 +1225,8 @@ export function ListingPage() {
           </div>
         </div>
       )}
+
+      <ComparePanel />
     </div>
   );
 }

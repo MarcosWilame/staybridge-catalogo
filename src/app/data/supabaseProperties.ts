@@ -1,12 +1,13 @@
 import type { Property } from './properties';
-import { formatEuroPrice } from '../utils/price';
+import { formatEuroPrice } from '../utils/price.ts';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const env = import.meta.env || {};
+const SUPABASE_URL = env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
+const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY || '';
 const SUPABASE_TABLE =
-  import.meta.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
+  env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 const SUPABASE_STORAGE_BUCKET =
-  import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'property-images';
+  env.VITE_SUPABASE_STORAGE_BUCKET || 'property-images';
 const AUTH_STORAGE_KEY = 'staybridge_admin_session';
 
 type SupabasePropertyRow = {

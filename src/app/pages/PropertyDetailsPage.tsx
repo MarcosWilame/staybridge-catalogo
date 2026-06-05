@@ -7,6 +7,10 @@ import { getGoogleMapsUrl, PropertyMap } from '../components/PropertyMap';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
+import { WHATSAPP_URL } from '../config/contact';
+import { SEO } from '../components/SEO';
+import { getAbsoluteUrl, SITE_NAME } from '../config/site';
+import { trackEvent } from '../utils/analytics';
 
 import {
   ArrowLeft,
@@ -14,7 +18,6 @@ import {
   Bed,
   CheckCircle,
   MessageCircle,
-  Heart,
   Share2,
   Calendar,
   Home,
@@ -28,6 +31,7 @@ import {
   TrainFront,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { shareProperty } from '../utils/shareProperty';
 
 interface PropertyAttribute {
   icon: LucideIcon;
@@ -117,7 +121,7 @@ export function PropertyDetailsPage() {
   const property = properties.find((p) => p.id === Number(id));
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [shareStatus, setShareStatus] = useState('');
   const mediaItems = useMemo(
     () => (property ? getMediaItems(property) : []),
     [property]
@@ -175,10 +179,36 @@ export function PropertyDetailsPage() {
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title} (ID: ${property.id})`
     );
 
+    trackEvent('whatsapp_click', {
+      source: 'property_details',
+      property_id: property.id,
+      property_type: property.type,
+      region: property.region,
+      price: property.price,
+    });
+
     window.open(
-      `https://wa.me/5588997993046?text=${message}`,
+      `${WHATSAPP_URL}?text=${message}`,
       '_blank'
     );
+  };
+
+  const handleShare = async () => {
+    if (!property) return;
+
+    try {
+      const result = await shareProperty(property);
+      trackEvent('property_share', {
+        source: 'property_details',
+        method: result,
+        property_id: property.id,
+      });
+      setShareStatus(result === 'copied' ? 'Link copiado' : 'Compartilhado');
+      window.setTimeout(() => setShareStatus(''), 1800);
+    } catch {
+      setShareStatus('Nao foi possivel compartilhar');
+      window.setTimeout(() => setShareStatus(''), 1800);
+    }
   };
 
   useEffect(() => {
@@ -211,6 +241,40 @@ export function PropertyDetailsPage() {
 
   if (!property) return propertyNotFoundContent;
 
+  const propertyDescription =
+    property.description ||
+    `${property.type} em ${property.region} com atendimento em portugues.`;
+  const propertyJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Accommodation',
+    name: property.title,
+    description: propertyDescription,
+    image: property.image,
+    url: getAbsoluteUrl(`/property/${property.id}`),
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: property.localArea || property.region,
+      postalCode: property.postcode,
+      streetAddress: property.address,
+      addressCountry: 'GB',
+    },
+    amenityFeature: property.amenities.map((amenity) => ({
+      '@type': 'LocationFeatureSpecification',
+      name: amenity,
+      value: true,
+    })),
+    offers: {
+      '@type': 'Offer',
+      price: weeklyPrice.replace(/[^0-9.]/g, ''),
+      priceCurrency: 'GBP',
+      availability: property.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: SITE_NAME,
+      },
+    },
+  };
+
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
       (prev + 1) % mediaItems.length
@@ -225,6 +289,13 @@ export function PropertyDetailsPage() {
 
   return (
     <div className="min-h-screen bg-white pb-44 pt-20 md:pb-8">
+      <SEO
+        title={`${property.title} em ${property.region}`}
+        description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
+        image={property.image}
+        type="article"
+        jsonLd={propertyJsonLd}
+      />
 
       {/* BREADCRUMB + BACK */}
       <div className="bg-[var(--gray-light)] py-4">
@@ -419,21 +490,21 @@ export function PropertyDetailsPage() {
                   </h1>
                 </div>
 
-                <div className="flex shrink-0 gap-2">
+                <div className="relative flex shrink-0 gap-2">
                   <button
-                    onClick={() => setIsFavorite(!isFavorite)}
-                    className={`rounded-full border-2 p-3 ${
-                      isFavorite
-                        ? 'bg-red-50 border-red-500 text-red-500'
-                        : 'border-gray-200 text-gray-600'
-                    }`}
+                    onClick={handleShare}
+                    className="rounded-full border-2 border-gray-200 p-3 text-gray-600 transition hover:border-[var(--green-dark)] hover:text-[var(--green-dark)]"
+                    aria-label="Compartilhar imovel"
+                    title="Compartilhar"
                   >
-                    <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
-                  </button>
-
-                  <button className="rounded-full border-2 border-gray-200 p-3 text-gray-600">
                     <Share2 className="w-6 h-6" />
                   </button>
+
+                  {shareStatus && (
+                    <div className="absolute right-0 top-full mt-2 whitespace-nowrap rounded-lg bg-[var(--green-dark)] px-3 py-2 text-xs font-bold text-white shadow-lg">
+                      {shareStatus}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -533,6 +604,12 @@ export function PropertyDetailsPage() {
                   href={getGoogleMapsUrl(property)}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() =>
+                    trackEvent('map_open_click', {
+                      source: 'property_details',
+                      property_id: property.id,
+                    })
+                  }
                   className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/95 py-3.5 font-bold text-[var(--green-dark)] md:py-4"
                 >
                   <MapPin className="w-6 h-6" />

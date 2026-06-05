@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom';
 import { User, MessageCircle, Home } from 'lucide-react';
+import { WHATSAPP_URL } from '../config/contact';
+import { SEO } from '../components/SEO';
 
 export function ProfilePage() {
   return (
     <div className="min-h-screen bg-[var(--gray-light)] px-4 pb-28 pt-28 md:pb-24">
+      <SEO
+        title="Atendimento e suporte"
+        description="Fale com a equipe Staybridge London para visitas, reservas, contratos e suporte em portugues durante sua estadia."
+      />
       <div className="mx-auto max-w-4xl">
         <div className="rounded-2xl bg-white p-6 text-center shadow-lg md:p-12">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--green-dark)]/20 md:h-20 md:w-20">
@@ -19,7 +25,7 @@ export function ProfilePage() {
 
           <div className="mx-auto grid max-w-lg grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             <a
-              href="https://wa.me/5588997993046"
+              href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-5 py-3.5 font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:px-6 md:py-4"

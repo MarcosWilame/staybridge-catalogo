@@ -2,15 +2,19 @@ import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ArrowRight, Bed, Building2, Home, MessageCircle, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { openWhatsApp } from '../config/contact';
+import { trackEvent } from '../utils/analytics';
 
 export function Hero() {
   const navigate = useNavigate();
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/5588997993046', '_blank');
+    trackEvent('whatsapp_click', { source: 'hero' });
+    openWhatsApp();
   };
 
   const goToProperties = () => {
+    trackEvent('properties_cta_click', { source: 'hero' });
     navigate('/properties');
   };
 
@@ -124,7 +128,14 @@ export function Hero() {
                   <button
                     key={item.path}
                     type="button"
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      trackEvent('quick_filter_click', {
+                        source: 'hero',
+                        label: item.label,
+                        path: item.path,
+                      });
+                      navigate(item.path);
+                    }}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-[var(--green-dark)] shadow-sm transition hover:bg-[var(--yellow)]"
                   >
                     <Icon className="h-4 w-4" />

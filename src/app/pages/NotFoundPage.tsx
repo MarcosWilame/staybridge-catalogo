@@ -1,9 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Home, Search } from 'lucide-react';
+import { SEO } from '../components/SEO';
 
 export function NotFoundPage() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 pb-24 pt-24">
+      <SEO
+        title="Pagina nao encontrada"
+        description="A pagina solicitada nao existe. Veja as propriedades disponiveis da Staybridge London."
+      />
       <div className="max-w-md text-center">
         <div className="mb-8">
           <div className="text-7xl font-bold text-[var(--green-dark)] md:text-9xl">404</div>

@@ -1,6 +1,8 @@
 import { MessageCircle } from 'lucide-react';
 import { motion } from "framer-motion";
 import { useLocation } from 'react-router-dom';
+import { openWhatsApp } from '../config/contact';
+import { trackEvent } from '../utils/analytics';
 
 export function WhatsAppButton() {
   const location = useLocation();
@@ -11,7 +13,11 @@ export function WhatsAppButton() {
   if (isCatalogFlow) return null;
 
   const handleClick = () => {
-    window.open('https://wa.me/5588997993046', '_blank');
+    trackEvent('whatsapp_click', {
+      source: 'floating_button',
+      page: location.pathname,
+    });
+    openWhatsApp();
   };
 
   return (

@@ -1,13 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-declare global {
-  interface Window {
-    fbq: (...args: unknown[]) => void;
-    gtag: (...args: unknown[]) => void;
-  }
-}
-
 export function Analytics() {
   const location = useLocation();
 

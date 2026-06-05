@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Property } from '../data/properties';
 import {
   AlertCircle,
@@ -30,7 +30,6 @@ import {
   Users,
   Video,
   X,
-  type LucideIcon,
 } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import {
@@ -59,160 +58,22 @@ import {
   isInRecovery,
   isRecoveryExpired,
 } from '../utils/recovery';
-
-const INITIAL_FORM: Omit<Property, 'id'> = {
-  image: '',
-  images: [],
-  video: '',
-  type: 'Studio',
-  title: '',
-  region: '',
-  price: '',
-  description: '',
-  longDescription: '',
-  available: true,
-  listed: true,
-  billsIncluded: false,
-  bedrooms: 1,
-  bathrooms: 0,
-  category: 'studio',
-  amenities: [],
-  deposit: 0,
-  nearbyStations: [],
-  coordinates: { lat: 0, lng: 0 },
-  furnishing: 'Mobiliado',
-  moveInDate: 'Imediata',
-  postcode: '',
-  address: '',
-  people: 1,
-};
-
-type AdminStatusFilter = 'all' | 'listed' | 'hidden' | 'trash';
-type AdminAvailabilityFilter = 'all' | 'available' | 'unavailable';
-type FolderInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-  directory?: string;
-  mozdirectory?: string;
-  webkitdirectory?: string;
-};
-
-const adminInputClass =
-  'w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none transition focus:border-[var(--green-dark)] focus:ring-2 focus:ring-[var(--green-dark)]/15';
-
-const adminTextAreaClass =
-  'w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none transition focus:border-[var(--green-dark)] focus:ring-2 focus:ring-[var(--green-dark)]/15';
-
-const adminLabelClass = 'mb-2 flex items-center gap-2 text-sm font-bold text-gray-800';
-
-const CATEGORY_OPTIONS = [
-  { value: 'studio', label: 'Studio' },
-  { value: 'ensuite', label: 'Ensuite' },
-  { value: 'single', label: 'Single Room' },
-  { value: 'double', label: 'Double Room' },
-  { value: 'flat', label: 'Flat' },
-];
-
-const AMENITY_OPTIONS = [
-  'Wi-Fi',
-  'Mobiliado',
-  'Bills inclusas',
-  'Banheiro privativo',
-  'Cozinha equipada',
-  'Lavanderia',
-  'Cama',
-  'Guarda-roupa',
-  'Mesa de estudos',
-  'TV',
-  'Jardim',
-  'Estacionamento',
-];
-
-const MOVE_IN_OPTIONS = ['Imediata', 'A combinar', 'Em breve'];
-
-const PRICE_PERIOD_OPTIONS = [
-  { value: '/week', label: 'por semana' },
-  { value: '/month', label: 'por mês' },
-  { value: '/day', label: 'por dia' },
-];
-
-const STATION_SUGGESTIONS = [
-  'Dollis Hill Station',
-  'Willesden Green Station',
-  'Kilburn Station',
-  'Neasden Station',
-  'Cricklewood Station',
-  'Wembley Park Station',
-  'Stratford Station',
-  'Canada Water Station',
-  'London Bridge Station',
-  'Elephant & Castle Station',
-];
-
-function getCategoryLabel(category: string) {
-  return CATEGORY_OPTIONS.find((option) => option.value === category)?.label || category;
-}
-
-function getStationMapQuery(formData: Omit<Property, 'id'>) {
-  return [
-    'train station tube station near',
-    formData.address,
-    formData.postcode,
-    formData.region,
-    'London',
-  ]
-    .filter(Boolean)
-    .join(' ');
-}
-
-function AdminFieldLabel({
-  icon: Icon,
-  children,
-}: {
-  icon: LucideIcon;
-  children: ReactNode;
-}) {
-  return (
-    <label className={adminLabelClass}>
-      <Icon className="h-4 w-4 text-[var(--green-dark)]" />
-      {children}
-    </label>
-  );
-}
-
-function AdminSwitch({
-  checked,
-  label,
-  onChange,
-}: {
-  checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-bold transition ${
-        checked
-          ? 'border-[var(--green-dark)] bg-[var(--green-light)] text-[var(--green-dark)]'
-          : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--green-dark)]'
-      }`}
-      aria-pressed={checked}
-    >
-      <span>{label}</span>
-      <span
-        className={`flex h-6 w-11 items-center rounded-full p-1 transition ${
-          checked ? 'bg-[var(--green-dark)]' : 'bg-gray-300'
-        }`}
-      >
-        <span
-          className={`h-4 w-4 rounded-full bg-white transition ${
-            checked ? 'translate-x-5' : 'translate-x-0'
-          }`}
-        />
-      </span>
-    </button>
-  );
-}
+import { AdminFieldLabel, AdminSwitch } from './admin/AdminControls';
+import {
+  AMENITY_OPTIONS,
+  CATEGORY_OPTIONS,
+  INITIAL_FORM,
+  MOVE_IN_OPTIONS,
+  PRICE_PERIOD_OPTIONS,
+  STATION_SUGGESTIONS,
+  adminInputClass,
+  adminTextAreaClass,
+  getCategoryLabel,
+  getStationMapQuery,
+  type AdminAvailabilityFilter,
+  type AdminStatusFilter,
+  type FolderInputProps,
+} from './admin/adminConfig';
 
 export function AdminPage() {
   const [session, setSession] = useState<SupabaseAuthSession | null>(null);

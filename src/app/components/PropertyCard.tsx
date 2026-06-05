@@ -10,14 +10,22 @@ import {
   ChevronRight,
   Images,
   Clock,
+  Scale,
+  Share2,
 } from 'lucide-react';
 import { Property } from '../data/properties';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
+import { WHATSAPP_URL } from '../config/contact';
+import { shareProperty } from '../utils/shareProperty';
+import { trackEvent } from '../utils/analytics';
 
 interface PropertyCardProps {
   property: Property;
+  isCompareSelected?: boolean;
+  isCompareDisabled?: boolean;
+  onToggleCompare?: (property: Property) => void;
 }
 
 function formatWeeklyPrice(price: string) {
@@ -67,8 +75,14 @@ function getAreaPreview(property: Property) {
   return property.localArea || textArea || station || postcodeArea || property.region;
 }
 
-export function PropertyCard({ property }: PropertyCardProps) {
+export function PropertyCard({
+  property,
+  isCompareSelected = false,
+  isCompareDisabled = false,
+  onToggleCompare,
+}: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [shareStatus, setShareStatus] = useState('');
   const images = useMemo(
     () => (property.images?.length ? property.images : [property.image]),
     [property.image, property.images]
@@ -84,7 +98,39 @@ export function PropertyCard({ property }: PropertyCardProps) {
     const message = encodeURIComponent(
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title}`
     );
-    window.open(`https://wa.me/5588997993046?text=${message}`, '_blank');
+    trackEvent('whatsapp_click', {
+      source: 'property_card',
+      property_id: property.id,
+      property_type: property.type,
+      region: property.region,
+    });
+    window.open(`${WHATSAPP_URL}?text=${message}`, '_blank');
+  };
+
+  const handleShare = async () => {
+    try {
+      const result = await shareProperty(property);
+      trackEvent('property_share', {
+        source: 'property_card',
+        method: result,
+        property_id: property.id,
+      });
+      setShareStatus(result === 'copied' ? 'Link copiado' : 'Compartilhado');
+      window.setTimeout(() => setShareStatus(''), 1800);
+    } catch {
+      setShareStatus('Nao foi possivel compartilhar');
+      window.setTimeout(() => setShareStatus(''), 1800);
+    }
+  };
+
+  const trackPropertyOpen = (source: string) => {
+    trackEvent('property_detail_click', {
+      source,
+      property_id: property.id,
+      property_type: property.type,
+      region: property.region,
+      price: property.price,
+    });
   };
 
   const showPreviousImage = () => {
@@ -112,7 +158,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
     <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
       {/* Image Container */}
       <div className="relative h-56 shrink-0 overflow-hidden sm:h-64">
-        <Link to={`/property/${property.id}`} className="block h-full">
+        <Link
+          to={`/property/${property.id}`}
+          className="block h-full"
+          onClick={() => trackPropertyOpen('card_image')}
+        >
           <ImageWithFallback
             src={getOptimizedImageUrl(currentImage, 'card')}
             alt={property.title}
@@ -184,6 +234,36 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </>
         )}
 
+        <div className="absolute right-3 top-3 flex flex-col gap-2">
+          {onToggleCompare && (
+            <button
+              type="button"
+              onClick={() => onToggleCompare(property)}
+              disabled={isCompareDisabled && !isCompareSelected}
+              className={`rounded-full p-2 shadow-lg transition ${
+                isCompareSelected
+                  ? 'bg-[var(--yellow)] text-black'
+                  : 'bg-white/95 text-[var(--green-dark)] hover:bg-[var(--yellow)]'
+              } disabled:cursor-not-allowed disabled:opacity-50`}
+              aria-pressed={isCompareSelected}
+              aria-label={isCompareSelected ? 'Remover da comparacao' : 'Adicionar a comparacao'}
+              title={isCompareSelected ? 'Remover da comparacao' : 'Comparar'}
+            >
+              <Scale className="h-4 w-4" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleShare}
+            className="rounded-full bg-white/95 p-2 text-[var(--green-dark)] shadow-lg transition hover:bg-[var(--yellow)] hover:text-black"
+            aria-label="Compartilhar imovel"
+            title="Compartilhar"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+        </div>
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
@@ -203,7 +283,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Title */}
-        <Link to={`/property/${property.id}`}>
+        <Link to={`/property/${property.id}`} onClick={() => trackPropertyOpen('card_title')}>
           <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[var(--green-dark)] transition-colors leading-tight">
             {property.title}
           </h3>
@@ -255,6 +335,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <div className="mt-auto flex gap-2">
           <Link
             to={`/property/${property.id}`}
+            onClick={() => trackPropertyOpen('card_button')}
             className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] md:hover:scale-105 md:px-4"
           >
             <span className="truncate">Ver Detalhes</span>
@@ -269,6 +350,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
             <span className="sm:hidden">WhatsApp</span>
           </button>
         </div>
+
+        {shareStatus && (
+          <div className="mt-3 rounded-lg bg-[var(--green-dark)]/10 px-3 py-2 text-center text-xs font-bold text-[var(--green-dark)]">
+            {shareStatus}
+          </div>
+        )}
       </div>
     </div>
   );

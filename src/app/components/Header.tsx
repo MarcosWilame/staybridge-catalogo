@@ -1,6 +1,8 @@
 import { useState, useEffect, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, MessageCircle } from 'lucide-react';
+import { openWhatsApp } from '../config/contact';
+import { trackEvent } from '../utils/analytics';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -62,7 +64,10 @@ export function Header() {
   };
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/5588997993046', '_blank');
+    trackEvent('whatsapp_click', {
+      source: isMobileMenuOpen ? 'mobile_header' : 'desktop_header',
+    });
+    openWhatsApp();
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
