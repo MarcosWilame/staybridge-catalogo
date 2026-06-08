@@ -38,6 +38,12 @@ function formatWeeklyPrice(price: string) {
   return amount.startsWith('£') ? amount : `£${amount}`;
 }
 
+function getPriceValue(price: string) {
+  const match = price.match(/\d+(?:[.,]\d+)?/);
+  if (!match) return 0;
+  return Number(match[0].replace(',', '.'));
+}
+
 const postcodeAreaByDistrict: Record<string, string> = {
   HA2: 'Harrow',
   NW2: 'Neasden',
@@ -94,15 +100,26 @@ export function PropertyCard({
 
   const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
 
+  const getPropertyTrackingParams = () => ({
+    property_id: property.id,
+    property_type: property.type,
+    property_category: property.category,
+    region: property.region,
+    local_area: property.localArea || areaPreview,
+    postcode: property.postcode,
+    weekly_price: getPriceValue(property.price),
+    availability: availabilityLabel,
+    available_now: isNow,
+    bills_included: property.billsIncluded,
+  });
+
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
       `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title}`
     );
     trackEvent('whatsapp_click', {
       source: 'property_card',
-      property_id: property.id,
-      property_type: property.type,
-      region: property.region,
+      ...getPropertyTrackingParams(),
     });
     window.open(`${WHATSAPP_URL}?text=${message}`, '_blank');
   };
@@ -126,10 +143,7 @@ export function PropertyCard({
   const trackPropertyOpen = (source: string) => {
     trackEvent('property_detail_click', {
       source,
-      property_id: property.id,
-      property_type: property.type,
-      region: property.region,
-      price: property.price,
+      ...getPropertyTrackingParams(),
     });
   };
 

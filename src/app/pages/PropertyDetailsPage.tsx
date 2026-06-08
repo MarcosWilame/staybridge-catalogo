@@ -92,6 +92,12 @@ function formatWeeklyPrice(price: string) {
   return amount.startsWith('£') ? amount : `£${amount}`;
 }
 
+function getPriceValue(price: string) {
+  const match = price.match(/\d+(?:[.,]\d+)?/);
+  if (!match) return 0;
+  return Number(match[0].replace(',', '.'));
+}
+
 function getNearbyIcon(label: string) {
   const normalized = label.toLowerCase();
 
@@ -183,8 +189,14 @@ export function PropertyDetailsPage() {
       source: 'property_details',
       property_id: property.id,
       property_type: property.type,
+      property_category: property.category,
       region: property.region,
-      price: property.price,
+      local_area: property.localArea,
+      postcode: property.postcode,
+      weekly_price: getPriceValue(property.price),
+      availability: availabilityLabel,
+      available_now: isNow,
+      bills_included: property.billsIncluded,
     });
 
     window.open(
@@ -249,7 +261,7 @@ export function PropertyDetailsPage() {
     '@type': 'Accommodation',
     name: property.title,
     description: propertyDescription,
-    image: property.image,
+    image: (property.images?.length ? property.images : [property.image]).filter(Boolean),
     url: getAbsoluteUrl(`/property/${property.id}`),
     address: {
       '@type': 'PostalAddress',
@@ -265,14 +277,46 @@ export function PropertyDetailsPage() {
     })),
     offers: {
       '@type': 'Offer',
-      price: weeklyPrice.replace(/[^0-9.]/g, ''),
+      price: getPriceValue(property.price),
       priceCurrency: 'GBP',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: getPriceValue(property.price),
+        priceCurrency: 'GBP',
+        unitText: 'week',
+      },
       availability: property.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: getAbsoluteUrl(`/property/${property.id}`),
       seller: {
         '@type': 'Organization',
         name: SITE_NAME,
       },
     },
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Inicio',
+        item: getAbsoluteUrl('/'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Imoveis',
+        item: getAbsoluteUrl('/properties'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: property.title,
+        item: getAbsoluteUrl(`/property/${property.id}`),
+      },
+    ],
   };
 
   const nextImage = () => {
@@ -294,7 +338,7 @@ export function PropertyDetailsPage() {
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
         image={property.image}
         type="article"
-        jsonLd={propertyJsonLd}
+        jsonLd={[propertyJsonLd, breadcrumbJsonLd]}
       />
 
       {/* BREADCRUMB + BACK */}

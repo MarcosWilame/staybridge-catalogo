@@ -50,14 +50,25 @@ export default async function handler(req, res) {
   const now = new Date().toISOString();
   const propertyIds = await loadPropertyIds();
   const staticPaths = ['/', '/properties', '/profile'];
+  const catalogFilterPaths = [
+    '/properties?type=studio',
+    '/properties?type=ensuite',
+    '/properties?type=flat',
+    '/properties?availableNow=1',
+    '/properties?billsIncluded=1',
+    '/properties?region=north',
+    '/properties?region=south',
+    '/properties?region=east',
+    '/properties?region=west',
+  ];
   const propertyPaths = propertyIds.map((id) => `/property/${id}`);
-  const urls = [...staticPaths, ...propertyPaths]
+  const urls = [...staticPaths, ...catalogFilterPaths, ...propertyPaths]
     .map(
       (path) => `  <url>
     <loc>${escapeXml(`${SITE_URL}${path}`)}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>${path.startsWith('/property/') ? 'weekly' : 'daily'}</changefreq>
-    <priority>${path === '/' ? '1.0' : path === '/properties' ? '0.9' : '0.7'}</priority>
+    <priority>${path === '/' ? '1.0' : path === '/properties' ? '0.9' : path.startsWith('/properties?') ? '0.8' : '0.7'}</priority>
   </url>`
     )
     .join('\n');

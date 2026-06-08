@@ -7,7 +7,7 @@ interface SEOProps {
   description: string;
   image?: string;
   type?: 'website' | 'article';
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 function setMeta(selector: string, attr: 'content' | 'href', value: string) {
@@ -74,7 +74,7 @@ export function SEO({
       const script = document.createElement('script');
       script.id = scriptId;
       script.type = 'application/ld+json';
-      script.textContent = JSON.stringify(jsonLd);
+      script.textContent = JSON.stringify(Array.isArray(jsonLd) ? jsonLd : [jsonLd]);
       document.head.appendChild(script);
     }
   }, [description, image, jsonLd, location.pathname, title, type]);

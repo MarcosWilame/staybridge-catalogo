@@ -8,6 +8,7 @@ import { getAvailabilityInfo } from '../utils/availability';
 import { WHATSAPP_URL } from '../config/contact';
 import { SEO } from '../components/SEO';
 import { trackEvent } from '../utils/analytics';
+import { getAbsoluteUrl, SITE_NAME } from '../config/site';
 import {
   MAX_COMPARE_ITEMS,
   getCompareProperties,
@@ -44,6 +45,16 @@ type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'ty
 const INITIAL_VISIBLE_COUNT = 12;
 const PRICE_STEP = 25;
 const DEFAULT_MAX_PRICE = 700;
+
+const filterLabels: Record<keyof FilterState, string> = {
+  search: 'busca',
+  region: 'regiao',
+  type: 'tipo',
+  priceRange: 'valor',
+  availableNow: 'entrada imediata',
+  billsIncluded: 'bills inclusas',
+  people: 'capacidade',
+};
 
 function LondonPropertiesLoading() {
   const loadingCards = [
@@ -169,6 +180,16 @@ export function ListingPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const getTrackingFilters = (nextFilters = filters) => ({
+    search_term: nextFilters.search.trim() || undefined,
+    region: nextFilters.region || undefined,
+    property_type: nextFilters.type || undefined,
+    price_range: nextFilters.priceRange || undefined,
+    available_now: nextFilters.availableNow || undefined,
+    bills_included: nextFilters.billsIncluded || undefined,
+    people: nextFilters.people || undefined,
+  });
+
   const updateFilter = <K extends keyof FilterState>(
     key: K,
     value: FilterState[K],
@@ -181,8 +202,10 @@ export function ListingPage() {
       }
       if (key !== 'search') {
         trackEvent('property_filter_change', {
-          filter: String(key),
+          filter: filterLabels[key],
+          filter_key: String(key),
           value: String(value),
+          ...getTrackingFilters(next),
         });
       }
       return next;
@@ -248,8 +271,10 @@ export function ListingPage() {
     setFilters(next);
     syncSearchParams(next);
     trackEvent('property_filter_change', {
-      filter: 'priceRange',
+      filter: filterLabels.priceRange,
+      filter_key: 'priceRange',
       value: next.priceRange || 'any',
+      ...getTrackingFilters(next),
     });
   };
 
@@ -428,6 +453,40 @@ export function ListingPage() {
     { value: 'flat', label: 'Flat' },
   ];
 
+  const activeFilterSummary = activeFilterChips
+    .map((chip) => chip.label)
+    .join(', ');
+
+  const listingTitle = filters.type
+    ? `${typeOptions.find((type) => type.value === filters.type)?.label || filters.type} em Londres`
+    : filters.region
+      ? `Acomodacoes em ${filters.region.charAt(0).toUpperCase() + filters.region.slice(1)} London`
+      : filters.availableNow
+        ? 'Acomodacoes com entrada imediata em Londres'
+        : 'Imoveis e quartos em Londres';
+
+  const listingDescription = activeFilterSummary
+    ? `Veja ${sortedProperties.length} opcoes em Londres para ${activeFilterSummary}. Studios, ensuites, rooms e flats com atendimento em portugues.`
+    : 'Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e entrada imediata.';
+
+  const listingJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${listingTitle} | ${SITE_NAME}`,
+    description: listingDescription,
+    url: getAbsoluteUrl('/properties'),
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: sortedProperties.length,
+      itemListElement: visibleProperties.slice(0, 12).map((property, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: getAbsoluteUrl(`/property/${property.id}`),
+        name: property.title,
+      })),
+    },
+  };
+
   const peopleOptions = [
     { value: '', label: 'Qualquer' },
     { value: '1', label: '1 pessoa' },
@@ -486,6 +545,53 @@ export function ListingPage() {
     setIsCompareOpen(false);
     setCompareMessage('');
   };
+
+  useEffect(() => {
+    const searchTerm = filters.search.trim();
+    if (!searchTerm) return;
+
+    const timeout = window.setTimeout(() => {
+      trackEvent('search_submit', {
+        ...getTrackingFilters(),
+        results_count: sortedProperties.length,
+      });
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [filters.search, sortedProperties.length]);
+
+  useEffect(() => {
+    if (isLoading || sortedProperties.length > 0 || !hasActiveFilters) return;
+
+    trackEvent('filter_results_empty', {
+      results_count: 0,
+      ...getTrackingFilters(),
+    });
+  }, [hasActiveFilters, isLoading, sortedProperties.length]);
+
+  useEffect(() => {
+    if (isLoading || visibleProperties.length === 0) return;
+
+    trackEvent('property_impression', {
+      results_count: sortedProperties.length,
+      visible_count: visibleProperties.length,
+      property_ids: visibleProperties.map((property) => property.id).join(','),
+      sort_by: sortBy,
+      ...getTrackingFilters(),
+    });
+  }, [
+    filters.availableNow,
+    filters.billsIncluded,
+    filters.people,
+    filters.priceRange,
+    filters.region,
+    filters.search,
+    filters.type,
+    isLoading,
+    sortBy,
+    sortedProperties.length,
+    visibleCount,
+  ]);
 
   const PriceSliderFilter = ({ isMobile = false }: { isMobile?: boolean }) => {
     const [draftPrice, setDraftPrice] = useState(selectedMaxPrice);
@@ -956,8 +1062,9 @@ export function ListingPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-28 pt-28 md:pb-10">
       <SEO
-        title="Imoveis e quartos em Londres"
-        description="Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e entrada imediata."
+        title={listingTitle}
+        description={listingDescription}
+        jsonLd={listingJsonLd}
       />
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-5">
@@ -993,7 +1100,15 @@ export function ListingPage() {
 
             <select
               value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as SortOption)}
+              onChange={(event) => {
+                const nextSort = event.target.value as SortOption;
+                setSortBy(nextSort);
+                trackEvent('property_sort_change', {
+                  sort_by: nextSort,
+                  results_count: sortedProperties.length,
+                  ...getTrackingFilters(),
+                });
+              }}
               className="max-w-[10rem] rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-700 shadow-sm focus:border-[var(--green-dark)] focus:outline-none"
               aria-label="Ordenar propriedades"
             >
@@ -1076,7 +1191,15 @@ export function ListingPage() {
                     Ordenar por
                     <select
                       value={sortBy}
-                      onChange={(event) => setSortBy(event.target.value as SortOption)}
+                      onChange={(event) => {
+                        const nextSort = event.target.value as SortOption;
+                        setSortBy(nextSort);
+                        trackEvent('property_sort_change', {
+                          sort_by: nextSort,
+                          results_count: sortedProperties.length,
+                          ...getTrackingFilters(),
+                        });
+                      }}
                       className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-[var(--green-dark)] focus:outline-none"
                     >
                       <option value="recommended">Recomendados</option>
