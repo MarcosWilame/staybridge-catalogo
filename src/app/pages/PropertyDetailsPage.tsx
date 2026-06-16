@@ -31,7 +31,7 @@ import {
   TrainFront,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { shareProperty } from '../utils/shareProperty';
+import { createWhatsAppLeadMessage, shareProperty } from '../utils/shareProperty';
 
 interface PropertyAttribute {
   icon: LucideIcon;
@@ -181,9 +181,7 @@ export function PropertyDetailsPage() {
   const handleWhatsApp = () => {
     if (!property) return;
 
-    const message = encodeURIComponent(
-      `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title} (ID: ${property.id})`
-    );
+    const message = encodeURIComponent(createWhatsAppLeadMessage(property));
 
     trackEvent('whatsapp_click', {
       source: 'property_details',

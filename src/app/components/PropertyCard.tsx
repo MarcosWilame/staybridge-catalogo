@@ -18,7 +18,7 @@ import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 import { WHATSAPP_URL } from '../config/contact';
-import { shareProperty } from '../utils/shareProperty';
+import { createWhatsAppLeadMessage, shareProperty } from '../utils/shareProperty';
 import { trackEvent } from '../utils/analytics';
 
 interface PropertyCardProps {
@@ -114,9 +114,7 @@ export function PropertyCard({
   });
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent(
-      `Olá! Tenho interesse no ${property.type} em ${property.region} - ${property.title}`
-    );
+    const message = encodeURIComponent(createWhatsAppLeadMessage(property));
     trackEvent('whatsapp_click', {
       source: 'property_card',
       ...getPropertyTrackingParams(),
