@@ -148,6 +148,11 @@ export function ListingPage() {
   );
 
   const listRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef(filters);
+
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -179,6 +184,19 @@ export function ListingPage() {
 
     setSearchParams(nextParams, { replace: true });
   };
+
+  useEffect(() => {
+    const searchParamValue = searchParams.get('search') || '';
+    const nextSearch = filters.search.trim();
+
+    if (searchParamValue === nextSearch) return;
+
+    const timeout = window.setTimeout(() => {
+      syncSearchParams(filtersRef.current);
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [filters.search, searchParams]);
 
   const getTrackingFilters = (nextFilters = filters) => ({
     search_term: nextFilters.search.trim() || undefined,
@@ -712,7 +730,7 @@ export function ListingPage() {
     );
   };
 
-  const FiltersPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
+  const renderFiltersPanel = (isMobile = false) => (
     <div
       className={`overflow-y-auto overscroll-contain bg-white ${
         isMobile
@@ -752,7 +770,9 @@ export function ListingPage() {
             id={`search-${isMobile ? 'mobile' : 'desktop'}`}
             type="search"
             value={filters.search}
-            onChange={(event) => updateFilter('search', event.target.value)}
+            onChange={(event) =>
+              updateFilter('search', event.target.value, { syncUrl: false })
+            }
             placeholder="Bairro, postcode ou estacao"
             className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-3 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
           />
@@ -1166,7 +1186,7 @@ export function ListingPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="hidden lg:block">
-            <FiltersPanel />
+            {renderFiltersPanel()}
           </div>
 
           <div
@@ -1333,7 +1353,7 @@ export function ListingPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <FiltersPanel isMobile />
+            {renderFiltersPanel(true)}
 
             {/* Botão aplicar no mobile */}
             <div className="sticky bottom-0 border-t border-gray-100 bg-white p-4">
