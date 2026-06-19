@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Property } from '../data/properties';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Property, type PropertyStatus } from '../data/properties';
 import {
   AlertCircle,
   Bath,
@@ -9,8 +10,6 @@ import {
   Check,
   Cloud,
   Download,
-  Eye,
-  EyeOff,
   FileText,
   FolderOpen,
   Home,
@@ -18,6 +17,7 @@ import {
   ListChecks,
   Lock,
   LogIn,
+  LogOut,
   MapPin,
   Navigation,
   Plus,
@@ -44,6 +44,8 @@ import {
   searchPropertyImagesInStorage,
   searchPropertyVideosInStorage,
   signInAdmin,
+  signOutAdmin,
+  validateAdminSession,
   normalizeImageUrl,
   normalizeVideoUrl,
   type SupabaseAuthSession,
@@ -60,6 +62,23 @@ import {
   isRecoveryExpired,
 } from '../utils/recovery';
 import { AdminFieldLabel, AdminSwitch } from './admin/AdminControls';
+import { AdminDashboard } from './admin/AdminDashboard';
+import { AdminLibraryPage } from './admin/AdminLibraryPage';
+import { AdminNavigation } from './admin/AdminNavigation';
+import { AvailabilityAgenda } from './admin/AvailabilityAgenda';
+import { CadastroAssistant } from './admin/CadastroAssistant';
+import {
+  applyAssistantToProperty,
+  createAssistantFormFromProperty,
+} from './admin/cadastroAssistantUtils';
+import { useCadastroAssistant } from './admin/useCadastroAssistant';
+import {
+  PROPERTY_STATUS_OPTIONS,
+  applyPropertyStatus,
+  findDuplicateProperty,
+  getPropertyManagementStatus,
+  getPropertyStatusLabel,
+} from './admin/propertyManagement';
 import {
   AMENITY_OPTIONS,
   CATEGORY_OPTIONS,
@@ -73,10 +92,20 @@ import {
   getStationMapQuery,
   type AdminAvailabilityFilter,
   type AdminStatusFilter,
-  type FolderInputProps,
 } from './admin/adminConfig';
 
 export function AdminPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const adminView = location.pathname.startsWith('/admin/properties')
+    ? 'properties'
+    : location.pathname === '/admin/new' || location.pathname.startsWith('/admin/edit/')
+      ? 'registration'
+      : location.pathname.startsWith('/admin/library')
+        ? 'library'
+        : location.pathname.startsWith('/admin/trash')
+          ? 'trash'
+          : 'overview';
   const [session, setSession] = useState<SupabaseAuthSession | null>(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -86,7 +115,6 @@ export function AdminPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [syncMessage, setSyncMessage] = useState('');
   const [syncError, setSyncError] = useState('');
-  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Property, 'id'>>(INITIAL_FORM);
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all');
@@ -113,6 +141,22 @@ export function AdminPage() {
   const [storageFolderVideos, setStorageFolderVideos] = useState<StorageVideoItem[]>([]);
   const [isLoadingStorageFolder, setIsLoadingStorageFolder] = useState(false);
   const [stationInput, setStationInput] = useState('');
+  const cadastroAssistant = useCadastroAssistant({
+    session,
+    onMediaFound: (result) => {
+      setStorageFolderPath(result.path);
+      setStorageFolderImages(result.images);
+      setStorageFolderVideos(result.videos);
+    },
+    onMessage: (message) => {
+      setSyncMessage(message);
+      setTimeout(() => setSyncMessage(''), 4000);
+    },
+    onError: (message) => {
+      setSyncError(message);
+      alert(message);
+    },
+  });
   const formRef = useRef<HTMLDivElement | null>(null);
   const moveInDateInputValue = /^\d{4}-\d{2}-\d{2}$/.test(formData.moveInDate)
     ? formData.moveInDate
@@ -128,9 +172,31 @@ export function AdminPage() {
   };
 
   useEffect(() => {
-    setSession(getStoredAdminSession());
-    setIsAuthLoading(false);
+    const restoreSession = async () => {
+      const storedSession = getStoredAdminSession();
+      if (!storedSession) {
+        setIsAuthLoading(false);
+        return;
+      }
+
+      try {
+        setSession(await validateAdminSession(storedSession));
+      } catch {
+        signOutAdmin();
+        setSession(null);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    void restoreSession();
   }, []);
+
+  const handleSignOut = () => {
+    signOutAdmin();
+    setSession(null);
+    navigate('/admin');
+  };
 
   // Carregar somente apos login para evitar leitura publica no Supabase.
   useEffect(() => {
@@ -193,10 +259,27 @@ export function AdminPage() {
     (property) => !isInRecovery(property) && !isRecoveryExpired(property)
   );
   const recoveryProperties = properties.filter(isInRecovery);
-  const listedCount = activeProperties.filter((property) => property.listed !== false).length;
-  const hiddenCount = activeProperties.length - listedCount;
   const availableCount = activeProperties.filter((property) => property.available).length;
   const unavailableCount = activeProperties.length - availableCount;
+  const statusCounts = PROPERTY_STATUS_OPTIONS.reduce<Record<PropertyStatus, number>>(
+    (counts, option) => {
+      counts[option.value] = activeProperties.filter(
+        (property) => getPropertyManagementStatus(property) === option.value
+      ).length;
+      return counts;
+    },
+    { available: 0, reserved: 0, rented: 0, hidden: 0, maintenance: 0 }
+  );
+  const duplicateProperty = findDuplicateProperty(
+    activeProperties,
+    {
+      address: formData.address,
+      postcode: formData.postcode,
+      title: formData.title,
+      unit: cadastroAssistant.form.unit,
+    },
+    editingId
+  );
   const adminRegionOptions = Array.from(
     new Set(activeProperties.map((property) => property.region).filter(Boolean))
   ).sort();
@@ -205,8 +288,9 @@ export function AdminPage() {
     statusFilter === 'trash' ? recoveryProperties : activeProperties;
   const visibleAdminProperties = adminPropertiesForStatus.filter((property) => {
     if (statusFilter === 'trash') return true;
-    if (statusFilter === 'listed' && property.listed === false) return false;
-    if (statusFilter === 'hidden' && property.listed !== false) return false;
+    if (statusFilter !== 'all' && getPropertyManagementStatus(property) !== statusFilter) {
+      return false;
+    }
     if (adminTypeFilter && property.category !== adminTypeFilter) return false;
     if (adminRegionFilter && property.region !== adminRegionFilter) return false;
     if (adminAvailabilityFilter === 'available' && !property.available) return false;
@@ -589,6 +673,15 @@ export function AdminPage() {
     }
   };
 
+  const handleAssistantApply = () => {
+    setFormData((current) =>
+      applyAssistantToProperty(current, cadastroAssistant.form, cadastroAssistant.result)
+    );
+
+    setSyncMessage('Dados do assistente aplicados ao cadastro');
+    setTimeout(() => setSyncMessage(''), 3000);
+  };
+
   const handleVideoUrlChange = (value: string) => {
     setFormData(prev => ({ ...prev, video: value }));
   };
@@ -684,6 +777,11 @@ export function AdminPage() {
       return;
     }
 
+    if (duplicateProperty) {
+      alert(`Possível duplicidade: este imóvel já está cadastrado no ID #${duplicateProperty.id}`);
+      return;
+    }
+
     const propertyToSave: Property = {
       ...formData,
       type: getCategoryLabel(formData.category),
@@ -714,6 +812,7 @@ export function AdminPage() {
 
       setSyncError('');
       resetForm();
+      navigate('/admin/properties');
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao salvar imóvel';
@@ -725,8 +824,9 @@ export function AdminPage() {
   const handleEditProperty = (property: Property) => {
     const { id, ...rest } = property;
     setFormData({ ...rest, price: formatEuroPrice(rest.price) });
+    cadastroAssistant.setForm(createAssistantFormFromProperty(rest));
     setEditingId(id);
-    setShowForm(true);
+    navigate(`/admin/edit/${id}`);
     scrollToForm();
   };
 
@@ -776,11 +876,10 @@ export function AdminPage() {
       }
 
       const savedProperty = await savePropertyToSupabase(
-        {
+        applyPropertyStatus({
           ...property,
-          listed: true,
           deletedAt: undefined,
-        },
+        }, 'available'),
         session.access_token
       );
 
@@ -823,18 +922,17 @@ export function AdminPage() {
     }
   };
 
-  const handleToggleListed = async (property: Property) => {
+  const handleChangePropertyStatus = async (
+    property: Property,
+    status: PropertyStatus
+  ) => {
     try {
       if (!hasSupabaseConfig() || !session) {
         throw new Error('Supabase nao configurado');
       }
 
-      const nextListed = property.listed === false;
       const savedProperty = await savePropertyToSupabase(
-        {
-          ...property,
-          listed: nextListed,
-        },
+        applyPropertyStatus(property, status),
         session.access_token
       );
 
@@ -842,15 +940,11 @@ export function AdminPage() {
         prev.map((item) => (item.id === property.id ? savedProperty : item))
       );
       setSyncError('');
-      setSyncMessage(
-        nextListed
-          ? 'Imovel ativado na listagem publica'
-          : 'Imovel ocultado da listagem publica'
-      );
+      setSyncMessage(`Status alterado para ${getPropertyStatusLabel(savedProperty)}`);
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Erro ao atualizar visibilidade';
+        error instanceof Error ? error.message : 'Erro ao atualizar status';
       setSyncError(message);
       alert(message);
     }
@@ -875,16 +969,32 @@ export function AdminPage() {
     setStorageFolderImages([]);
     setStorageFolderVideos([]);
     setIsLoadingStorageFolder(false);
+    cadastroAssistant.reset();
     setStationInput('');
     setEditingId(null);
-    setShowForm(false);
   };
 
   const openNewPropertyForm = () => {
     resetForm();
-    setShowForm(true);
+    navigate('/admin/new');
     scrollToForm();
   };
+
+  const cancelPropertyForm = () => {
+    resetForm();
+    navigate('/admin/properties');
+  };
+
+  useEffect(() => {
+    if (adminView === 'library' && session && !storageFolderPath) {
+      void handleOpenStorageFolder('library');
+    }
+    if (adminView === 'trash') {
+      setStatusFilter('trash');
+    } else if (adminView === 'properties' && statusFilter === 'trash') {
+      setStatusFilter('all');
+    }
+  }, [adminView, session]);
 
   const handleDownloadJson = () => {
     const json = JSON.stringify(properties, null, 2);
@@ -1023,8 +1133,24 @@ export function AdminPage() {
                   <Building2 className="h-4 w-4" />
                   Painel administrativo
                 </div>
-                <h1 className="text-4xl font-extrabold text-[var(--green-dark)] mb-2">Gerenciar Imóveis</h1>
-                <p className="text-gray-600">Adicione, edite, oculte ou remova propriedades do catálogo.</p>
+                <h1 className="mb-2 text-3xl font-extrabold text-[var(--green-dark)] md:text-4xl">
+                  {{
+                    overview: 'Visão geral',
+                    properties: 'Gerenciar imóveis',
+                    registration: editingId ? 'Editar imóvel' : 'Novo cadastro',
+                    library: 'Biblioteca de mídia',
+                    trash: 'Lixeira',
+                  }[adminView]}
+                </h1>
+                <p className="text-gray-600">
+                  {{
+                    overview: 'Acompanhe disponibilidade, status e distribuição do catálogo.',
+                    properties: 'Consulte, filtre e altere o status dos imóveis.',
+                    registration: 'Preencha, revise e publique o anúncio.',
+                    library: 'Organize imagens e vídeos armazenados no Supabase.',
+                    trash: 'Restaure ou exclua definitivamente imóveis removidos.',
+                  }[adminView]}
+                </p>
               </div>
             </div>
           </div>
@@ -1048,9 +1174,36 @@ export function AdminPage() {
                 {syncError}
               </span>
             )}
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-semibold text-gray-700 shadow-sm hover:text-red-700"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </button>
+
+            {syncMessage && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-[var(--green-light)] px-3 py-1 font-semibold text-[var(--green-dark)]">
+                <Check className="h-4 w-4" />
+                {syncMessage}
+              </span>
+            )}
           </div>
         </div>
 
+        <div className="grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)]">
+          <AdminNavigation trashCount={recoveryProperties.length} />
+          <main className="min-w-0">
+        {adminView === 'overview' && (
+          <>
+            <AdminDashboard properties={activeProperties} />
+            <AvailabilityAgenda properties={activeProperties} onEdit={handleEditProperty} />
+          </>
+        )}
+
+        {adminView === 'properties' && (
         <div className="mb-6 flex flex-col gap-3 rounded-lg border border-[var(--surface-border)] bg-white p-4 shadow-[var(--surface-shadow)] sm:flex-row sm:flex-wrap">
           <button
             onClick={openNewPropertyForm}
@@ -1059,26 +1212,6 @@ export function AdminPage() {
             <Plus className="w-5 h-5" />
             Novo Imóvel
           </button>
-
-          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--green-dark)] bg-white px-4 py-2 font-bold text-[var(--green-dark)] transition hover:bg-[var(--green-light)] sm:w-auto">
-            <input
-              {...({
-                type: 'file',
-                accept: 'image/*',
-                multiple: true,
-                disabled: isUploadingLibrary,
-                webkitdirectory: '',
-                directory: '',
-                mozdirectory: '',
-                onChange: handleUploadLibraryFolder,
-                className: 'hidden',
-              } satisfies FolderInputProps)}
-            />
-            <FolderOpen className="h-5 w-5" />
-            {isUploadingLibrary && libraryUploadProgress
-              ? `Enviando ${libraryUploadProgress}`
-              : 'Enviar pasta para biblioteca'}
-          </label>
 
           <button
             onClick={handleDownloadJson}
@@ -1099,22 +1232,19 @@ export function AdminPage() {
             Importar JSON
           </label>
 
-          {syncMessage && (
-            <div className="inline-flex items-center gap-2 font-semibold text-[var(--green-dark)] sm:ml-auto">
-              <Check className="w-5 h-5" />
-              {syncMessage}
-            </div>
-          )}
-
         </div>
+        )}
 
+        {adminView === 'properties' && (
         <div className="mb-6 rounded-lg border border-[var(--surface-border)] bg-white p-4 shadow-[var(--surface-shadow)]">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               {[
                 { value: 'all' as const, label: `Todos (${activeProperties.length})` },
-                { value: 'listed' as const, label: `No site (${listedCount})` },
-                { value: 'hidden' as const, label: `Ocultos (${hiddenCount})` },
+                ...PROPERTY_STATUS_OPTIONS.map((option) => ({
+                  value: option.value,
+                  label: `${option.label} (${statusCounts[option.value]})`,
+                })),
                 { value: 'trash' as const, label: `Lixeira (${recoveryProperties.length})` },
               ].map((option) => (
                 <button
@@ -1194,9 +1324,25 @@ export function AdminPage() {
             </div>
           </div>
         </div>
+        )}
+
+        {adminView === 'library' && (
+          <AdminLibraryPage
+            path={storageFolderPath}
+            folders={storageFolders}
+            images={storageFolderImages}
+            videos={storageFolderVideos}
+            isLoading={isLoadingStorageFolder}
+            isUploading={isUploadingLibrary}
+            uploadProgress={libraryUploadProgress}
+            onOpen={handleOpenStorageFolder}
+            onBack={handleBackStorageFolder}
+            onUpload={handleUploadLibraryFolder}
+          />
+        )}
 
         {/* FORM */}
-        {showForm && (
+        {adminView === 'registration' && (
           <div
             ref={formRef}
             className={`scroll-mt-28 mb-8 overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow-strong)] transition-all ${
@@ -1222,8 +1368,8 @@ export function AdminPage() {
                         : 'Preencha os dados principais para criar um novo imovel.'}
                     </p>
                   </div>
-                  <button
-                    onClick={resetForm}
+              <button
+                onClick={cancelPropertyForm}
                     className="self-start rounded-full bg-[var(--gray-light)] p-2 text-[var(--green-dark)] hover:bg-[var(--green-light)] sm:self-auto"
                   >
                     <X className="w-6 h-6" />
@@ -1232,6 +1378,14 @@ export function AdminPage() {
               </div>
             </div>
 
+            <CadastroAssistant
+              form={cadastroAssistant.form}
+              result={cadastroAssistant.result}
+              isLoading={cadastroAssistant.isLoading}
+              onChange={cadastroAssistant.setForm}
+              onSearchMedia={cadastroAssistant.searchMedia}
+              onApply={handleAssistantApply}
+            />
             <div className="grid grid-cols-1 gap-6 p-5 md:grid-cols-2 md:p-6">
               <h3 className="md:col-span-2 text-lg font-extrabold text-[var(--green-dark)]">
                 Dados principais
@@ -1440,17 +1594,24 @@ export function AdminPage() {
                 />
               </div>
 
-              <AdminSwitch
-                checked={formData.available}
-                label="Disponível"
-                onChange={(checked) => setFormData(prev => ({ ...prev, available: checked }))}
-              />
-
-              <AdminSwitch
-                checked={formData.listed !== false}
-                label="Mostrar no site"
-                onChange={(checked) => setFormData(prev => ({ ...prev, listed: checked }))}
-              />
+              <div>
+                <AdminFieldLabel icon={ListChecks}>Status do imóvel</AdminFieldLabel>
+                <select
+                  value={getPropertyManagementStatus(formData)}
+                  onChange={(event) =>
+                    setFormData((current) =>
+                      applyPropertyStatus(current, event.target.value as PropertyStatus)
+                    )
+                  }
+                  className={adminInputClass}
+                >
+                  {PROPERTY_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <AdminSwitch
                 checked={formData.billsIncluded}
@@ -2033,25 +2194,39 @@ export function AdminPage() {
             </div>
 
             {/* SAVE BUTTON */}
-            <div className="mt-8 flex flex-col gap-3 border-t border-[var(--surface-border)] bg-[var(--gray-light)] p-5 sm:flex-row md:p-6">
-              <button
-                onClick={handleSaveProperty}
-                className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-6 py-3 font-bold text-white hover:bg-[var(--green-medium)]"
-              >
-                <Save className="w-5 h-5" />
-                {editingId ? 'Atualizar' : 'Criar'} Imóvel
-              </button>
-              <button
-                onClick={resetForm}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-bold text-gray-700 hover:bg-gray-100"
-              >
-                Cancelar
-              </button>
+            <div className="mt-8 flex flex-col gap-3 border-t border-[var(--surface-border)] bg-[var(--gray-light)] p-5 md:p-6">
+              {duplicateProperty && (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span>
+                    Possível duplicidade com o imóvel #{duplicateProperty.id}: {duplicateProperty.title}.
+                    Edite o cadastro existente ou altere o endereço/unidade.
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  onClick={handleSaveProperty}
+                  disabled={Boolean(duplicateProperty)}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-6 py-3 font-bold text-white hover:bg-[var(--green-medium)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Save className="w-5 h-5" />
+                  {editingId ? 'Atualizar' : 'Criar'} Imóvel
+                </button>
+                <button
+                  onClick={cancelPropertyForm}
+                  className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-bold text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* PROPERTIES LIST */}
+        {(adminView === 'properties' || adminView === 'trash') && (
+          <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visibleAdminProperties.map((property) => (
             <div
@@ -2076,14 +2251,12 @@ export function AdminPage() {
                   className={`absolute top-2 right-2 rounded-full px-3 py-1 text-xs font-bold shadow ${
                     isInRecovery(property)
                       ? 'bg-red-50 text-red-700'
-                      : property.listed === false
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-[var(--green-light)] text-[var(--green-dark)]'
+                      : 'bg-white text-[var(--green-dark)]'
                   }`}
                 >
                   {isInRecovery(property)
                     ? `${getRecoveryDaysLeft(property)} dias`
-                    : property.listed === false ? 'Oculto' : 'No site'}
+                    : getPropertyStatusLabel(property)}
                 </div>
               </div>
 
@@ -2114,26 +2287,23 @@ export function AdminPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handleToggleListed(property)}
-                      className={`col-span-2 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold ${
-                        property.listed === false
-                          ? 'bg-[var(--green-dark)] text-white hover:bg-[var(--green-medium)]'
-                          : 'bg-gray-900 text-white hover:bg-gray-800'
-                      }`}
+                    <select
+                      value={getPropertyManagementStatus(property)}
+                      onChange={(event) =>
+                        handleChangePropertyStatus(
+                          property,
+                          event.target.value as PropertyStatus
+                        )
+                      }
+                      className={`${adminInputClass} col-span-2`}
+                      aria-label={`Status de ${property.title}`}
                     >
-                      {property.listed === false ? (
-                        <>
-                          <Eye className="h-4 w-4" />
-                          Ativar no site
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="h-4 w-4" />
-                          Ocultar do site
-                        </>
-                      )}
-                    </button>
+                      {PROPERTY_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
 
                     <button
                       onClick={() => handleEditProperty(property)}
@@ -2155,7 +2325,7 @@ export function AdminPage() {
           ))}
         </div>
 
-        {adminPropertiesForStatus.length > 0 && visibleAdminProperties.length === 0 && !showForm && (
+        {adminPropertiesForStatus.length > 0 && visibleAdminProperties.length === 0 && (
           <div className="py-12 text-center">
             <p className="mb-4 text-gray-600">Nenhum imovel encontrado com esses filtros</p>
             <button
@@ -2173,7 +2343,7 @@ export function AdminPage() {
           </div>
         )}
 
-        {activeProperties.length === 0 && statusFilter !== 'trash' && !showForm && (
+        {activeProperties.length === 0 && adminView === 'properties' && (
           <div className="text-center py-12">
             <p className="text-gray-600 mb-4">Nenhum imóvel adicionado ainda</p>
             <button
@@ -2186,6 +2356,10 @@ export function AdminPage() {
             </button>
           </div>
         )}
+          </>
+        )}
+          </main>
+        </div>
       </div>
     </div>
   );

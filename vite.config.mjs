@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { toPublicProperty } from './api/public-property-fields.js';
 
 function localPublicPropertiesApi() {
   return {
@@ -60,19 +61,7 @@ function localPublicPropertiesApi() {
 
           const rows = await response.json();
           const properties = Array.isArray(rows)
-            ? rows
-                .map((row) => {
-                  const data =
-                    row?.data && typeof row.data === 'object'
-                      ? row.data
-                      : {};
-
-                  return {
-                    ...data,
-                    id: Number(data.id || row.id),
-                  };
-                })
-                .filter((property) => property.listed !== false)
+            ? rows.map(toPublicProperty).filter(Boolean)
             : [];
 
           res.statusCode = 200;

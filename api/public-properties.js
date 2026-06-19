@@ -1,3 +1,5 @@
+import { toPublicProperty } from './public-property-fields.js';
+
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
 
 const SUPABASE_SERVICE_KEY =
@@ -45,17 +47,7 @@ export default async function handler(req, res) {
     const rows = await response.json();
 
     const properties = Array.isArray(rows)
-      ? rows.map((row) => {
-          const data =
-            row?.data && typeof row.data === 'object'
-              ? row.data
-              : {};
-
-          return {
-            ...data,
-            id: Number(data.id || row.id),
-          };
-        }).filter((property) => property.listed !== false)
+      ? rows.map(toPublicProperty).filter(Boolean)
       : [];
 
     res.setHeader(

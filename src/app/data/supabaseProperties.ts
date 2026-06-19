@@ -579,6 +579,34 @@ function toStringArray(value: unknown) {
     : [];
 }
 
+export async function validateAdminSession(session: SupabaseAuthSession) {
+  if (!session.access_token || session.expires_at <= Math.floor(Date.now() / 1000)) {
+    signOutAdmin();
+    return null;
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    signOutAdmin();
+    return null;
+  }
+
+  const user = (await response.json()) as { email?: string };
+  const validatedSession = {
+    ...session,
+    user: { email: user.email },
+  };
+  persistSession(validatedSession);
+  return validatedSession;
+}
+
 export function normalizeImageUrl(value: string) {
   const trimmed = value.trim();
   const supabaseHostname = getSupabaseHostname();
@@ -683,6 +711,28 @@ function normalizeCategory(category: unknown, type: unknown) {
   return raw || 'studio';
 }
 
+function normalizeStatus(
+  status: unknown,
+  available: boolean,
+  listed: boolean
+): Property['status'] {
+  const normalized = toStringValue(status).trim().toLowerCase();
+  if (
+    normalized === 'available' ||
+    normalized === 'reserved' ||
+    normalized === 'rented' ||
+    normalized === 'hidden' ||
+    normalized === 'maintenance'
+  ) {
+    return normalized;
+  }
+
+  if (!listed && !available) return 'rented';
+  if (!listed) return 'hidden';
+  if (!available) return 'reserved';
+  return 'available';
+}
+
 export function normalizeProperty(input: PropertyInput): Property | null {
   const id = toNumberValue(input.id, Number.NaN);
 
@@ -692,6 +742,8 @@ export function normalizeProperty(input: PropertyInput): Property | null {
 
   const image = normalizeImageUrl(toStringValue(input.image));
   const images = toImageArray(input.images);
+  const available = toBooleanValue(input.available, true);
+  const listed = toBooleanValue(input.listed, true);
 
   return {
     id,
@@ -706,8 +758,9 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     price: formatEuroPrice(toStringValue(input.price)),
     description: toStringValue(input.description),
     longDescription: toStringValue(input.longDescription),
-    available: toBooleanValue(input.available, true),
-    listed: toBooleanValue(input.listed, true),
+    available,
+    listed,
+    status: normalizeStatus(input.status, available, listed),
     deletedAt: typeof input.deletedAt === 'string' ? input.deletedAt : undefined,
     billsIncluded: toBooleanValue(input.billsIncluded, false),
     bedrooms:

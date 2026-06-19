@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
       { path: '/properties', element: <ListingPage /> },
       { path: '/property/:id', element: <PropertyDetailsPage /> },
       { path: '/profile', element: <ProfilePage /> },
-      { path: '/admin', element: <AdminRoute /> },
+      { path: '/admin/*', element: <AdminRoute /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -24,6 +24,7 @@ test('normalizeProperty coerces common spreadsheet/admin values', () => {
   assert.equal(property.category, 'ensuite');
   assert.equal(property.price, '£320/week');
   assert.equal(property.available, true);
+  assert.equal(property.status, 'available');
   assert.equal(property.billsIncluded, true);
   assert.deepEqual(property.coordinates, { lat: 51.5, lng: -0.12 });
 });

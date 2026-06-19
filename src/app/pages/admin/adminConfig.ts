@@ -13,6 +13,7 @@ export const INITIAL_FORM: Omit<Property, 'id'> = {
   longDescription: '',
   available: true,
   listed: true,
+  status: 'available',
   billsIncluded: false,
   bedrooms: 1,
   bathrooms: 0,
@@ -28,7 +29,14 @@ export const INITIAL_FORM: Omit<Property, 'id'> = {
   people: 1,
 };
 
-export type AdminStatusFilter = 'all' | 'listed' | 'hidden' | 'trash';
+export type AdminStatusFilter =
+  | 'all'
+  | 'available'
+  | 'reserved'
+  | 'rented'
+  | 'hidden'
+  | 'maintenance'
+  | 'trash';
 export type AdminAvailabilityFilter = 'all' | 'available' | 'unavailable';
 export type FolderInputProps = InputHTMLAttributes<HTMLInputElement> & {
   directory?: string;

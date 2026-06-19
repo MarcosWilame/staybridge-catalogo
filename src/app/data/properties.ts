@@ -1,3 +1,5 @@
+export type PropertyStatus = 'available' | 'reserved' | 'rented' | 'hidden' | 'maintenance';
+
 export interface Property {
   id: number;
   image: string;
@@ -12,6 +14,7 @@ export interface Property {
   longDescription: string;
   available: boolean;
   listed?: boolean;
+  status?: PropertyStatus;
   deletedAt?: string;
   billsIncluded: boolean;
   bedrooms?: number;
