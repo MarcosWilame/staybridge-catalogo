@@ -22,7 +22,7 @@ export const INITIAL_FORM: Omit<Property, 'id'> = {
   nearbyStations: [],
   coordinates: { lat: 0, lng: 0 },
   furnishing: 'Mobiliado',
-  moveInDate: 'Imediata',
+  moveInDate: 'Disponível agora',
   postcode: '',
   address: '',
   people: 1,
@@ -67,7 +67,7 @@ export const AMENITY_OPTIONS = [
   'Estacionamento',
 ];
 
-export const MOVE_IN_OPTIONS = ['Imediata', 'A combinar', 'Em breve'];
+export const MOVE_IN_OPTIONS = ['Disponível agora', 'A combinar', 'Em breve'];
 
 export const PRICE_PERIOD_OPTIONS = [
   { value: '/week', label: 'por semana' },

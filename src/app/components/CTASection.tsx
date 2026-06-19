@@ -48,7 +48,7 @@ export function CTASection() {
           <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-white/90 md:mb-12 md:text-2xl">
             Fale com nossa equipe em português agora e garanta sua acomodação em Londres.
             <br />
-            <strong className="text-[var(--yellow)]">Entrada imediata disponível!</strong>
+            <strong className="text-[var(--yellow)]">Disponível agora!</strong>
           </p>
 
           {/* CTA Buttons */}

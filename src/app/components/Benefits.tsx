@@ -13,7 +13,7 @@ const benefits = [
   },
   {
     icon: Zap,
-    title: 'Entrada Imediata',
+    title: 'Disponível agora',
     description: 'Move-in rápido sem complicações burocráticas',
   },
   {

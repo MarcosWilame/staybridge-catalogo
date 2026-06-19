@@ -98,7 +98,10 @@ export function PropertyCard({
   const weeklyPrice = formatWeeklyPrice(property.price);
   const areaPreview = getAreaPreview(property);
 
-  const { label: availabilityLabel, isNow } = getAvailabilityInfo(property.moveInDate);
+  const { label: availabilityLabel, isNow } = getAvailabilityInfo(
+    property.moveInDate,
+    property.available
+  );
 
   const getPropertyTrackingParams = () => ({
     property_id: property.id,
@@ -186,24 +189,22 @@ export function PropertyCard({
 
         {/* Overlay Badges */}
         <div className="absolute left-3 top-3 flex max-w-[calc(100%-7rem)] flex-col gap-2">
-          {property.available && (
-            <span
-              className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
-                isNow
-                  ? 'bg-[var(--yellow)] text-black'
-                  : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1'
-              }`}
-            >
-              {isNow ? (
-                availabilityLabel
-              ) : (
-                <>
-                  <Clock className="w-3 h-3 shrink-0" />
-                  {availabilityLabel}
-                </>
-              )}
-            </span>
-          )}
+          <span
+            className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
+              isNow
+                ? 'bg-[var(--yellow)] text-black'
+                : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1'
+            }`}
+          >
+            {isNow ? (
+              availabilityLabel
+            ) : (
+              <>
+                <Clock className="w-3 h-3 shrink-0" />
+                {availabilityLabel}
+              </>
+            )}
+          </span>
           {property.billsIncluded && (
             <span className="bg-white/95 backdrop-blur text-[var(--green-dark)] px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
               Bills Inclusas
@@ -308,17 +309,15 @@ export function PropertyCard({
               {weeklyPrice}
             </div>
           </div>
-          {property.available && (
-            <div
-              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                isNow
-                  ? 'bg-[var(--yellow)] text-black'
-                  : 'bg-white text-[var(--green-dark)]'
-              }`}
-            >
-              {availabilityLabel}
-            </div>
-          )}
+          <div
+            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+              isNow
+                ? 'bg-[var(--yellow)] text-black'
+                : 'bg-white text-[var(--green-dark)]'
+            }`}
+          >
+            {availabilityLabel}
+          </div>
         </div>
 
         {/* Description */}

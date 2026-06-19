@@ -171,7 +171,7 @@ export function PropertyDetailsPage() {
     ) : null;
 
   const { label: availabilityLabel, isNow } = property
-    ? getAvailabilityInfo(property.moveInDate)
+    ? getAvailabilityInfo(property.moveInDate, property.available)
     : { label: '', isNow: false };
   const weeklyPrice = property ? formatWeeklyPrice(property.price) : '';
   const nearbyHighlights = property
@@ -428,24 +428,22 @@ export function PropertyDetailsPage() {
 
               {/* BADGES */}
               <div className="absolute left-3 top-3 flex max-w-[calc(100%-6rem)] flex-col gap-2 md:left-4 md:top-4">
-                {property.available && (
-                  <span
-                    className={`rounded-full px-3 py-1.5 text-xs font-bold md:px-4 md:py-2 md:text-sm ${
-                      isNow
-                        ? 'bg-[var(--yellow)] text-black'
-                        : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1.5'
-                    }`}
-                  >
-                    {isNow ? (
-                      availabilityLabel
-                    ) : (
-                      <>
-                        <Clock className="w-3.5 h-3.5 shrink-0" />
-                        {availabilityLabel}
-                      </>
-                    )}
-                  </span>
-                )}
+                <span
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold md:px-4 md:py-2 md:text-sm ${
+                    isNow
+                      ? 'bg-[var(--yellow)] text-black'
+                      : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1.5'
+                  }`}
+                >
+                  {isNow ? (
+                    availabilityLabel
+                  ) : (
+                    <>
+                      <Clock className="w-3.5 h-3.5 shrink-0" />
+                      {availabilityLabel}
+                    </>
+                  )}
+                </span>
 
                 {property.billsIncluded && (
                   <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">

@@ -94,7 +94,7 @@ export const properties: Property[] = [
 
   furnishing: 'Mobiliado',
 
-  moveInDate: 'Imediata',
+  moveInDate: 'Disponível agora',
 
   postcode: 'NW10 2EL',
 
@@ -138,7 +138,7 @@ export const properties: Property[] = [
     lng: -0.13,
   },
   furnishing: 'Mobiliado',
-  moveInDate: 'Imediata',
+  moveInDate: 'Disponível agora',
   postcode: 'SW16 5BA',
   address: '2 Bencroft Road SW16 5BA',
   people: 2,
@@ -266,7 +266,7 @@ export const properties: Property[] = [
 
   furnishing: 'Mobiliado',
 
-  moveInDate: 'Imediata',
+  moveInDate: 'Disponível agora',
 
   postcode: 'SW16 5BJ',
 
@@ -350,7 +350,7 @@ images: [
 
   furnishing: 'Mobiliado',
 
-  moveInDate: 'Imediata',
+  moveInDate: 'Disponível agora',
 
   postcode: 'SE25 6NN',
 

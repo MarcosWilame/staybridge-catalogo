@@ -51,7 +51,7 @@ const filterLabels: Record<keyof FilterState, string> = {
   region: 'regiao',
   type: 'tipo',
   priceRange: 'valor',
-  availableNow: 'entrada imediata',
+  availableNow: 'Disponível agora',
   billsIncluded: 'bills inclusas',
   people: 'capacidade',
 };
@@ -355,7 +355,7 @@ export function ListingPage() {
 
   if (filters.availableNow) {
     filteredProperties = filteredProperties.filter((p) => {
-      return getAvailabilityInfo(p.moveInDate).isNow;
+      return getAvailabilityInfo(p.moveInDate, p.available).isNow;
     });
   }
 
@@ -381,8 +381,8 @@ export function ListingPage() {
     }
 
     if (sortBy === 'available') {
-      const aNow = getAvailabilityInfo(a.moveInDate).isNow;
-      const bNow = getAvailabilityInfo(b.moveInDate).isNow;
+      const aNow = getAvailabilityInfo(a.moveInDate, a.available).isNow;
+      const bNow = getAvailabilityInfo(b.moveInDate, b.available).isNow;
       return Number(bNow) - Number(aNow);
     }
 
@@ -433,7 +433,7 @@ export function ListingPage() {
     },
     filters.availableNow && {
       key: 'availableNow' as const,
-      label: 'Entrada imediata',
+      label: 'Disponível agora',
       clear: () => updateFilter('availableNow', false),
     },
     filters.billsIncluded && {
@@ -480,12 +480,12 @@ export function ListingPage() {
     : filters.region
       ? `Acomodacoes em ${filters.region.charAt(0).toUpperCase() + filters.region.slice(1)} London`
       : filters.availableNow
-        ? 'Acomodacoes com entrada imediata em Londres'
+        ? 'Acomodacoes disponíveis agora em Londres'
         : 'Imoveis e quartos em Londres';
 
   const listingDescription = activeFilterSummary
     ? `Veja ${sortedProperties.length} opcoes em Londres para ${activeFilterSummary}. Studios, ensuites, rooms e flats com atendimento em portugues.`
-    : 'Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e entrada imediata.';
+    : 'Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e disponibilidade agora.';
 
   const listingJsonLd = {
     '@context': 'https://schema.org',
@@ -881,7 +881,7 @@ export function ListingPage() {
         )}
       </div>
 
-      {/* ENTRADA IMEDIATA */}
+      {/* Disponível agora */}
       <div className="mt-6 space-y-3">
         {isMobile ? (
           <>
@@ -894,7 +894,7 @@ export function ListingPage() {
                   : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
             >
-              Entrada imediata
+              Disponível agora
               <CheckCircle2 className={`h-5 w-5 ${filters.availableNow ? 'text-black' : 'text-gray-300'}`} />
             </button>
 
@@ -919,7 +919,7 @@ export function ListingPage() {
                 checked={filters.availableNow}
                 onChange={(e) => updateFilter('availableNow', e.target.checked)}
               />
-              Entrada imediata
+              Disponível agora
             </label>
 
             <label className="flex gap-2 items-center cursor-pointer">
@@ -963,7 +963,8 @@ export function ListingPage() {
       },
       {
         label: 'Entrada',
-        getValue: (property: Property) => getAvailabilityInfo(property.moveInDate).label,
+        getValue: (property: Property) =>
+          getAvailabilityInfo(property.moveInDate, property.available).label,
       },
     ];
 
@@ -1135,7 +1136,7 @@ export function ListingPage() {
               <option value="recommended">Recomendados</option>
               <option value="price-asc">Menor preço</option>
               <option value="price-desc">Maior preço</option>
-              <option value="available">Entrada imediata</option>
+              <option value="available">Disponível agora</option>
               <option value="type">Tipo</option>
             </select>
           </div>
@@ -1169,7 +1170,7 @@ export function ListingPage() {
                   : 'bg-gray-100 text-gray-700'
               }`}
             >
-              Entrada imediata
+              Disponível agora
             </button>
 
             {hasActiveFilters && (
@@ -1225,7 +1226,7 @@ export function ListingPage() {
                       <option value="recommended">Recomendados</option>
                       <option value="price-asc">Menor preço</option>
                       <option value="price-desc">Maior preço</option>
-                      <option value="available">Entrada imediata</option>
+                      <option value="available">Disponível agora</option>
                       <option value="type">Tipo</option>
                     </select>
                   </label>

@@ -42,15 +42,16 @@ import {
   replacePropertiesInSupabase,
   savePropertyToSupabase,
   searchPropertyImagesInStorage,
+  searchPropertyVideosInStorage,
   signInAdmin,
   normalizeImageUrl,
   normalizeVideoUrl,
   type SupabaseAuthSession,
   type StorageFolderItem,
   type StorageImageItem,
+  type StorageVideoItem,
   uploadLibraryImageToStorage,
   uploadPropertyImageToStorage,
-  uploadPropertyVideoToStorage,
 } from '../data/supabaseProperties';
 import { buildEuroPrice, formatEuroPrice, getPricePeriod, getPriceValue } from '../utils/price';
 import {
@@ -99,17 +100,23 @@ export function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState('');
   const [isUploadingLibrary, setIsUploadingLibrary] = useState(false);
   const [libraryUploadProgress, setLibraryUploadProgress] = useState('');
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [storageImageSearch, setStorageImageSearch] = useState('');
   const [storageImageResults, setStorageImageResults] = useState<StorageImageItem[]>([]);
   const [isSearchingStorageImages, setIsSearchingStorageImages] = useState(false);
+  const [storageVideoSearch, setStorageVideoSearch] = useState('');
+  const [storageVideoResults, setStorageVideoResults] = useState<StorageVideoItem[]>([]);
+  const [isSearchingStorageVideos, setIsSearchingStorageVideos] = useState(false);
   const [isStorageBrowserOpen, setIsStorageBrowserOpen] = useState(false);
   const [storageFolderPath, setStorageFolderPath] = useState('');
   const [storageFolders, setStorageFolders] = useState<StorageFolderItem[]>([]);
   const [storageFolderImages, setStorageFolderImages] = useState<StorageImageItem[]>([]);
+  const [storageFolderVideos, setStorageFolderVideos] = useState<StorageVideoItem[]>([]);
   const [isLoadingStorageFolder, setIsLoadingStorageFolder] = useState(false);
   const [stationInput, setStationInput] = useState('');
   const formRef = useRef<HTMLDivElement | null>(null);
+  const moveInDateInputValue = /^\d{4}-\d{2}-\d{2}$/.test(formData.moveInDate)
+    ? formData.moveInDate
+    : '';
 
   const scrollToForm = () => {
     window.requestAnimationFrame(() => {
@@ -435,6 +442,37 @@ export function AdminPage() {
     }
   };
 
+  const handleSearchStorageVideos = async () => {
+    if (!session || !hasSupabaseConfig()) {
+      alert('Entre no admin e confira a configuracao do Supabase antes de buscar videos');
+      return;
+    }
+
+    setIsSearchingStorageVideos(true);
+    setSyncError('');
+
+    try {
+      const results = await searchPropertyVideosInStorage({
+        accessToken: session.access_token,
+        query: storageVideoSearch,
+      });
+
+      setStorageVideoResults(results);
+      setSyncMessage(
+        results.length
+          ? `${results.length} videos encontrados no Supabase`
+          : 'Nenhum video encontrado no Supabase'
+      );
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao buscar videos';
+      setSyncError(message);
+      alert(message);
+    } finally {
+      setIsSearchingStorageVideos(false);
+    }
+  };
+
   const handleAddStorageImage = (imageUrl: string) => {
     setFormData(prev => {
       if (prev.images.includes(imageUrl)) return prev;
@@ -445,6 +483,12 @@ export function AdminPage() {
         image: prev.image || imageUrl,
       };
     });
+  };
+
+  const handleAddStorageVideo = (videoUrl: string) => {
+    setFormData(prev => ({ ...prev, video: videoUrl }));
+    setSyncMessage('Video adicionado ao imovel');
+    setTimeout(() => setSyncMessage(''), 3000);
   };
 
   const handleAddStorageImages = (items: StorageImageItem[]) => {
@@ -503,6 +547,7 @@ export function AdminPage() {
       setStorageFolderPath(prefix);
       setStorageFolders(result.folders);
       setStorageFolderImages(result.images);
+      setStorageFolderVideos(result.videos);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao abrir pasta';
       setSyncError(message);
@@ -553,46 +598,6 @@ export function AdminPage() {
       ...prev,
       video: normalizeVideoUrl(prev.video || ''),
     }));
-  };
-
-  const handleUploadVideo = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) return;
-
-    if (!file.type.startsWith('video/')) {
-      alert('Selecione um arquivo de video valido');
-      return;
-    }
-
-    if (!session || !hasSupabaseConfig()) {
-      alert('Entre no admin e confira a configuracao do Supabase antes de enviar video');
-      return;
-    }
-
-    const propertyId = editingId !== null ? editingId : nextId;
-
-    setIsUploadingVideo(true);
-    setSyncError('');
-
-    try {
-      const videoUrl = await uploadPropertyVideoToStorage({
-        file,
-        propertyId,
-        accessToken: session.access_token,
-      });
-
-      setFormData(prev => ({ ...prev, video: videoUrl }));
-      setSyncMessage('Video enviado para o Supabase Storage');
-      setTimeout(() => setSyncMessage(''), 3000);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel enviar o video';
-      setSyncError(message);
-      alert(message);
-    } finally {
-      setIsUploadingVideo(false);
-    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -858,14 +863,17 @@ export function AdminPage() {
     setUploadProgress('');
     setIsUploadingLibrary(false);
     setLibraryUploadProgress('');
-    setIsUploadingVideo(false);
     setStorageImageSearch('');
     setStorageImageResults([]);
     setIsSearchingStorageImages(false);
+    setStorageVideoSearch('');
+    setStorageVideoResults([]);
+    setIsSearchingStorageVideos(false);
     setIsStorageBrowserOpen(false);
     setStorageFolderPath('');
     setStorageFolders([]);
     setStorageFolderImages([]);
+    setStorageFolderVideos([]);
     setIsLoadingStorageFolder(false);
     setStationInput('');
     setEditingId(null);
@@ -1375,26 +1383,48 @@ export function AdminPage() {
               {/* MOVE IN DATE */}
               <div className="md:col-span-2">
                 <AdminFieldLabel icon={CalendarDays}>Data de Entrada</AdminFieldLabel>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {MOVE_IN_OPTIONS.map((option) => (
-                    <label
-                      key={option}
-                      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                        formData.moveInDate === option
-                          ? 'border-[var(--green-dark)] bg-[var(--green-light)] text-[var(--green-dark)]'
-                          : 'border-gray-200 bg-white text-gray-800 hover:border-[var(--green-dark)] hover:bg-emerald-50'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="moveInDate"
-                        checked={formData.moveInDate === option}
-                        onChange={() => setFormData(prev => ({ ...prev, moveInDate: option }))}
-                        className="h-4 w-4 accent-[var(--green-dark)]"
-                      />
-                      {option}
-                    </label>
-                  ))}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {MOVE_IN_OPTIONS.map((option) => {
+                      const isSelected =
+                        formData.moveInDate === option ||
+                        (option === 'Disponível agora' && formData.moveInDate === 'Imediata');
+
+                      return (
+                        <label
+                          key={option}
+                          className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                            isSelected
+                              ? 'border-[var(--green-dark)] bg-[var(--green-light)] text-[var(--green-dark)]'
+                              : 'border-gray-200 bg-white text-gray-800 hover:border-[var(--green-dark)] hover:bg-emerald-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="moveInDate"
+                            checked={isSelected}
+                            onChange={() => setFormData(prev => ({ ...prev, moveInDate: option }))}
+                            className="h-4 w-4 accent-[var(--green-dark)]"
+                          />
+                          {option}
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:items-center">
+                    <input
+                      type="date"
+                      value={moveInDateInputValue}
+                      onChange={(event) =>
+                        setFormData(prev => ({ ...prev, moveInDate: event.target.value }))
+                      }
+                      className={adminInputClass}
+                    />
+                    <p className="text-xs font-semibold text-gray-500">
+                      Use uma data quando o imóvel ainda não estiver disponível. Ela aparecerá no site.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -1686,27 +1716,186 @@ export function AdminPage() {
 
             {/* VIDEO */}
             <div className="mt-6 px-5 md:px-6">
-              <AdminFieldLabel icon={Video}>Vídeo (URL)</AdminFieldLabel>
-              <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+              <AdminFieldLabel icon={Video}>Video</AdminFieldLabel>
+              <div className="grid gap-2">
                 <input
                   type="text"
                   value={formData.video || ''}
                   onChange={(e) => handleVideoUrlChange(e.target.value)}
                   onBlur={handleVideoUrlBlur}
                   className={adminInputClass}
-                  placeholder="URL do vídeo, YouTube ou link compartilhado do Google Drive"
+                  placeholder="URL do video no Supabase, YouTube ou Google Drive"
                 />
-                <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--green-dark)] bg-white px-4 py-2 font-bold text-[var(--green-dark)] hover:bg-[var(--green-light)]">
-                  <UploadCloud className="h-4 w-4" />
-                  {isUploadingVideo ? 'Enviando...' : 'Upload vídeo'}
-                  <input
-                    type="file"
-                    accept="video/*"
-                    disabled={isUploadingVideo}
-                    onChange={handleUploadVideo}
-                    className="sr-only"
-                  />
-                </label>
+
+                <div className="rounded-lg border border-[var(--surface-border)] bg-[var(--gray-light)] p-3">
+                  <div className="grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                    <input
+                      type="text"
+                      value={storageVideoSearch}
+                      onChange={(e) => setStorageVideoSearch(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchStorageVideos()}
+                      className={adminInputClass}
+                      placeholder="Buscar videos no Supabase por nome, pasta ou imovel"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearchStorageVideos}
+                      disabled={isSearchingStorageVideos}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-bold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      <Search className="h-4 w-4" />
+                      {isSearchingStorageVideos ? 'Buscando...' : 'Buscar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenStorageFolder(storageFolderPath)}
+                      disabled={isLoadingStorageFolder}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--green-dark)] bg-white px-4 py-2 font-bold text-[var(--green-dark)] hover:bg-[var(--green-light)] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      {isLoadingStorageFolder ? 'Abrindo...' : 'Abrir pastas'}
+                    </button>
+                  </div>
+
+                  {isStorageBrowserOpen && (
+                    <div className="mt-3 rounded-lg border border-[var(--surface-border)] bg-white p-3">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenStorageFolder('')}
+                          disabled={isLoadingStorageFolder}
+                          className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-70"
+                        >
+                          <Home className="h-3.5 w-3.5" />
+                          Raiz
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBackStorageFolder}
+                          disabled={!storageFolderPath || isLoadingStorageFolder}
+                          className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Voltar
+                        </button>
+                        <span className="min-w-0 flex-1 truncate text-xs font-bold text-gray-600">
+                          {storageFolderPath || 'property-images'}
+                        </span>
+                      </div>
+
+                      {storageFolders.length > 0 && (
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          {storageFolders.map((folder) => (
+                            <button
+                              key={folder.path}
+                              type="button"
+                              onClick={() => handleOpenStorageFolder(folder.path)}
+                              disabled={isLoadingStorageFolder}
+                              className="flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-[var(--gray-light)] px-3 py-2 text-left text-sm font-bold text-gray-800 hover:border-[var(--green-dark)] hover:bg-[var(--green-light)] disabled:opacity-70"
+                            >
+                              <FolderOpen className="h-4 w-4 shrink-0 text-[var(--green-dark)]" />
+                              <span className="truncate">{folder.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {isStorageBrowserOpen && storageFolderVideos.length > 0 && (
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      {storageFolderVideos.map((item) => {
+                        const isSelected = formData.video === item.url;
+
+                        return (
+                          <div
+                            key={item.path}
+                            className="overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white"
+                          >
+                            <video
+                              src={item.url}
+                              className="h-32 w-full bg-black object-cover"
+                              controls
+                              preload="metadata"
+                            />
+                            <div className="p-2">
+                              <p
+                                className="mb-2 truncate text-[11px] font-semibold text-gray-600"
+                                title={item.path}
+                              >
+                                {item.name}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleAddStorageVideo(item.url)}
+                                disabled={isSelected}
+                                className={`w-full rounded-md px-2 py-1.5 text-xs font-bold ${
+                                  isSelected
+                                    ? 'bg-[var(--green-light)] text-[var(--green-dark)]'
+                                    : 'bg-[var(--green-dark)] text-white hover:bg-[var(--green-medium)]'
+                                }`}
+                              >
+                                {isSelected ? 'Selecionado' : 'Usar este video'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {storageVideoResults.length > 0 && (
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      {storageVideoResults.map((item) => {
+                        const isSelected = formData.video === item.url;
+
+                        return (
+                          <div
+                            key={item.path}
+                            className="overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white"
+                          >
+                            <video
+                              src={item.url}
+                              className="h-32 w-full bg-black object-cover"
+                              controls
+                              preload="metadata"
+                            />
+                            <div className="p-2">
+                              <p
+                                className="mb-2 truncate text-[11px] font-semibold text-gray-600"
+                                title={item.path}
+                              >
+                                {item.path}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleAddStorageVideo(item.url)}
+                                disabled={isSelected}
+                                className={`w-full rounded-md px-2 py-1.5 text-xs font-bold ${
+                                  isSelected
+                                    ? 'bg-[var(--green-light)] text-[var(--green-dark)]'
+                                    : 'bg-[var(--green-dark)] text-white hover:bg-[var(--green-medium)]'
+                                }`}
+                              >
+                                {isSelected ? 'Selecionado' : 'Usar este video'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {formData.video && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, video: '' }))}
+                      className="mt-3 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
+                    >
+                      <X className="h-4 w-4" />
+                      Remover video
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 

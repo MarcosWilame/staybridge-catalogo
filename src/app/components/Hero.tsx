@@ -19,7 +19,7 @@ export function Hero() {
   };
 
   const quickLinks = [
-    { label: 'Entrada imediata', path: '/properties?availableNow=1', icon: Zap },
+    { label: 'Disponível agora', path: '/properties?availableNow=1', icon: Zap },
     { label: 'Studios', path: '/properties?type=studio', icon: Home },
     { label: 'Ensuites', path: '/properties?type=ensuite', icon: Bed },
     { label: 'Flats', path: '/properties?type=flat', icon: Building2 },
@@ -163,7 +163,7 @@ export function Hero() {
             </div>
             <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Entrada imediata</span>
+              <span>Disponível agora</span>
             </div>
           </motion.div>
 

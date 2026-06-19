@@ -11,7 +11,10 @@ export interface PropertyAttribute {
 export function getPropertyAttributes(property: Property): PropertyAttribute[] {
   const category = property.category.toLowerCase();
   const type = property.type.toLowerCase();
-  const { label: availabilityLabel } = getAvailabilityInfo(property.moveInDate);
+  const { label: availabilityLabel } = getAvailabilityInfo(
+    property.moveInDate,
+    property.available
+  );
   const isRoom = ['single', 'double', 'ensuite', 'studio'].some(
     (roomType) => category.includes(roomType) || type.includes(roomType)
   );

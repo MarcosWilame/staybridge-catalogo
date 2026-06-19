@@ -33,6 +33,8 @@ export type StorageImageItem = {
   url: string;
 };
 
+export type StorageVideoItem = StorageImageItem;
+
 export type StorageFolderItem = {
   name: string;
   path: string;
@@ -192,6 +194,15 @@ function isStorageImage(item: SupabaseStorageObject, objectPath: string) {
   );
 }
 
+function isStorageVideo(item: SupabaseStorageObject, objectPath: string) {
+  const mimeType = item.metadata?.mimetype || item.metadata?.mimeType || '';
+
+  return (
+    mimeType.startsWith('video/') ||
+    /\.(avi|m4v|mov|mp4|mpeg|mpg|webm)$/i.test(objectPath)
+  );
+}
+
 export async function listPropertyStorageFolder({
   accessToken,
   prefix = '',
@@ -202,6 +213,7 @@ export async function listPropertyStorageFolder({
   const items = await listStorageObjects(prefix, accessToken);
   const folders: StorageFolderItem[] = [];
   const images: StorageImageItem[] = [];
+  const videos: StorageVideoItem[] = [];
 
   for (const item of items) {
     const objectPath = [prefix, item.name].filter(Boolean).join('/');
@@ -210,6 +222,15 @@ export async function listPropertyStorageFolder({
       folders.push({
         name: item.name,
         path: objectPath,
+      });
+      continue;
+    }
+
+    if (isStorageVideo(item, objectPath)) {
+      videos.push({
+        name: item.name,
+        path: objectPath,
+        url: getStoragePublicUrl(objectPath),
       });
       continue;
     }
@@ -223,7 +244,7 @@ export async function listPropertyStorageFolder({
     });
   }
 
-  return { folders, images };
+  return { folders, images, videos };
 }
 
 export async function listPropertyImagesInStorageFolder({
@@ -288,6 +309,50 @@ export async function searchPropertyImagesInStorage({
       }
 
       if (!isStorageImage(item, objectPath)) continue;
+      if (normalizedQuery && !objectPath.toLowerCase().includes(normalizedQuery)) {
+        continue;
+      }
+
+      results.push({
+        name: item.name,
+        path: objectPath,
+        url: getStoragePublicUrl(objectPath),
+      });
+    }
+  };
+
+  await walk('', 0);
+  return results;
+}
+
+export async function searchPropertyVideosInStorage({
+  accessToken,
+  query,
+  limit = 60,
+}: {
+  accessToken: string;
+  query: string;
+  limit?: number;
+}) {
+  const normalizedQuery = query.trim().toLowerCase();
+  const results: StorageVideoItem[] = [];
+
+  const walk = async (prefix: string, depth: number) => {
+    if (results.length >= limit || depth > 8) return;
+
+    const items = await listStorageObjects(prefix, accessToken);
+
+    for (const item of items) {
+      if (results.length >= limit) break;
+
+      const objectPath = [prefix, item.name].filter(Boolean).join('/');
+
+      if (isStorageFolder(item)) {
+        await walk(objectPath, depth + 1);
+        continue;
+      }
+
+      if (!isStorageVideo(item, objectPath)) continue;
       if (normalizedQuery && !objectPath.toLowerCase().includes(normalizedQuery)) {
         continue;
       }
@@ -662,7 +727,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     nearbyStations: toStringArray(input.nearbyStations),
     coordinates: toCoordinates(input.coordinates),
     furnishing: toStringValue(input.furnishing, 'Mobiliado'),
-    moveInDate: toStringValue(input.moveInDate, 'Imediata'),
+    moveInDate: toStringValue(input.moveInDate, 'Disponível agora'),
     postcode: toStringValue(input.postcode),
     address: toStringValue(input.address),
     people:
