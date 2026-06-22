@@ -1,7 +1,9 @@
 import { Hero } from '../components/Hero';
 import { lazy, Suspense } from 'react';
 import { HomeTrustStrip } from '../components/HomeTrustStrip';
+import { HomeProofBar } from '../components/HomeProofBar';
 import { CTASection } from '../components/CTASection';
+import { AccommodationMatch } from '../components/AccommodationMatch';
 import { SEO } from '../components/SEO';
 import { getAbsoluteUrl, SITE_NAME, SITE_URL } from '../config/site';
 
@@ -67,6 +69,8 @@ export function HomePage() {
         jsonLd={homeJsonLd}
       />
       <Hero />
+      <HomeProofBar />
+      <AccommodationMatch />
       <Suspense fallback={<div className="h-96 bg-gray-50" aria-hidden="true" />}>
         <FeaturedProperties />
       </Suspense>

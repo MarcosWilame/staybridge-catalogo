@@ -5,11 +5,13 @@ import { WhatsAppButton } from '../components/WhatsAppButton';
 import { MobileBottomNav } from '../components/MobileBottomNav';
 import { ScrollToTop } from '../components/ScrollToTop';
 import { Analytics } from '../components/Analytics';
+import { MotionObserver } from '../components/MotionObserver';
 
 export function RootLayout() {
   return (
     <>
       <Analytics />
+      <MotionObserver />
 
       <div className="min-h-screen bg-white">
         <a

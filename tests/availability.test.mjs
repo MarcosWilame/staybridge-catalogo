@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getAvailabilityInfo } from '../src/app/utils/availability.ts';
+import { getAvailabilityInfo, getMoveInTimestamp } from '../src/app/utils/availability.ts';
 
 test('availability labels immediate properties as available now', () => {
   assert.deepEqual(getAvailabilityInfo('now', true), {
@@ -22,4 +22,12 @@ test('availability shows unavailable only when there is no usable date', () => {
     label: 'Indisponível',
     isNow: false,
   });
+});
+
+test('move-in timestamps normalize immediate, ISO and UK-style dates', () => {
+  const today = new Date(2026, 5, 22);
+
+  assert.equal(getMoveInTimestamp('now', true, today), new Date(2026, 5, 22).getTime());
+  assert.equal(getMoveInTimestamp('2026-07-10', true, today), new Date(2026, 6, 10).getTime());
+  assert.equal(getMoveInTimestamp('10/07/2026', true, today), new Date(2026, 6, 10).getTime());
 });

@@ -1,39 +1,51 @@
-import { CheckCircle2, FileText, Headphones, Home, Search, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, FileText, Headphones, Home, Search, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const confidenceItems = [
-  { icon: Headphones, title: 'Atendimento em português', text: 'Orientação clara desde a busca até a mudança.' },
-  { icon: FileText, title: 'Informações transparentes', text: 'Preço semanal, localização e detalhes importantes antes do contato.' },
-  { icon: ShieldCheck, title: 'Decisão com mais segurança', text: 'Tire dúvidas e alinhe os próximos passos diretamente com a equipe.' },
+  { icon: Headphones, title: 'Atendimento em português' },
+  { icon: FileText, title: 'Preço e detalhes transparentes' },
+  { icon: ShieldCheck, title: 'Orientação até a mudança' },
 ];
 
 const steps = [
-  { number: '01', icon: Search, title: 'Encontre', text: 'Filtre por tipo, região e disponibilidade.' },
-  { number: '02', icon: Headphones, title: 'Converse', text: 'Confirme os detalhes com atendimento em português.' },
-  { number: '03', icon: Home, title: 'Mude', text: 'Organize sua entrada com mais clareza e tranquilidade.' },
+  { number: '01', icon: Search, title: 'Encontre', text: 'Busque por região, estação ou postcode.' },
+  { number: '02', icon: Headphones, title: 'Converse', text: 'Confirme disponibilidade e tire suas dúvidas.' },
+  { number: '03', icon: Home, title: 'Mude', text: 'Organize sua entrada com suporte da equipe.' },
 ];
 
 export function HomeTrustStrip() {
   return (
-    <section id="benefits" className="bg-[#113424] py-16 text-white md:py-24">
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:gap-20 lg:px-8">
-        <div>
-          <p className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[var(--yellow)]"><CheckCircle2 className="h-4 w-4" /> Confiança em cada etapa</p>
-          <h2 className="text-3xl font-extrabold leading-tight tracking-[-.025em] md:text-5xl">Mudar de país já é complexo. Encontrar casa não precisa ser.</h2>
-          <p className="mt-5 max-w-xl leading-relaxed text-white/70 md:text-lg">A Staybridge combina um catálogo simples de comparar com atendimento humano para reduzir dúvidas e acelerar sua decisão.</p>
-          <div className="mt-8 space-y-6">
-            {confidenceItems.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="flex gap-4"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--yellow)] text-[#113424]"><Icon className="h-5 w-5" /></div><div><h3 className="font-bold">{title}</h3><p className="mt-1 text-sm leading-relaxed text-white/65">{text}</p></div></div>
+    <section id="benefits" className="reveal-section relative overflow-hidden bg-[#113424] py-16 text-white md:py-20">
+      <div aria-hidden="true" className="absolute -right-32 -top-32 h-96 w-96 rounded-full border-[70px] border-[var(--yellow)]/5" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="max-w-3xl">
+            <p className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-[.16em] text-[var(--yellow)]"><CheckCircle2 className="h-4 w-4" /> Simples, claro e humano</p>
+            <h2 className="text-3xl font-black leading-tight tracking-[-.035em] md:text-5xl">Da busca à mudança, você não está sozinho.</h2>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">Uma jornada objetiva para encontrar, confirmar e reservar sua acomodação em Londres.</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+            {confidenceItems.map(({ icon: Icon, title }) => (
+              <div key={title} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-bold text-white/82 backdrop-blur-sm"><Icon className="h-4 w-4 shrink-0 text-[var(--yellow)]" />{title}</div>
             ))}
           </div>
         </div>
-        <div className="rounded-[2rem] bg-[#f4f0dd] p-6 text-[#173627] shadow-[0_30px_80px_rgba(0,0,0,.18)] md:p-10">
-          <p className="text-xs font-bold uppercase tracking-[.16em] text-[#47705a]">Como funciona</p>
-          <h3 className="mt-3 text-2xl font-extrabold md:text-3xl">Do primeiro clique à sua nova casa</h3>
-          <div className="mt-8 divide-y divide-[#173627]/12">
-            {steps.map(({ number, icon: Icon, title, text }) => (
-              <div key={number} className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-6 first:pt-0 last:pb-0"><span className="text-sm font-black text-[#47705a]">{number}</span><div><h4 className="text-lg font-extrabold">{title}</h4><p className="mt-1 text-sm leading-relaxed text-[#456152]">{text}</p></div><div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#173627]/15 bg-white/60"><Icon className="h-5 w-5" /></div></div>
-            ))}
-          </div>
+
+        <div className="mt-10 grid overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,.16)] backdrop-blur-sm md:grid-cols-3">
+          {steps.map(({ number, icon: Icon, title, text }, index) => (
+            <article key={number} className={`relative p-6 md:p-8 ${index ? 'border-t border-white/10 md:border-l md:border-t-0' : ''}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black tracking-[.18em] text-[var(--yellow)]">PASSO {number}</span>
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--yellow)] text-[#113424]"><Icon className="h-5 w-5" /></div>
+              </div>
+              <h3 className="mt-6 text-xl font-black">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-white/60">{text}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link to="/properties" className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-6 font-black text-[#113424] transition hover:-translate-y-0.5 hover:bg-white">Começar minha busca <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
         </div>
       </div>
     </section>

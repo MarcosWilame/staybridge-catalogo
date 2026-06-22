@@ -21,24 +21,17 @@ const questions = [
 
 export function HomeSeoContent() {
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#f7f7f0] py-12 md:py-16" aria-labelledby="london-accommodation-title">
+    <section id="faq" className="reveal-section scroll-mt-24 bg-[#f7f7f0] py-14 md:py-20" aria-labelledby="london-accommodation-title">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
         <div>
-          <p className="mb-3 text-sm font-bold uppercase tracking-wider text-[var(--green-medium)]">
-            London accommodation for Brazilians and international renters
+          <p className="mb-3 text-xs font-black uppercase tracking-[.14em] text-[var(--green-medium)]">
+            Moradia em Londres
           </p>
           <h2 id="london-accommodation-title" className="text-3xl font-extrabold leading-tight text-[var(--green-dark)] md:text-4xl">
-            Aluguel de quartos, suítes, estúdios e apartamentos em Londres
+            Encontre sua acomodação em Londres
           </h2>
-          <p className="mt-5 leading-relaxed text-gray-700">
-            Encontre acomodação em Londres com informações claras sobre valor semanal,
-            bills, disponibilidade e região. Compare opções para curta ou longa permanência
-            e converse em português com uma equipe que conhece as dúvidas de quem está
-            chegando ao Reino Unido.
-          </p>
-          <p className="mt-4 leading-relaxed text-gray-700" lang="en">
-            Looking for a room, ensuite, studio or flat in London? Browse available homes,
-            compare weekly prices and move-in dates, and get support in Portuguese.
+          <p className="mt-4 max-w-xl leading-relaxed text-gray-700">
+            Compare quartos, suítes, estúdios e apartamentos por preço, região e disponibilidade — com atendimento em português.
           </p>
           <Link
             to="/properties"
@@ -52,8 +45,8 @@ export function HomeSeoContent() {
           <h2 className="text-2xl font-extrabold text-[var(--green-dark)]">Perguntas frequentes</h2>
           <div className="mt-4 space-y-3">
             {questions.map((item) => (
-              <details key={item.question} className="group rounded-xl border border-[var(--surface-border)] bg-white p-4 shadow-sm">
-                <summary className="cursor-pointer list-none pr-6 font-bold text-gray-900 marker:hidden">
+              <details key={item.question} className="group rounded-2xl border border-[var(--surface-border)] bg-white p-5 shadow-[0_10px_30px_rgba(26,77,46,.06)] transition hover:border-[var(--green-dark)]/35 hover:shadow-[0_14px_38px_rgba(26,77,46,.10)]">
+                <summary className="cursor-pointer list-none pr-6 font-black text-gray-900 marker:hidden">
                   {item.question}
                 </summary>
                 <p className="mt-3 border-t border-gray-100 pt-3 text-sm leading-relaxed text-gray-600">

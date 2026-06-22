@@ -76,57 +76,56 @@ export function FeaturedProperties() {
   const { properties } = useProperties();
 
   const availableProperties = useMemo(
-    () => properties.filter((property) => property.available && hasDisplayImage(property)),
+    () => properties.filter((property) => property.available),
     [properties]
   );
-  const featuredProperties = useMemo(
-    () => pickFeaturedProperties(availableProperties),
+  const displayableProperties = useMemo(
+    () => availableProperties.filter(hasDisplayImage),
     [availableProperties]
+  );
+  const featuredProperties = useMemo(
+    () => pickFeaturedProperties(displayableProperties),
+    [displayableProperties]
   );
   const displayedProperties = featuredProperties.slice(0, 3);
 
   return (
-    <section className="bg-[#f4f0dd] py-16 md:py-24">
+    <section className="reveal-section relative overflow-hidden bg-[#f4f0dd] py-14 md:py-20">
+      <div aria-hidden="true" className="absolute -right-32 top-10 h-80 w-80 rounded-full bg-[var(--yellow)]/15 blur-3xl" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[.16em] text-[var(--green-medium)]">Seleção disponível agora</p>
-            <h2 className="max-w-2xl text-3xl font-extrabold leading-tight text-[var(--green-dark)] md:text-5xl">
-              Lugares para começar uma nova fase em Londres
+            <p className="mb-3 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[.16em] text-[var(--green-medium)]"><span className="h-2 w-2 rounded-full bg-[#22a95a] shadow-[0_0_0_5px_rgba(34,169,90,.12)]" /> Seleção disponível agora</p>
+            <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-[-.03em] text-[var(--green-dark)] md:text-4xl">
+              Disponíveis agora em Londres
             </h2>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
-              Estúdios, suítes, apartamentos e quartos com suporte em português para
-              você decidir com segurança.
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600">
+              Compare fotos, valores semanais e localização antes de falar com a equipe.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[var(--green-dark)] shadow-sm">
-              {availableProperties.length} opções disponíveis
-            </div>
+          <div className="flex items-center gap-3">
             <Link
               to="/properties"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--green-dark)] bg-white px-4 py-3 text-sm font-bold text-[var(--green-dark)] transition hover:bg-[var(--green-dark)] hover:text-white"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-5 text-sm font-black text-white shadow-[0_10px_25px_rgba(26,77,46,.18)] transition hover:-translate-y-0.5 hover:bg-[var(--green-medium)]"
             >
-              Ver todas
+              Ver mais imóveis
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-5 scrollbar-hide md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0">
           {displayedProperties.map((property, index) => (
             <div
               key={property.id}
-              className={`h-full transform transition-all duration-500 hover:-translate-y-1 ${
-                index > 0 ? 'hidden md:block' : ''
-              }`}
+              className="h-full w-[86vw] max-w-[390px] shrink-0 snap-center transform transition-all duration-500 hover:-translate-y-1 md:w-auto md:max-w-none"
             >
               <PropertyCard property={property} />
             </div>
           ))}
         </div>
-
+        <p className="mt-1 text-center text-xs font-semibold text-[var(--green-dark)]/60 md:hidden">Deslize para comparar mais opções</p>
       </div>
     </section>
   );

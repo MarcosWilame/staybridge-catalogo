@@ -22,7 +22,7 @@ export function WhatsAppButton() {
       type="button"
       onClick={handleClick}
       aria-label="Falar com a Staybridge London no WhatsApp"
-      className={`group whatsapp-enter fixed bottom-24 right-4 z-50 rounded-full bg-[#25D366] p-3 text-white shadow-2xl transition-transform duration-300 hover:scale-110 hover:bg-[#20BA5A] active:scale-95 md:bottom-6 md:right-6 md:p-4 ${
+      className={`group whatsapp-enter fixed bottom-24 right-4 z-50 rounded-full border-2 border-white/80 bg-[#25D366] p-3 text-white shadow-[0_16px_40px_rgba(0,0,0,.28)] transition-transform duration-300 hover:scale-110 hover:bg-[#20BA5A] active:scale-95 md:bottom-6 md:right-6 md:p-4 ${
         isCatalogFlow ? 'hidden md:block' : ''
       }`}
     >

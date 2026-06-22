@@ -1,7 +1,6 @@
 import { useState, useEffect, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle } from 'lucide-react';
-import { openWhatsApp } from '../config/contact';
+import { Menu, X, Search } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
 export function Header() {
@@ -72,11 +71,12 @@ export function Header() {
     }
   };
 
-  const handleWhatsApp = () => {
-    trackEvent('whatsapp_click', {
+  const handleCatalogClick = () => {
+    trackEvent('properties_cta_click', {
       source: isMobileMenuOpen ? 'mobile_header' : 'desktop_header',
     });
-    openWhatsApp();
+    setIsMobileMenuOpen(false);
+    navigate('/properties');
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -93,7 +93,7 @@ export function Header() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isTransparent
           ? 'bg-transparent'
-          : 'bg-[#2d6a4f] backdrop-blur-lg shadow-lg'
+          : 'border-b border-white/10 bg-[#153d2b]/95 backdrop-blur-xl shadow-[0_10px_35px_rgba(7,30,20,.20)]'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -115,7 +115,7 @@ export function Header() {
           </NavLink>
 
           {/* Desktop Navigation */}
-          <nav aria-label="Navegação principal" className="hidden items-center gap-5 md:flex">
+          <nav aria-label="Navegação principal" className="hidden items-center gap-2 md:flex">
             <NavLink to="/" end onClick={handleLogoClick} className={navLinkClass}>
               Início
             </NavLink>
@@ -132,11 +132,11 @@ export function Header() {
             </button>
 
             <button
-              onClick={handleWhatsApp}
-              className="bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+              onClick={handleCatalogClick}
+              className="flex items-center gap-2 rounded-xl bg-[var(--yellow)] px-6 py-3 font-black text-[#102c20] shadow-[0_8px_24px_rgba(244,208,63,.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--yellow-dark)]"
             >
-              <MessageCircle className="w-4 h-4" />
-              WhatsApp
+              <Search className="w-4 h-4" />
+              Buscar imóveis
             </button>
           </nav>
 
@@ -194,11 +194,11 @@ export function Header() {
               </button>
 
               <button
-                onClick={handleWhatsApp}
+                onClick={handleCatalogClick}
                 className="bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 justify-center"
               >
-                <MessageCircle className="w-4 h-4" />
-                WhatsApp
+                <Search className="w-4 h-4" />
+                Buscar imóveis
               </button>
             </nav>
           </div>

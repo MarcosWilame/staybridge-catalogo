@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Search, User } from 'lucide-react';
+import { Home, Search } from 'lucide-react';
 
 export function MobileBottomNav() {
   const navItems = [
     { path: '/', icon: Home, label: 'Inicio', end: true },
     { path: '/properties', icon: Search, label: 'Buscar' },
-    { path: '/profile', icon: User, label: 'Atendimento' },
   ];
 
   const scrollToPageTop = () => {
@@ -21,8 +20,8 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav aria-label="Navegação mobile" className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white shadow-2xl md:hidden">
-      <div className="grid grid-cols-3 items-stretch pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+    <nav aria-label="Navegação mobile" className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 shadow-[0_-10px_35px_rgba(23,54,39,.12)] backdrop-blur-xl md:hidden">
+      <div className="grid grid-cols-2 items-stretch gap-1 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
         {navItems.map((item) => {
           const Icon = item.icon;
 

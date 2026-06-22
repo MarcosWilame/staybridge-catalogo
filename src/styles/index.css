@@ -51,6 +51,25 @@ main:focus-visible {
 .hero-delay-3 { animation-delay: 200ms; }
 .hero-delay-4 { animation-delay: 260ms; }
 
+.reveal-section {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 650ms cubic-bezier(.2,.8,.2,1), transform 650ms cubic-bezier(.2,.8,.2,1);
+}
+
+.reveal-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes whatsapp-enter {
   from { opacity: 0; transform: scale(.75); }
   to { opacity: 1; transform: scale(1); }
@@ -65,6 +84,7 @@ main:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
   .hero-reveal, .whatsapp-enter, .whatsapp-pulse { animation: none !important; }
+  .reveal-section { opacity: 1 !important; transform: none !important; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 

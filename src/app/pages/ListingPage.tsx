@@ -4,7 +4,7 @@ import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
 import { PropertyMap } from '../components/PropertyMap';
-import { getAvailabilityInfo } from '../utils/availability';
+import { getAvailabilityInfo, getMoveInTimestamp } from '../utils/availability';
 import { WHATSAPP_URL } from '../config/contact';
 import { SEO } from '../components/SEO';
 import { LeadCaptureModal } from '../components/LeadCaptureModal';
@@ -43,6 +43,7 @@ interface FilterState {
   availableNow: boolean;
   billsIncluded: boolean;
   people: string;
+  moveInBy: string;
 }
 
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
@@ -59,6 +60,7 @@ const filterLabels: Record<keyof FilterState, string> = {
   availableNow: 'Disponível agora',
   billsIncluded: 'contas inclusas',
   people: 'capacidade',
+  moveInBy: 'data de mudança',
 };
 
 function LondonPropertiesLoading() {
@@ -140,10 +142,16 @@ export function ListingPage() {
     availableNow: searchParams.get('availableNow') === '1',
     billsIncluded: searchParams.get('billsIncluded') === '1',
     people: searchParams.get('people') || '',
+    moveInBy: searchParams.get('moveInBy') || '',
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('recommended');
+  const requestedSort = searchParams.get('sort');
+  const [sortBy, setSortBy] = useState<SortOption>(
+    requestedSort === 'price-asc' || requestedSort === 'price-desc' || requestedSort === 'available' || requestedSort === 'type'
+      ? requestedSort
+      : 'recommended'
+  );
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
@@ -190,6 +198,7 @@ export function ListingPage() {
       availableNow: searchParams.get('availableNow') === '1',
       billsIncluded: searchParams.get('billsIncluded') === '1',
       people: searchParams.get('people') || '',
+      moveInBy: searchParams.get('moveInBy') || '',
     }));
   }, [searchParams]);
 
@@ -207,6 +216,7 @@ export function ListingPage() {
     if (nextFilters.availableNow) nextParams.set('availableNow', '1');
     if (nextFilters.billsIncluded) nextParams.set('billsIncluded', '1');
     if (nextFilters.people) nextParams.set('people', nextFilters.people);
+    if (nextFilters.moveInBy) nextParams.set('moveInBy', nextFilters.moveInBy);
 
     setSearchParams(nextParams, { replace: true });
   };
@@ -232,6 +242,7 @@ export function ListingPage() {
     available_now: nextFilters.availableNow || undefined,
     bills_included: nextFilters.billsIncluded || undefined,
     people: nextFilters.people || undefined,
+    move_in_by: nextFilters.moveInBy || undefined,
   });
 
   const updateFilter = <K extends keyof FilterState>(
@@ -265,6 +276,7 @@ export function ListingPage() {
       availableNow: false,
       billsIncluded: false,
       people: '',
+      moveInBy: '',
     };
 
     setFilters(emptyFilters);
@@ -397,6 +409,14 @@ export function ListingPage() {
     });
   }
 
+  if (filters.moveInBy) {
+    const [year, month, day] = filters.moveInBy.split('-').map(Number);
+    const cutoff = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+    filteredProperties = filteredProperties.filter(
+      (property) => property.available && getMoveInTimestamp(property.moveInDate, property.available) <= cutoff
+    );
+  }
+
   const sortedProperties = [...filteredProperties].sort((a, b) => {
     if (sortBy === 'price-asc') {
       return getPriceValue(a.price) - getPriceValue(b.price);
@@ -434,7 +454,8 @@ export function ListingPage() {
     filters.priceRange ||
     filters.availableNow ||
     filters.billsIncluded ||
-    filters.people;
+    filters.people ||
+    filters.moveInBy;
 
   const activeFilterChips = [
     filters.search && {
@@ -471,6 +492,11 @@ export function ListingPage() {
       key: 'people' as const,
       label: filters.people === '4+' ? '4+ pessoas' : `${filters.people}+ pessoa${filters.people === '1' ? '' : 's'}`,
       clear: () => updateFilter('people', ''),
+    },
+    filters.moveInBy && {
+      key: 'moveInBy' as const,
+      label: `Mudança até ${filters.moveInBy.split('-').reverse().join('/')}`,
+      clear: () => updateFilter('moveInBy', ''),
     },
   ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 

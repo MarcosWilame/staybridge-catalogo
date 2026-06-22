@@ -11,6 +11,7 @@ import {
   Clock,
   Scale,
   Share2,
+  Heart,
 } from 'lucide-react';
 import { Property } from '../data/properties';
 import { getAvailabilityInfo } from '../utils/availability';
@@ -88,6 +89,15 @@ export function PropertyCard({
 }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [shareStatus, setShareStatus] = useState('');
+  const [isSaved, setIsSaved] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const saved = JSON.parse(localStorage.getItem('staybridge-saved-properties') || '[]') as number[];
+      return saved.includes(property.id);
+    } catch {
+      return false;
+    }
+  });
   const images = useMemo(
     () => (property.images?.length ? property.images : [property.image]),
     [property.image, property.images]
@@ -131,6 +141,20 @@ export function PropertyCard({
     }
   };
 
+  const handleSave = () => {
+    const next = !isSaved;
+    setIsSaved(next);
+    try {
+      const saved = new Set<number>(JSON.parse(localStorage.getItem('staybridge-saved-properties') || '[]'));
+      if (next) saved.add(property.id);
+      else saved.delete(property.id);
+      localStorage.setItem('staybridge-saved-properties', JSON.stringify(Array.from(saved)));
+    } catch {
+      // Saving is optional; the card remains fully usable when storage is unavailable.
+    }
+    trackEvent('property_save', { property_id: property.id, saved: next });
+  };
+
   const trackPropertyOpen = (source: string) => {
     trackEvent('property_detail_click', {
       source,
@@ -153,7 +177,7 @@ export function PropertyCard({
   };
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-xl md:rounded-2xl">
+    <div className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white shadow-[0_16px_50px_rgba(26,77,46,.10)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[var(--green-dark)]/30 hover:shadow-[0_24px_65px_rgba(26,77,46,.18)]">
       {/* Image Container */}
       <div className="relative h-52 shrink-0 overflow-hidden sm:h-56">
         <Link
@@ -221,6 +245,16 @@ export function PropertyCard({
         )}
 
         <div className="absolute right-3 top-3 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`rounded-full p-2 shadow-lg transition ${isSaved ? 'bg-[var(--yellow)] text-[var(--green-dark)]' : 'bg-white/95 text-[var(--green-dark)] hover:bg-[var(--yellow)]'}`}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
+            title={isSaved ? 'Salvo' : 'Salvar'}
+          >
+            <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+          </button>
           {onToggleCompare && (
             <button
               type="button"
@@ -294,10 +328,10 @@ export function PropertyCard({
           <Link
             to={`/property/${property.id}`}
             onClick={() => trackPropertyOpen('card_button')}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-[var(--yellow-dark)]"
+            className="group/button flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-4 py-2.5 text-sm font-black text-[#102c20] shadow-[0_8px_20px_rgba(244,208,63,.20)] transition hover:-translate-y-0.5 hover:bg-[var(--yellow-dark)]"
           >
             <span className="truncate">Ver Detalhes</span>
-            <ArrowRight className="h-4 w-4 shrink-0" />
+            <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover/button:translate-x-1" />
           </Link>
         </div>
 

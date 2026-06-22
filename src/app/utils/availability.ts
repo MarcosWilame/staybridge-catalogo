@@ -43,3 +43,34 @@ export function getAvailabilityInfo(
     ? { label: 'Disponível agora', isNow: true }
     : { label: 'Indisponível', isNow: false };
 }
+
+export function getMoveInTimestamp(
+  moveInDate: string,
+  available = true,
+  today = new Date()
+) {
+  const info = getAvailabilityInfo(moveInDate, available);
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  if (info.isNow) return startOfToday;
+
+  const normalized = (moveInDate || '').trim();
+  let year: number;
+  let month: number;
+  let day: number;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    [year, month, day] = normalized.split('-').map(Number);
+  } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
+    [day, month, year] = normalized.split('/').map(Number);
+  } else if (/^\d{2}\/\d{2}$/.test(normalized)) {
+    [day, month] = normalized.split('/').map(Number);
+    year = today.getFullYear();
+    const candidate = new Date(year, month - 1, day).getTime();
+    if (candidate < startOfToday) year += 1;
+  } else {
+    return available ? startOfToday : Number.POSITIVE_INFINITY;
+  }
+
+  const timestamp = new Date(year, month - 1, day).getTime();
+  return Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY;
+}

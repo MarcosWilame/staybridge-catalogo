@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Instagram, MessageCircle } from 'lucide-react';
-import { WHATSAPP_URL } from '../config/contact';
+import { MapPin, Instagram, Search } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -26,15 +25,6 @@ export function Footer() {
               >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-white/10 hover:bg-[var(--yellow)] hover:text-black rounded-full flex items-center justify-center transition-all duration-300"
-                aria-label="WhatsApp da Staybridge London"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </a>
             </div>
           </div>
 
@@ -58,8 +48,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/profile" className="text-gray-300 hover:text-[var(--yellow)] transition-colors">
-                  Atendimento
+                <Link to="/properties" className="text-gray-300 hover:text-[var(--yellow)] transition-colors">
+                  Buscar imóveis
                 </Link>
               </li>
             </ul>
@@ -74,10 +64,10 @@ export function Footer() {
                 <span>Londres, Reino Unido</span>
               </li>
               <li>
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-gray-300 transition hover:text-[var(--yellow)]">
-                  <MessageCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                  <span>Atendimento pelo WhatsApp</span>
-                </a>
+                <Link to="/properties" className="flex items-start gap-2 text-gray-300 transition hover:text-[var(--yellow)]">
+                  <Search className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                  <span>Explorar imóveis</span>
+                </Link>
               </li>
             </ul>
           </div>
