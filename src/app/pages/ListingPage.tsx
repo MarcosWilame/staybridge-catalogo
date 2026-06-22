@@ -12,6 +12,7 @@ import type { LeadIntent } from '../utils/leadCapture';
 import { trackEvent } from '../utils/analytics';
 import { getAbsoluteUrl, SITE_NAME } from '../config/site';
 import { getPropertyImageAlt } from '../utils/imageAlt';
+import { formatPropertyType } from '../utils/propertyType';
 import {
   MAX_COMPARE_ITEMS,
   getCompareProperties,
@@ -56,16 +57,16 @@ const filterLabels: Record<keyof FilterState, string> = {
   type: 'tipo',
   priceRange: 'valor',
   availableNow: 'Disponível agora',
-  billsIncluded: 'bills inclusas',
+  billsIncluded: 'contas inclusas',
   people: 'capacidade',
 };
 
 function LondonPropertiesLoading() {
   const loadingCards = [
-    { label: 'Studio', width: 'w-3/4' },
-    { label: 'Ensuite', width: 'w-2/3' },
-    { label: 'Flat', width: 'w-4/5' },
-    { label: 'Room', width: 'w-3/5' },
+    { label: 'Estúdio', width: 'w-3/4' },
+    { label: 'Suíte', width: 'w-2/3' },
+    { label: 'Apartamento', width: 'w-4/5' },
+    { label: 'Quarto', width: 'w-3/5' },
   ];
 
   return (
@@ -463,7 +464,7 @@ export function ListingPage() {
     },
     filters.billsIncluded && {
       key: 'billsIncluded' as const,
-      label: 'Bills inclusas',
+      label: 'Contas inclusas',
       clear: () => updateFilter('billsIncluded', false),
     },
     filters.people && {
@@ -474,9 +475,9 @@ export function ListingPage() {
   ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 
   const quickMobileFilters = [
-    { key: 'studio', label: 'Studio', type: 'studio' },
-    { key: 'ensuite', label: 'Ensuite', type: 'ensuite' },
-    { key: 'flat', label: 'Flat', type: 'flat' },
+    { key: 'studio', label: 'Estúdio', type: 'studio' },
+    { key: 'ensuite', label: 'Suíte', type: 'ensuite' },
+    { key: 'flat', label: 'Apartamento', type: 'flat' },
   ];
 
   const regionOptions = [
@@ -489,11 +490,11 @@ export function ListingPage() {
 
   const typeOptions = [
     { value: '', label: 'Todos' },
-    { value: 'studio', label: 'Studio' },
-    { value: 'ensuite', label: 'Ensuite' },
+    { value: 'studio', label: 'Estúdio' },
+    { value: 'ensuite', label: 'Suíte' },
     { value: 'single', label: 'Single' },
     { value: 'double', label: 'Double' },
-    { value: 'flat', label: 'Flat' },
+    { value: 'flat', label: 'Apartamento' },
   ];
 
   const activeFilterSummary = activeFilterChips
@@ -509,8 +510,8 @@ export function ListingPage() {
         : 'Imoveis e quartos em Londres';
 
   const listingDescription = activeFilterSummary
-    ? `Veja ${sortedProperties.length} opcoes em Londres para ${activeFilterSummary}. Studios, ensuites, rooms e flats com atendimento em portugues.`
-    : 'Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e disponibilidade agora.';
+    ? `Veja ${sortedProperties.length} opções em Londres para ${activeFilterSummary}. Estúdios, suítes, quartos e apartamentos com atendimento em português.`
+    : 'Compare estúdios, suítes, quartos e apartamentos em Londres com filtros por região, valor, capacidade, contas inclusas e disponibilidade.';
 
   const listingJsonLd = [
     {
@@ -974,7 +975,7 @@ export function ListingPage() {
                   : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
             >
-              Bills inclusas
+              Contas inclusas
               <Banknote className={`h-5 w-5 ${filters.billsIncluded ? 'text-white' : 'text-gray-300'}`} />
             </button>
           </>
@@ -995,7 +996,7 @@ export function ListingPage() {
                 checked={filters.billsIncluded}
                 onChange={(e) => updateFilter('billsIncluded', e.target.checked)}
               />
-              Bills inclusas
+              Contas inclusas
             </label>
           </>
         )}
@@ -1013,7 +1014,7 @@ export function ListingPage() {
       },
       {
         label: 'Tipo',
-        getValue: (property: Property) => property.type || '-',
+        getValue: (property: Property) => formatPropertyType(property) || '-',
       },
       {
         label: 'Regiao',
@@ -1025,7 +1026,7 @@ export function ListingPage() {
           `${property.people || 1} pessoa${Number(property.people || 1) === 1 ? '' : 's'}`,
       },
       {
-        label: 'Bills',
+        label: 'Contas',
         getValue: (property: Property) => (property.billsIncluded ? 'Inclusas' : 'Consultar'),
       },
       {

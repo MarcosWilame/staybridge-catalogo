@@ -97,7 +97,7 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24">
+        <div className="flex h-20 items-center justify-between">
 
           {/* Logo */}
           <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
@@ -109,13 +109,13 @@ export function Header() {
               decoding="async"
               loading="eager"
               fetchPriority="high"
-              className="h-20 w-auto object-contain md:h-[86px]"
+              className="h-16 w-auto object-contain md:h-[70px]"
               style={{ mixBlendMode: 'screen' }}
             />
           </NavLink>
 
           {/* Desktop Navigation */}
-          <nav aria-label="Navegação principal" className="hidden md:flex items-center gap-8">
+          <nav aria-label="Navegação principal" className="hidden items-center gap-5 md:flex">
             <NavLink to="/" end onClick={handleLogoClick} className={navLinkClass}>
               Início
             </NavLink>

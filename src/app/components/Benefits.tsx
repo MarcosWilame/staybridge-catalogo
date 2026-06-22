@@ -8,7 +8,7 @@ const benefits = [
   },
   {
     icon: FileCheck,
-    title: 'Bills Inclusas',
+    title: 'Contas inclusas',
     description: 'Água, luz, gás e internet já inclusos no preço',
   },
   {

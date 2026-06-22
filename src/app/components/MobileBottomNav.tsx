@@ -5,7 +5,7 @@ export function MobileBottomNav() {
   const navItems = [
     { path: '/', icon: Home, label: 'Inicio', end: true },
     { path: '/properties', icon: Search, label: 'Buscar' },
-    { path: '/profile', icon: User, label: 'Perfil' },
+    { path: '/profile', icon: User, label: 'Atendimento' },
   ];
 
   const scrollToPageTop = () => {

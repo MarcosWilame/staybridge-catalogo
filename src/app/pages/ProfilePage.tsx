@@ -16,7 +16,7 @@ export function ProfilePage() {
             <User className="h-8 w-8 text-[var(--green-dark)] md:h-10 md:w-10" />
           </div>
           <h1 className="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">
-            Área do Cliente
+            Atendimento e suporte
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-sm leading-relaxed text-gray-600 md:text-base">
             Para acessar sua área pessoal, agendar visitas ou gerenciar suas reservas,

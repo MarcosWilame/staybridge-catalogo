@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { PropertyCard } from './PropertyCard';
@@ -74,7 +74,6 @@ function getPropertyImageCandidates(property: Property) {
 
 export function FeaturedProperties() {
   const { properties } = useProperties();
-  const [activeIndex, setActiveIndex] = useState(0);
 
   const availableProperties = useMemo(
     () => properties.filter((property) => property.available && hasDisplayImage(property)),
@@ -84,41 +83,19 @@ export function FeaturedProperties() {
     () => pickFeaturedProperties(availableProperties),
     [availableProperties]
   );
-  const carouselProperties = featuredProperties.length
-    ? Array.from(
-        { length: Math.min(3, featuredProperties.length) },
-        (_, index) => featuredProperties[(activeIndex + index) % featuredProperties.length]
-      )
-    : [];
-
-  useEffect(() => {
-    if (featuredProperties.length <= 1) return;
-
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % featuredProperties.length);
-    }, 4200);
-
-    return () => window.clearInterval(timer);
-  }, [featuredProperties.length]);
-
-  useEffect(() => {
-    if (activeIndex < featuredProperties.length) return;
-    setActiveIndex(0);
-  }, [activeIndex, featuredProperties.length]);
+  const displayedProperties = featuredProperties.slice(0, 3);
 
   return (
-    <section className="bg-gray-50 py-12 md:py-16">
+    <section className="bg-[#f4f0dd] py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="mb-3 inline-flex rounded-full bg-[var(--green-dark)] px-3 py-1.5 text-xs font-bold uppercase text-white">
-              Unidades disponíveis agora
-            </div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-[.16em] text-[var(--green-medium)]">Seleção disponível agora</p>
             <h2 className="max-w-2xl text-3xl font-extrabold leading-tight text-[var(--green-dark)] md:text-5xl">
-              Escolha sua próxima acomodação em Londres
+              Lugares para começar uma nova fase em Londres
             </h2>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
-              Studios, ensuites, flats e quartos com suporte em português para
+              Estúdios, suítes, apartamentos e quartos com suporte em português para
               você decidir com segurança.
             </p>
           </div>
@@ -138,9 +115,9 @@ export function FeaturedProperties() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-          {carouselProperties.map((property, index) => (
+          {displayedProperties.map((property, index) => (
             <div
-              key={`${property.id}-${activeIndex}`}
+              key={property.id}
               className={`h-full transform transition-all duration-500 hover:-translate-y-1 ${
                 index > 0 ? 'hidden md:block' : ''
               }`}
@@ -150,23 +127,6 @@ export function FeaturedProperties() {
           ))}
         </div>
 
-        {featuredProperties.length > 1 && (
-          <div className="mt-6 flex items-center justify-center gap-2">
-            {featuredProperties.slice(0, 6).map((property, index) => (
-              <button
-                key={property.id}
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                className={`h-2.5 rounded-full transition-all ${
-                  index === activeIndex
-                    ? 'w-8 bg-[var(--green-dark)]'
-                    : 'w-2.5 bg-gray-300 hover:bg-gray-400'
-                }`}
-                aria-label={`Ver acomodacao ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );

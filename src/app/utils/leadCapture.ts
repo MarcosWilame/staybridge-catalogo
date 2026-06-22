@@ -1,6 +1,6 @@
 import type { Property } from '../data/properties';
 
-export type LeadIntent = 'visit' | 'video' | 'whatsapp';
+export type LeadIntent = 'visit' | 'whatsapp';
 
 export interface LeadDetails {
   name: string;
@@ -11,7 +11,6 @@ export interface LeadDetails {
 
 const intentLabels: Record<LeadIntent, string> = {
   visit: 'agendar uma visita',
-  video: 'receber um vídeo do imóvel',
   whatsapp: 'falar com a equipe pelo WhatsApp',
 };
 

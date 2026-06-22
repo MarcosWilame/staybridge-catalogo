@@ -18,6 +18,7 @@ import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 import { shareProperty } from '../utils/shareProperty';
 import { trackEvent } from '../utils/analytics';
 import { getPropertyImageAlt } from '../utils/imageAlt';
+import { formatPropertyType } from '../utils/propertyType';
 
 interface PropertyCardProps {
   property: Property;
@@ -259,7 +260,7 @@ export function PropertyCard({
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
             <Bed className="w-3.5 h-3.5" />
-            <span className="line-clamp-1 break-words">{property.type}</span>
+            <span className="line-clamp-1 break-words">{formatPropertyType(property)}</span>
           </span>
           <span className="inline-flex min-w-0 max-w-[45%] items-center gap-1 text-gray-600 text-sm font-medium">
             <MapPin className="w-4 h-4 text-gray-400" />

@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarDays, MessageCircle, PlayCircle, X } from 'lucide-react';
+import { CalendarDays, MessageCircle, X } from 'lucide-react';
 import type { Property } from '../data/properties';
 import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
@@ -22,7 +22,6 @@ interface LeadCaptureModalProps {
 
 const intentIcons = {
   visit: CalendarDays,
-  video: PlayCircle,
   whatsapp: MessageCircle,
 };
 
@@ -128,7 +127,7 @@ export function LeadCaptureModal({
         <form onSubmit={submit} className="space-y-5 p-5 sm:p-6">
           <fieldset>
             <legend className="mb-2 text-sm font-bold text-gray-800">O que você precisa?</legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(Object.keys(leadIntentLabels) as LeadIntent[]).map((item) => {
                 const Icon = intentIcons[item];
                 const selected = item === intent;
@@ -145,7 +144,7 @@ export function LeadCaptureModal({
                     }`}
                   >
                     <Icon className="h-5 w-5" />
-                    {item === 'visit' ? 'Agendar visita' : item === 'video' ? 'Pedir vídeo' : 'Falar agora'}
+                    {item === 'visit' ? 'Agendar visita' : 'Falar agora'}
                   </button>
                 );
               })}

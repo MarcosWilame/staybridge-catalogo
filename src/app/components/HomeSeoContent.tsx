@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 const questions = [
   {
     question: 'Quais tipos de acomodação estão disponíveis em Londres?',
-    answer: 'O catálogo reúne quartos, ensuites, studios e apartamentos. Use os filtros para comparar região, preço semanal, capacidade e data de entrada.',
+    answer: 'O catálogo reúne quartos, suítes, estúdios e apartamentos. Use os filtros para comparar região, preço semanal, capacidade e data de entrada.',
   },
   {
     question: 'As contas estão incluídas no aluguel?',
@@ -28,7 +28,7 @@ export function HomeSeoContent() {
             London accommodation for Brazilians and international renters
           </p>
           <h2 id="london-accommodation-title" className="text-3xl font-extrabold leading-tight text-[var(--green-dark)] md:text-4xl">
-            Aluguel de quartos, ensuites, studios e apartamentos em Londres
+            Aluguel de quartos, suítes, estúdios e apartamentos em Londres
           </h2>
           <p className="mt-5 leading-relaxed text-gray-700">
             Encontre acomodação em Londres com informações claras sobre valor semanal,

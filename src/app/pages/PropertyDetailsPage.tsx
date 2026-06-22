@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { getGoogleMapsUrl, PropertyMap } from '../components/PropertyMap';
+import { PropertyMap } from '../components/PropertyMap';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
@@ -12,6 +12,7 @@ import { SEO } from '../components/SEO';
 import { LeadCaptureModal } from '../components/LeadCaptureModal';
 import type { LeadIntent } from '../utils/leadCapture';
 import { getPropertyImageAlt } from '../utils/imageAlt';
+import { formatPropertyType } from '../utils/propertyType';
 import { getAbsoluteUrl } from '../config/site';
 import { trackEvent } from '../utils/analytics';
 
@@ -275,7 +276,7 @@ export function PropertyDetailsPage() {
 
   const propertyDescription =
     property.description ||
-    `${property.type} em ${property.region} com atendimento em portugues.`;
+    `${formatPropertyType(property)} em ${property.region} com atendimento em português.`;
   const propertyUrl = getAbsoluteUrl(`/property/${property.id}`);
   const residenceId = `${propertyUrl}#residence`;
   const listingId = `${propertyUrl}#listing`;
@@ -363,7 +364,7 @@ export function PropertyDetailsPage() {
           })),
           {
             '@type': 'LocationFeatureSpecification',
-            name: 'Bills included',
+            name: 'Contas inclusas',
             value: property.billsIncluded,
           },
           {
@@ -414,7 +415,7 @@ export function PropertyDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-44 pt-20 md:pb-8">
+    <div className="min-h-screen bg-[#f7f4df] pb-44 pt-20 md:pb-8">
       <SEO
         title={`${property.title} em ${property.region}`}
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
@@ -461,13 +462,13 @@ export function PropertyDetailsPage() {
       </div>
 
       {/* PAGE CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-3 lg:gap-8 lg:px-8">
 
         {/* IMAGE GALLERY */}
-        <div className="mb-6 md:mb-8">
+        <div className="mb-6 md:mb-8 lg:order-1 lg:col-span-2 lg:mb-0">
           <div className="relative mb-4 overflow-hidden rounded-xl shadow-xl md:rounded-2xl md:shadow-2xl">
 
-            <div className="relative h-72 sm:h-96 md:h-[600px]">
+            <div className="relative h-72 sm:h-96 lg:h-[520px]">
               {currentMedia?.type === 'video' ? (
                 <iframe
                   src={currentMedia.embedSrc}
@@ -537,7 +538,7 @@ export function PropertyDetailsPage() {
 
                 {property.billsIncluded && (
                   <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
-                    Bills Inclusas
+                    Contas inclusas
                   </span>
                 )}
               </div>
@@ -587,19 +588,19 @@ export function PropertyDetailsPage() {
         </div>
 
         {/* CONTENT GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:contents">
 
           {/* MAIN */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8 lg:order-3 lg:col-span-2 lg:mt-8">
 
             {/* TITLE */}
-            <div>
+            <div className="lg:hidden">
               <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
                 <div className="min-w-0">
                   <div className="mb-3 flex flex-wrap items-center gap-3">
                     <span className="max-w-full rounded-full bg-[var(--green-dark)] px-3 py-1.5 text-sm font-bold leading-snug text-white">
-                      {property.type}
+                      {formatPropertyType(property)}
                     </span>
 
                     <span className="flex min-w-0 items-center gap-1 text-gray-600">
@@ -702,13 +703,47 @@ export function PropertyDetailsPage() {
           </div>
 
           {/* SIDEBAR */}
-          <div className="lg:col-span-1">
+          <div className="lg:order-2 lg:col-span-1">
             <div className="sticky top-24 space-y-4">
+
+              <div className="hidden rounded-2xl border border-[var(--green-dark)]/15 bg-[#eef3ec] p-5 shadow-sm lg:block">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-[var(--green-dark)]/10 px-3 py-1.5 text-sm font-bold text-[var(--green-dark)]">
+                    {formatPropertyType(property)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="rounded-full border border-gray-200 p-2.5 text-gray-600 hover:border-[var(--green-dark)] hover:text-[var(--green-dark)]"
+                    aria-label="Compartilhar imóvel"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                </div>
+                <h1 className="text-3xl font-extrabold leading-tight text-gray-900">
+                  {property.title}
+                </h1>
+                <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-gray-600">
+                  <MapPin className="h-4 w-4 text-[var(--green-dark)]" />
+                  {property.localArea || property.region}
+                </div>
+                <div className="mt-4 grid gap-2 text-sm text-gray-700">
+                  {getPropertyAttributes(property).slice(0, 3).map((attribute) => {
+                    const Icon = attribute.icon;
+                    return (
+                      <div key={attribute.label} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-[var(--green-dark)]" />
+                        {attribute.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               <div className="rounded-2xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] p-5 text-white md:p-6">
 
                 <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/80">
-                  Week
+                  Por semana
                 </div>
 
                 <div className="mb-4 text-4xl font-bold md:text-5xl">
@@ -735,40 +770,16 @@ export function PropertyDetailsPage() {
                   Falar no WhatsApp
                 </button>
 
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="mt-3">
                   <button
                     type="button"
                     onClick={() => openLeadForm('visit', 'property_sidebar')}
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"
                   >
                     <Calendar className="h-5 w-5" />
                     Agendar visita
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => openLeadForm('video', 'property_sidebar')}
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-                  >
-                    <Play className="h-5 w-5" />
-                    Pedir vídeo
-                  </button>
                 </div>
-
-                <a
-                  href={getGoogleMapsUrl(property)}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() =>
-                    trackEvent('map_open_click', {
-                      source: 'property_details',
-                      property_id: property.id,
-                    })
-                  }
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/95 py-3.5 font-bold text-[var(--green-dark)] md:py-4"
-                >
-                  <MapPin className="w-6 h-6" />
-                  Abrir endereço no mapa
-                </a>
 
               </div>
 
@@ -782,7 +793,7 @@ export function PropertyDetailsPage() {
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Week
+              Por semana
             </div>
             <div className="text-2xl font-bold leading-tight text-[var(--green-dark)]">
               <span className="truncate">{weeklyPrice}</span>

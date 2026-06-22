@@ -1,38 +1,37 @@
+import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Check, MapPin, MessageCircle, Search } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { ArrowRight, Bed, Building2, Home, MessageCircle, Zap } from 'lucide-react';
 import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
 
 export function Hero() {
   const navigate = useNavigate();
+  const [type, setType] = useState('');
+  const [region, setRegion] = useState('');
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (type) params.set('type', type);
+    if (region) params.set('region', region);
+    params.set('availableNow', '1');
+    trackEvent('property_search', { source: 'hero', type, region });
+    navigate(`/properties?${params.toString()}`);
+  };
 
   const handleWhatsApp = () => {
     trackEvent('whatsapp_click', { source: 'hero' });
     openWhatsApp();
   };
 
-  const goToProperties = () => {
-    trackEvent('properties_cta_click', { source: 'hero' });
-    navigate('/properties');
-  };
-
-  const quickLinks = [
-    { label: 'Disponível agora', path: '/properties?availableNow=1', icon: Zap },
-    { label: 'Studios', path: '/properties?type=studio', icon: Home },
-    { label: 'Ensuites', path: '/properties?type=ensuite', icon: Bed },
-    { label: 'Flats', path: '/properties?type=flat', icon: Building2 },
-  ];
-
   return (
-    <div id="hero" className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[90vh]">
-
-      {/* BACKGROUND */}
+    <section id="hero" className="relative min-h-[760px] overflow-hidden bg-[#102c20] pt-24 md:min-h-[720px] md:pt-20">
       <div className="absolute inset-0">
         <ImageWithFallback
           src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=1600&q=76"
-          alt="Vista clara e aconchegante de Londres durante o dia"
-          className="w-full h-full object-cover"
+          alt="Vista de Londres"
+          className="h-full w-full object-cover object-center"
           width={1600}
           height={1067}
           loading="eager"
@@ -40,128 +39,39 @@ export function Hero() {
           decoding="async"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#07140f]/86 via-[#173627]/48 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,30,20,.96)_0%,rgba(10,39,27,.88)_46%,rgba(10,39,27,.34)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#071e14]/70 via-transparent to-[#071e14]/25" />
       </div>
 
-      {/* CONTENT */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-28 sm:px-6 md:py-16 lg:px-8">
-        <div className="max-w-3xl">
-
-          {/* TITLE */}
-          <h1
-            className="hero-reveal mb-5 break-words text-4xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)] sm:text-6xl lg:text-7xl"
-          >
-            Sua Nova
-            <br />
-            <span className="relative inline-block">
-              Acomodação
-              <svg
-                className="absolute -bottom-2 left-0 w-full"
-                height="12"
-                viewBox="0 0 300 12"
-                fill="none"
-              >
-                <path
-                  d="M2 10C80 2 220 2 298 10"
-                  stroke="var(--yellow)"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-            <br />
-            <span className="text-[var(--yellow)]">em Londres</span>
+      <div className="relative mx-auto flex min-h-[636px] max-w-7xl items-center px-4 py-14 sm:px-6 md:min-h-[640px] lg:px-8">
+        <div className="w-full max-w-4xl">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[.14em] text-white backdrop-blur-sm">
+            <MapPin className="h-4 w-4 text-[var(--yellow)]" />
+            Acomodação em Londres • Atendimento em português
+          </div>
+          <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.04] tracking-[-.035em] text-white sm:text-6xl lg:text-7xl">
+            Seu lugar em Londres, <span className="text-[var(--yellow)]">sem complicação.</span>
           </h1>
-
-          {/* DESCRIPTION */}
-          <p
-            className="hero-reveal hero-delay-1 mb-7 inline-block rounded-xl bg-black/35 px-4 py-3 text-base leading-relaxed text-white shadow-lg backdrop-blur-[2px] sm:text-xl"
-          >
-            Studios, ensuites e flats prontos para você morar.
-            <br />
-            <strong className="text-[var(--yellow)]">
-              Atendimento em português
-            </strong>{' '}
-            e entrada imediata.
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/85 sm:text-xl">
+            Compare quartos, suítes, estúdios e apartamentos disponíveis. Informações claras e suporte humano para você escolher com segurança.
           </p>
 
-          {/* BUTTONS */}
-          <div
-            className="hero-reveal hero-delay-2 flex flex-col gap-3 sm:flex-row sm:gap-4"
-          >
-            <button
-              onClick={goToProperties}
-              className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-6 py-3.5 font-semibold text-black transition-all hover:bg-[var(--yellow-dark)] hover:scale-105 sm:w-auto sm:px-8 sm:py-4"
-            >
-              Ver Unidades
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+          <form onSubmit={handleSearch} className="mt-8 grid gap-2 rounded-2xl bg-white p-2.5 shadow-[0_24px_70px_rgba(0,0,0,.28)] sm:grid-cols-[1fr_1fr_auto]" aria-label="Buscar acomodação">
+            <label><span className="sr-only">Tipo de acomodação</span><select value={type} onChange={(event) => setType(event.target.value)} className="min-h-14 w-full appearance-none rounded-xl bg-[#f5f5ef] px-4 text-sm font-semibold text-[#173627] outline-none ring-[var(--yellow)] focus:ring-2"><option value="">Todos os tipos</option><option value="single">Quarto individual</option><option value="double">Quarto duplo</option><option value="ensuite">Suíte</option><option value="studio">Estúdio</option><option value="flat">Apartamento</option></select></label>
+            <label><span className="sr-only">Região de Londres</span><select value={region} onChange={(event) => setRegion(event.target.value)} className="min-h-14 w-full appearance-none rounded-xl bg-[#f5f5ef] px-4 text-sm font-semibold text-[#173627] outline-none ring-[var(--yellow)] focus:ring-2"><option value="">Todas as regiões</option><option value="North">Norte de Londres</option><option value="South">Sul de Londres</option><option value="East">Leste de Londres</option><option value="West">Oeste de Londres</option></select></label>
+            <button type="submit" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-6 font-extrabold text-[#102c20] transition hover:bg-[var(--yellow-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Search className="h-5 w-5" /> Buscar imóveis</button>
+          </form>
 
-            <button
-              onClick={handleWhatsApp}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 sm:w-auto sm:px-8 sm:py-4"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Falar no WhatsApp
-            </button>
+          <div className="mt-5 flex flex-col gap-4 text-sm text-white/85 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-[var(--yellow)]" /> Valores semanais claros</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-[var(--yellow)]" /> Disponibilidade atualizada</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-[var(--yellow)]" /> Suporte em português</span>
+            </div>
+            <button type="button" onClick={handleWhatsApp} className="inline-flex shrink-0 items-center gap-2 font-bold text-white underline decoration-white/35 underline-offset-4 transition hover:text-[var(--yellow)]"><MessageCircle className="h-5 w-5" /> Prefere ajuda? Fale conosco <ArrowRight className="h-4 w-4" /></button>
           </div>
-
-          <div
-            className="hero-reveal hero-delay-3 mt-5 rounded-2xl bg-black/35 p-3 backdrop-blur-[2px] sm:mt-6 sm:inline-block"
-          >
-            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-white/75">
-              Buscar rápido
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:flex">
-              {quickLinks.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <button
-                    key={item.path}
-                    type="button"
-                    onClick={() => {
-                      trackEvent('quick_filter_click', {
-                        source: 'hero',
-                        label: item.label,
-                        path: item.path,
-                      });
-                      navigate(item.path);
-                    }}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-[var(--green-dark)] shadow-sm transition hover:bg-[var(--yellow)]"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* TRUST */}
-          <div
-            className="hero-reveal hero-delay-4 mt-8 flex flex-wrap gap-2 text-sm text-white sm:mt-12 sm:gap-3"
-          >
-            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
-              <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Contratos seguros</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
-              <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Bills inclusas</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
-              <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
-              <span>Disponível agora</span>
-            </div>
-          </div>
-
         </div>
       </div>
-
-      {/* DECOR */}
-      <div className="absolute bottom-0 right-0 w-1/3 h-64 bg-gradient-to-tl from-[var(--green-dark)]/30 to-transparent pointer-events-none" />
-    </div>
+    </section>
   );
 }
