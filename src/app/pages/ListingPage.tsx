@@ -533,7 +533,7 @@ export function ListingPage() {
       ? `Acomodacoes em ${filters.region.charAt(0).toUpperCase() + filters.region.slice(1)} London`
       : filters.availableNow
         ? 'Acomodacoes disponíveis agora em Londres'
-        : 'Imoveis e quartos em Londres';
+        : 'Imóveis e quartos em Londres';
 
   const listingDescription = activeFilterSummary
     ? `Veja ${sortedProperties.length} opções em Londres para ${activeFilterSummary}. Studios, Ensuites, Rooms e Flats com atendimento em português.`
@@ -962,6 +962,7 @@ export function ListingPage() {
           </div>
         ) : (
           <select
+            aria-label="Capacidade"
             value={filters.people}
             onChange={(event) => updateFilter('people', event.target.value)}
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
@@ -1237,7 +1238,7 @@ export function ListingPage() {
             </select>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
             {quickMobileFilters.map((filter) => {
               const isActive = filters.type === filter.type;
 

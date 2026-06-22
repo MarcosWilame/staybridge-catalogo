@@ -1,6 +1,6 @@
 export function toPublicProperty(row) {
   const data = row?.data && typeof row.data === 'object' ? row.data : {};
-  if (data.listed === false) return null;
+  if (data.listed !== true) return null;
 
   const id = Number(data.id || row?.id);
   if (!Number.isFinite(id)) return null;
@@ -26,11 +26,9 @@ export function toPublicProperty(row) {
     amenities: data.amenities,
     deposit: data.deposit,
     nearbyStations: data.nearbyStations,
-    coordinates: data.coordinates,
     furnishing: data.furnishing,
     moveInDate: data.moveInDate,
     postcode: data.postcode,
-    address: data.address,
     people: data.people,
   };
 }

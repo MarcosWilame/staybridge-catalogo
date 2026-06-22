@@ -1,11 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { loadMarketingScripts, prepareMarketingQueues } from '../utils/analytics';
+import { getMarketingConsent, loadMarketingScripts, prepareMarketingQueues } from '../utils/analytics';
 
 export function Analytics() {
   const location = useLocation();
+  const [consentRevision, setConsentRevision] = useState(0);
 
   useEffect(() => {
+    const handleConsent = () => {
+      loadMarketingScripts();
+      setConsentRevision((revision) => revision + 1);
+    };
+    window.addEventListener('staybridge-marketing-consent', handleConsent);
     prepareMarketingQueues();
 
     const load = () => loadMarketingScripts();
@@ -23,11 +29,14 @@ export function Analytics() {
       if (idleWindow.cancelIdleCallback) idleWindow.cancelIdleCallback(idleId);
       else window.clearTimeout(idleId);
       events.forEach((event) => window.removeEventListener(event, load));
+      window.removeEventListener('staybridge-marketing-consent', handleConsent);
     };
   }, []);
 
   useEffect(() => {
     // Meta Pixel — dispara PageView a cada troca de rota
+    if (getMarketingConsent() !== true) return;
+
     if (typeof window.fbq === 'function') {
       window.fbq('track', 'PageView');
     }
@@ -38,7 +47,7 @@ export function Analytics() {
         page_path: location.pathname + location.search,
       });
     }
-  }, [location.pathname, location.search]);
+  }, [consentRevision, location.pathname, location.search]);
 
   return null;
 }

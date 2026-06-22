@@ -37,6 +37,10 @@ test('property structured data includes listing, residence, apartment and breadc
   assert.ok(types.includes('Residence'));
   assert.ok(types.includes('Apartment'));
   assert.ok(types.includes('BreadcrumbList'));
+  const residence = data['@graph'].find((item) =>
+    Array.isArray(item['@type']) ? item['@type'].includes('Residence') : item['@type'] === 'Residence'
+  );
+  assert.equal('streetAddress' in residence.address, false);
 });
 test('property HTML receives canonical and complete social metadata', () => {
   const template = '<html><head><title>Old</title><meta name="description" content="Old"><link rel="canonical" href="https://example.com/"></head><body><div id="root"></div></body></html>';

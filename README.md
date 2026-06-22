@@ -10,7 +10,7 @@ Responsive property catalog for Brazilian customers looking for rooms, studios, 
 - Admin page backed by Supabase for creating, editing, hiding, restoring, deleting, importing, and uploading media.
 - Public properties API via `/api/public-properties`.
 - SEO support with dynamic titles, descriptions, Open Graph/Twitter tags, JSON-LD for property pages, `robots.txt`, and `/sitemap.xml`.
-- GA4 and Meta Pixel page views plus custom CTA tracking events.
+- Consent-gated GA4 and Meta Pixel page views plus custom CTA tracking events.
 - Mobile bottom navigation without favorites for now.
 
 ## Tech Stack
@@ -18,7 +18,7 @@ Responsive property catalog for Brazilian customers looking for rooms, studios, 
 - React 18
 - React Router 6
 - TypeScript
-- Vite 5
+- Vite 8
 - Tailwind CSS 3
 - Lucide React
 - Supabase REST/Auth/Storage
@@ -64,14 +64,14 @@ VITE_CLOUDINARY_FOLDER=staybridge/properties
 - `id` integer
 - `data` jsonb
 
-The public API reads `id,data`, normalizes the object, and filters out properties where `listed === false`.
+The public API reads `id,data`, returns only explicitly allowed fields, and includes only properties where `listed === true`. Exact addresses and coordinates stay private.
 
 ## Routes
 
 - `/` home page
 - `/properties` property listing and comparison
 - `/property/:id` property details
-- `/profile` customer/support area
+- `/profile` customer/support area (`noindex`)
 - `/admin` admin dashboard, loaded lazily
 - `/sitemap.xml` dynamic sitemap
 
@@ -95,5 +95,7 @@ Tracked examples:
 ## Notes
 
 - Favorites were removed for now.
-- The lead/contact form was removed for now.
+- Property WhatsApp CTAs use the short inquiry modal to qualify leads before opening WhatsApp.
 - The admin page is lazily loaded and has begun being split into smaller admin-specific modules.
+- Admin sessions use `sessionStorage`, so credentials are cleared when the browser session ends.
+- See `SUPABASE_SECURITY.md` before deploying Supabase policy changes.

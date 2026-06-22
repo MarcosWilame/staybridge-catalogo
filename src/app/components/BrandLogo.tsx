@@ -18,7 +18,6 @@ export function BrandLogo({
         height="1350"
         decoding="async"
         loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
         className={`pointer-events-none absolute left-1/2 top-[57%] h-[200%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2 select-none object-contain [mix-blend-mode:screen] ${imageClassName}`}
       />
     </span>

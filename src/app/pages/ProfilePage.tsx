@@ -9,6 +9,7 @@ export function ProfilePage() {
       <SEO
         title="Atendimento e suporte"
         description="Fale com a equipe Staybridge London para visitas, reservas, contratos e suporte em portugues durante sua estadia."
+        noIndex
       />
       <div className="mx-auto max-w-4xl">
         <div className="rounded-2xl bg-white p-6 text-center shadow-lg md:p-12">

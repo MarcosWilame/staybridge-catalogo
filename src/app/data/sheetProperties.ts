@@ -6,25 +6,43 @@ let cachedError: string | null = null;
 const CACHE_KEY = 'staybridge-public-properties-v1';
 const CACHE_TTL = 5 * 60 * 1000;
 
-function readSessionCache() {
+function readSessionCache(allowStale = false) {
   try {
     const value = sessionStorage.getItem(CACHE_KEY);
     if (!value) return null;
     const parsed = JSON.parse(value) as { timestamp: number; properties: Property[] };
-    return Date.now() - parsed.timestamp < CACHE_TTL ? parsed.properties : null;
+    return allowStale || Date.now() - parsed.timestamp < CACHE_TTL
+      ? parsed.properties
+      : null;
   } catch {
     return null;
   }
 }
 
 function isListedProperty(property: Property) {
-  return property.listed !== false;
+  return property.listed === true;
+}
+
+async function fetchPropertiesWithRetry() {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch('/api/public-properties', { cache: 'default' });
+      if (response.ok || response.status < 500 || attempt === 1) return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) throw error;
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, 450));
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Falha ao carregar propriedades');
 }
 
 async function loadPropertiesFromSource() {
   if (cachedProperties) return cachedProperties;
-  if (cachedError) throw new Error(cachedError);
-
   const storedProperties = readSessionCache();
   if (storedProperties) {
     cachedProperties = storedProperties;
@@ -32,9 +50,7 @@ async function loadPropertiesFromSource() {
   }
 
   try {
-    const response = await fetch('/api/public-properties', {
-      cache: 'default',
-    });
+    const response = await fetchPropertiesWithRetry();
 
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
@@ -52,6 +68,7 @@ async function loadPropertiesFromSource() {
     cachedProperties = Array.isArray(data)
       ? (data as Property[]).filter(isListedProperty)
       : [];
+    cachedError = null;
     try {
       sessionStorage.setItem(
         CACHE_KEY,
@@ -64,6 +81,11 @@ async function loadPropertiesFromSource() {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
     cachedError = message;
+    const staleProperties = readSessionCache(true);
+    if (staleProperties) {
+      cachedProperties = staleProperties;
+      return staleProperties;
+    }
     throw new Error(message);
   }
 }

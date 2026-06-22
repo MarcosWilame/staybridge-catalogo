@@ -77,7 +77,6 @@ export function buildStructuredData(property, url) {
     url,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: property.address,
       addressLocality: property.localArea || property.region,
       addressRegion: 'London',
       postalCode: property.postcode,

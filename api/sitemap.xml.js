@@ -60,7 +60,7 @@ async function loadPropertyEntries() {
 
 export default async function handler(req, res) {
   const propertyEntries = await loadPropertyEntries();
-  const staticEntries = ['/', '/properties', '/profile'].map((path) => ({ path, lastmod: '' }));
+  const staticEntries = ['/', '/properties'].map((path) => ({ path, lastmod: '' }));
   const propertyPaths = propertyEntries.map(({ id, lastmod }) => ({
     path: `/property/${id}`,
     lastmod,

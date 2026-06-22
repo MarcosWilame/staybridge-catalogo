@@ -7,7 +7,6 @@ import { PropertyMap } from '../components/PropertyMap';
 import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
-import { WHATSAPP_URL } from '../config/contact';
 import { SEO } from '../components/SEO';
 import { LeadCaptureModal } from '../components/LeadCaptureModal';
 import type { LeadIntent } from '../utils/leadCapture';
@@ -15,6 +14,7 @@ import { getPropertyImageAlt } from '../utils/imageAlt';
 import { formatPropertyType } from '../utils/propertyType';
 import { getAbsoluteUrl } from '../config/site';
 import { trackEvent } from '../utils/analytics';
+import { isIllustrativePropertyImage } from '../utils/propertyMedia';
 
 import {
   ArrowLeft,
@@ -35,7 +35,7 @@ import {
   TrainFront,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { createWhatsAppLeadMessage, shareProperty } from '../utils/shareProperty';
+import { shareProperty } from '../utils/shareProperty';
 
 interface PropertyAttribute {
   icon: LucideIcon;
@@ -191,31 +191,6 @@ export function PropertyDetailsPage() {
     ? property.nearbyStations.filter((item) => item.trim().length > 0)
     : [];
 
-  const handleWhatsApp = () => {
-    if (!property) return;
-
-    const message = encodeURIComponent(createWhatsAppLeadMessage(property));
-
-    trackEvent('whatsapp_click', {
-      source: 'property_details',
-      property_id: property.id,
-      property_type: property.type,
-      property_category: property.category,
-      region: property.region,
-      local_area: property.localArea,
-      postcode: property.postcode,
-      weekly_price: getPriceValue(property.price),
-      availability: availabilityLabel,
-      available_now: isNow,
-      bills_included: property.billsIncluded,
-    });
-
-    window.open(
-      `${WHATSAPP_URL}?text=${message}`,
-      '_blank'
-    );
-  };
-
   const openLeadForm = (intent: LeadIntent, source: string) => {
     setLeadIntent(intent);
     setIsLeadFormOpen(true);
@@ -336,7 +311,6 @@ export function PropertyDetailsPage() {
           addressLocality: property.localArea || property.region,
           addressRegion: 'London',
           postalCode: property.postcode,
-          streetAddress: property.address,
           addressCountry: 'GB',
         },
         ...(hasValidCoordinates
@@ -535,6 +509,12 @@ export function PropertyDetailsPage() {
                     </>
                   )}
                 </span>
+
+                {currentMedia?.type === 'image' && isIllustrativePropertyImage(currentMedia.src) && (
+                  <span className="w-fit rounded-full bg-black/70 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
+                    Imagem ilustrativa
+                  </span>
+                )}
 
                 {property.billsIncluded && (
                   <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
@@ -763,7 +743,7 @@ export function PropertyDetailsPage() {
                 </div>
 
                 <button
-                  onClick={handleWhatsApp}
+                  onClick={() => openLeadForm('whatsapp', 'property_primary')}
                   className="premium-cta flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] py-3.5 font-bold text-black md:py-4"
                 >
                   <MessageCircle className="w-6 h-6" />
@@ -810,7 +790,7 @@ export function PropertyDetailsPage() {
           </button>
 
           <button
-            onClick={handleWhatsApp}
+            onClick={() => openLeadForm('whatsapp', 'property_mobile_primary')}
             className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[var(--yellow)] px-3 py-2.5 text-sm font-bold text-black shadow-lg"
           >
             <MessageCircle className="h-5 w-5" />

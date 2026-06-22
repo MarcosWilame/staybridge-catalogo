@@ -31,3 +31,11 @@ test('move-in timestamps normalize immediate, ISO and UK-style dates', () => {
   assert.equal(getMoveInTimestamp('2026-07-10', true, today), new Date(2026, 6, 10).getTime());
   assert.equal(getMoveInTimestamp('10/07/2026', true, today), new Date(2026, 6, 10).getTime());
 });
+
+test('past move-in dates become available now when the property is active', () => {
+  const today = new Date(2026, 5, 22);
+  assert.deepEqual(getAvailabilityInfo('02/06/2026', true, today), {
+    label: 'Disponível agora',
+    isNow: true,
+  });
+});

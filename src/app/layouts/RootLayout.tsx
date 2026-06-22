@@ -6,6 +6,7 @@ import { MobileBottomNav } from '../components/MobileBottomNav';
 import { ScrollToTop } from '../components/ScrollToTop';
 import { Analytics } from '../components/Analytics';
 import { MotionObserver } from '../components/MotionObserver';
+import { CookieConsent } from '../components/CookieConsent';
 
 export function RootLayout() {
   return (
@@ -29,6 +30,7 @@ export function RootLayout() {
 
         <Footer />
         <WhatsAppButton />
+        <CookieConsent />
         <MobileBottomNav />
       </div>
     </>

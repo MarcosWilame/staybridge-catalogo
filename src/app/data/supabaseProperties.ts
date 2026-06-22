@@ -496,11 +496,12 @@ export async function uploadPropertyVideoToStorage({
 }
 
 function persistSession(session: SupabaseAuthSession) {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
 export function getStoredAdminSession() {
-  const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+  const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
   if (!stored) return null;
 
   try {
@@ -512,13 +513,13 @@ export function getStoredAdminSession() {
       session.expires_at > Math.floor(Date.now() / 1000);
 
     if (!hasValidToken) {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
       return null;
     }
 
     return session;
   } catch {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
     return null;
   }
 }
@@ -547,6 +548,7 @@ export async function signInAdmin(email: string, password: string) {
 }
 
 export function signOutAdmin() {
+  sessionStorage.removeItem(AUTH_STORAGE_KEY);
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
@@ -884,21 +886,28 @@ export async function replacePropertiesInSupabase(
     throw new Error('Nenhum imovel valido para importar');
   }
 
-  await requestJson<null>(`${SUPABASE_TABLE}?id=gt.0`, {
-    method: 'DELETE',
-  }, accessToken);
+  const existingProperties = await loadPropertiesFromSupabase(accessToken);
 
   const rows = await requestJson<SupabasePropertyRow[]>(
-    `${SUPABASE_TABLE}`,
+    `${SUPABASE_TABLE}?on_conflict=id`,
     {
       method: 'POST',
       headers: {
-        Prefer: 'return=representation',
+        Prefer: 'resolution=merge-duplicates,return=representation',
       },
       body: JSON.stringify(normalizedProperties.map(toRecord)),
     },
     accessToken
   );
+
+  const importedIds = new Set(normalizedProperties.map((property) => property.id));
+  const staleProperties = existingProperties.filter(
+    (property) => !importedIds.has(property.id)
+  );
+
+  for (const property of staleProperties) {
+    await deletePropertyFromSupabase(property.id, accessToken);
+  }
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));
 }

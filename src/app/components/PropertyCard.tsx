@@ -11,7 +11,6 @@ import {
   Clock,
   Scale,
   Share2,
-  Heart,
 } from 'lucide-react';
 import { Property } from '../data/properties';
 import { getAvailabilityInfo } from '../utils/availability';
@@ -20,6 +19,7 @@ import { shareProperty } from '../utils/shareProperty';
 import { trackEvent } from '../utils/analytics';
 import { getPropertyImageAlt } from '../utils/imageAlt';
 import { formatPropertyType } from '../utils/propertyType';
+import { isIllustrativePropertyImage } from '../utils/propertyMedia';
 
 interface PropertyCardProps {
   property: Property;
@@ -89,20 +89,12 @@ export function PropertyCard({
 }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [shareStatus, setShareStatus] = useState('');
-  const [isSaved, setIsSaved] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const saved = JSON.parse(localStorage.getItem('staybridge-saved-properties') || '[]') as number[];
-      return saved.includes(property.id);
-    } catch {
-      return false;
-    }
-  });
   const images = useMemo(
     () => (property.images?.length ? property.images : [property.image]),
     [property.image, property.images]
   );
   const currentImage = images[currentImageIndex] || property.image;
+  const isIllustrativeImage = isIllustrativePropertyImage(currentImage);
   const hasCarousel = images.length > 1;
   const weeklyPrice = formatWeeklyPrice(property.price);
   const areaPreview = getAreaPreview(property);
@@ -139,20 +131,6 @@ export function PropertyCard({
       setShareStatus('Nao foi possivel compartilhar');
       window.setTimeout(() => setShareStatus(''), 1800);
     }
-  };
-
-  const handleSave = () => {
-    const next = !isSaved;
-    setIsSaved(next);
-    try {
-      const saved = new Set<number>(JSON.parse(localStorage.getItem('staybridge-saved-properties') || '[]'));
-      if (next) saved.add(property.id);
-      else saved.delete(property.id);
-      localStorage.setItem('staybridge-saved-properties', JSON.stringify(Array.from(saved)));
-    } catch {
-      // Saving is optional; the card remains fully usable when storage is unavailable.
-    }
-    trackEvent('property_save', { property_id: property.id, saved: next });
   };
 
   const trackPropertyOpen = (source: string) => {
@@ -215,6 +193,11 @@ export function PropertyCard({
               </>
             )}
           </span>
+          {isIllustrativeImage && (
+            <span className="w-fit rounded-full bg-black/70 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              Imagem ilustrativa
+            </span>
+          )}
         </div>
 
         {hasCarousel && (
@@ -245,16 +228,6 @@ export function PropertyCard({
         )}
 
         <div className="absolute right-3 top-3 flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={handleSave}
-            className={`rounded-full p-2 shadow-lg transition ${isSaved ? 'bg-[var(--yellow)] text-[var(--green-dark)]' : 'bg-white/95 text-[var(--green-dark)] hover:bg-[var(--yellow)]'}`}
-            aria-pressed={isSaved}
-            aria-label={isSaved ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
-            title={isSaved ? 'Salvo' : 'Salvar'}
-          >
-            <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-          </button>
           {onToggleCompare && (
             <button
               type="button"

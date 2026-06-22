@@ -37,11 +37,8 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      const detail = await response.text();
-
-      return res.status(response.status).json({
-        error: detail || 'Failed to load properties',
-      });
+      console.error('Supabase public properties request failed', response.status);
+      return res.status(502).json({ error: 'Failed to load properties' });
     }
 
     const rows = await response.json();
@@ -59,13 +56,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(properties);
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Unknown error';
-
-    return res.status(500).json({
-      error: message,
-    });
+    console.error('Unexpected public properties error', error instanceof Error ? error.name : 'Unknown');
+    return res.status(500).json({ error: 'Failed to load properties' });
   }
 }

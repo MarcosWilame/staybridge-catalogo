@@ -214,17 +214,7 @@ export function AdminPage() {
 
       try {
         const remoteProperties = await loadPropertiesFromSupabase(session.access_token);
-        const expiredRecoveryItems = remoteProperties.filter(isRecoveryExpired);
-
-        if (expiredRecoveryItems.length) {
-          await Promise.all(
-            expiredRecoveryItems.map((property) =>
-              deletePropertyFromSupabase(property.id, session.access_token)
-            )
-          );
-        }
-
-        setProperties(remoteProperties.filter((property) => !isRecoveryExpired(property)));
+        setProperties(remoteProperties);
         setSyncError('');
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Erro ao sincronizar com Supabase';
@@ -1025,6 +1015,12 @@ export function AdminPage() {
         if (!hasSupabaseConfig() || !session) {
           throw new Error('Supabase nao configurado');
         }
+
+        if (!confirm(`Importar ${data.length} registros? Um backup do catálogo atual será baixado antes da atualização.`)) {
+          return;
+        }
+
+        handleDownloadJson();
 
         const savedProperties = await replacePropertiesInSupabase(
           data,

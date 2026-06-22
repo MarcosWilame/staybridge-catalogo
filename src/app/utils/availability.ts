@@ -6,7 +6,8 @@
  */
 export function getAvailabilityInfo(
   moveInDate: string,
-  available = true
+  available = true,
+  today = new Date()
 ): {
   label: string;
   isNow: boolean;
@@ -27,11 +28,26 @@ export function getAvailabilityInfo(
   }
 
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
+    const [day, month, year] = normalized.split('/').map(Number);
+    const timestamp = new Date(year, month - 1, day).getTime();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    if (timestamp <= startOfToday) {
+      return available
+        ? { label: 'Disponível agora', isNow: true }
+        : { label: 'Indisponível', isNow: false };
+    }
     return { label: `Disponível em ${rawValue}`, isNow: false };
   }
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
     const [year, month, day] = normalized.split('-');
+    const timestamp = new Date(Number(year), Number(month) - 1, Number(day)).getTime();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    if (timestamp <= startOfToday) {
+      return available
+        ? { label: 'Disponível agora', isNow: true }
+        : { label: 'Indisponível', isNow: false };
+    }
     return { label: `Disponível em ${day}/${month}/${year}`, isNow: false };
   }
 
@@ -49,7 +65,7 @@ export function getMoveInTimestamp(
   available = true,
   today = new Date()
 ) {
-  const info = getAvailabilityInfo(moveInDate, available);
+  const info = getAvailabilityInfo(moveInDate, available, today);
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   if (info.isNow) return startOfToday;
 

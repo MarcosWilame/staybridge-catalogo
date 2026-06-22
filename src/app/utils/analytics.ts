@@ -12,6 +12,22 @@ declare global {
 }
 
 let marketingRequested = false;
+const MARKETING_CONSENT_KEY = 'staybridge-marketing-consent-v1';
+
+export function getMarketingConsent() {
+  if (typeof window === 'undefined') return null;
+  const value = window.localStorage.getItem(MARKETING_CONSENT_KEY);
+  return value === 'accepted' ? true : value === 'rejected' ? false : null;
+}
+
+export function setMarketingConsent(accepted: boolean) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(
+    MARKETING_CONSENT_KEY,
+    accepted ? 'accepted' : 'rejected'
+  );
+  window.dispatchEvent(new CustomEvent('staybridge-marketing-consent'));
+}
 
 function appendAsyncScript(src: string) {
   const script = document.createElement('script');
@@ -36,7 +52,11 @@ export function prepareMarketingQueues() {
 }
 
 export function loadMarketingScripts() {
-  if (typeof window === 'undefined' || marketingRequested) return;
+  if (
+    typeof window === 'undefined' ||
+    marketingRequested ||
+    getMarketingConsent() !== true
+  ) return;
   marketingRequested = true;
   prepareMarketingQueues();
 
@@ -49,6 +69,7 @@ export function loadMarketingScripts() {
 }
 
 export function trackEvent(eventName: string, params: AnalyticsParams = {}) {
+  if (getMarketingConsent() !== true) return;
   prepareMarketingQueues();
   loadMarketingScripts();
   const pageParams =
