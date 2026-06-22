@@ -177,7 +177,7 @@ export function PropertyCard({
   };
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white shadow-[0_16px_50px_rgba(26,77,46,.10)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[var(--green-dark)]/30 hover:shadow-[0_24px_65px_rgba(26,77,46,.18)]">
+    <div className="premium-card group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white shadow-[0_16px_50px_rgba(26,77,46,.10)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[var(--green-dark)]/30 hover:shadow-[0_24px_65px_rgba(26,77,46,.18)]">
       {/* Image Container */}
       <div className="relative h-52 shrink-0 overflow-hidden sm:h-56">
         <Link

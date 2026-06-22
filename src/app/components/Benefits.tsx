@@ -35,7 +35,7 @@ const benefits = [
 
 export function Benefits() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white to-[var(--gray-light)] py-12 md:py-20">
+    <section className="premium-section relative overflow-hidden bg-gradient-to-b from-white to-[var(--gray-light)] py-12 md:py-20">
       {/* Diagonal Background Element */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-[var(--green-dark)]/5 to-transparent transform -skew-y-3 origin-top-left" />
 
@@ -62,7 +62,7 @@ export function Benefits() {
             return (
               <div
                 key={index}
-                className="group rounded-xl border-2 border-transparent bg-white p-5 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl md:p-8"
+                className="premium-card group rounded-xl border-2 border-transparent bg-white p-5 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl md:p-8"
               >
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-16 md:w-16 md:rounded-2xl">
                   <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />

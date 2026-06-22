@@ -94,10 +94,145 @@ main:focus-visible {
 .modal-backdrop { animation: modal-backdrop-in 180ms ease-out both; }
 .modal-card { animation: modal-card-in 300ms cubic-bezier(.2,.85,.2,1) both; }
 
+/* Premium glass language inspired by the reference, using Staybridge colors. */
+.staybridge-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(244, 208, 63, .13), transparent 28rem),
+    radial-gradient(circle at 92% 28%, rgba(26, 77, 46, .14), transparent 34rem),
+    #f7f4df;
+}
+
+.premium-page,
+.premium-section {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 4% 8%, rgba(244, 208, 63, .16), transparent 25rem),
+    radial-gradient(circle at 96% 18%, rgba(45, 90, 61, .14), transparent 30rem),
+    linear-gradient(180deg, #faf8ed 0%, #f2f4e9 48%, #edf3ec 100%);
+}
+
+.premium-page::before,
+.premium-section::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  opacity: .42;
+  background-image:
+    linear-gradient(rgba(26, 77, 46, .025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 77, 46, .025) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+}
+
+.premium-header:not(.bg-transparent) {
+  border-bottom-color: rgba(255, 255, 255, .16);
+  background:
+    radial-gradient(circle at 78% -80%, rgba(244, 208, 63, .23), transparent 22rem),
+    rgba(15, 54, 37, .9);
+  box-shadow: 0 14px 45px rgba(7, 30, 20, .24);
+  backdrop-filter: blur(20px) saturate(145%);
+}
+
+.premium-card,
+.premium-panel {
+  border-color: var(--glass-border) !important;
+  background: var(--glass-surface);
+  box-shadow: var(--brand-glow);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.premium-card {
+  position: relative;
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1), border-color 320ms ease, box-shadow 320ms ease;
+}
+
+.premium-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .82);
+}
+
+.premium-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(26, 77, 46, .34) !important;
+  box-shadow: 0 28px 76px rgba(26, 77, 46, .22), 0 0 0 1px rgba(244, 208, 63, .12);
+}
+
+.premium-media {
+  border: 1px solid rgba(255, 255, 255, .72);
+  box-shadow: 0 30px 85px rgba(18, 58, 39, .2), 0 0 0 1px rgba(26, 77, 46, .1);
+}
+
+.premium-price-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background:
+    radial-gradient(circle at 90% 5%, rgba(244, 208, 63, .2), transparent 13rem),
+    linear-gradient(145deg, #123d2a 0%, #1a4d2e 54%, #2d5a3d 100%);
+  box-shadow: 0 28px 70px rgba(10, 53, 34, .28);
+}
+
+.premium-price-card::before {
+  content: '';
+  position: absolute;
+  width: 11rem;
+  height: 11rem;
+  right: -5rem;
+  top: -7rem;
+  border-radius: 999px;
+  background: rgba(244, 208, 63, .24);
+  filter: blur(28px);
+}
+
+.premium-heading-accent {
+  color: var(--green-dark);
+  background-image: linear-gradient(100deg, var(--green-dark) 5%, var(--green-medium) 62%, #927718 115%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.premium-cta {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--yellow-glow);
+}
+
+.premium-cta::after {
+  content: '';
+  position: absolute;
+  inset: -60% auto -60% -35%;
+  width: 26%;
+  pointer-events: none;
+  transform: rotate(18deg);
+  background: rgba(255, 255, 255, .42);
+  filter: blur(8px);
+  transition: left 500ms ease;
+}
+
+.premium-cta:hover::after { left: 118%; }
+
+.premium-floating-bar {
+  border-color: rgba(26, 77, 46, .14) !important;
+  background: rgba(255, 255, 255, .88) !important;
+  box-shadow: 0 -18px 50px rgba(14, 54, 35, .16) !important;
+  backdrop-filter: blur(20px) saturate(135%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
   .hero-reveal, .whatsapp-enter, .whatsapp-pulse, .modal-backdrop, .modal-card { animation: none !important; }
   .reveal-section { opacity: 1 !important; transform: none !important; }
+  .premium-card, .premium-cta { transition: none !important; }
+  .premium-card:hover { transform: none; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 

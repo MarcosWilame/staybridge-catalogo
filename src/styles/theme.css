@@ -61,6 +61,11 @@
   --surface-border: rgba(26, 77, 46, 0.16);
   --surface-shadow: 0 16px 42px rgba(26, 77, 46, 0.12);
   --surface-shadow-strong: 0 22px 58px rgba(26, 77, 46, 0.18);
+  --glass-surface: rgba(255, 255, 255, 0.78);
+  --glass-surface-strong: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(26, 77, 46, 0.17);
+  --brand-glow: 0 22px 70px rgba(26, 77, 46, 0.16);
+  --yellow-glow: 0 12px 36px rgba(244, 208, 63, 0.28);
 }
 
 .dark {

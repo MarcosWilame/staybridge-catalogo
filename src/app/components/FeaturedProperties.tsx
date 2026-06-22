@@ -90,13 +90,13 @@ export function FeaturedProperties() {
   const displayedProperties = featuredProperties.slice(0, 3);
 
   return (
-    <section className="reveal-section relative overflow-hidden bg-[#f4f0dd] py-14 md:py-20">
+    <section className="premium-section reveal-section relative overflow-hidden bg-[#f4f0dd] py-14 md:py-20">
       <div aria-hidden="true" className="absolute -right-32 top-10 h-80 w-80 rounded-full bg-[var(--yellow)]/15 blur-3xl" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="mb-3 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[.16em] text-[var(--green-medium)]"><span className="h-2 w-2 rounded-full bg-[#22a95a] shadow-[0_0_0_5px_rgba(34,169,90,.12)]" /> Seleção disponível agora</p>
-            <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-[-.03em] text-[var(--green-dark)] md:text-4xl">
+            <h2 className="premium-heading-accent max-w-2xl text-3xl font-black leading-tight tracking-[-.03em] text-[var(--green-dark)] md:text-4xl">
               Disponíveis agora em Londres
             </h2>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600">
@@ -107,7 +107,7 @@ export function FeaturedProperties() {
           <div className="flex items-center gap-3">
             <Link
               to="/properties"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-5 text-sm font-black text-white shadow-[0_10px_25px_rgba(26,77,46,.18)] transition hover:-translate-y-0.5 hover:bg-[var(--green-medium)]"
+              className="premium-cta inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-5 text-sm font-black text-white shadow-[0_10px_25px_rgba(26,77,46,.18)] transition hover:-translate-y-0.5 hover:bg-[var(--green-medium)]"
             >
               Ver mais imóveis
               <ArrowRight className="h-4 w-4" />

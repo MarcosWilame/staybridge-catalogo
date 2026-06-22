@@ -415,7 +415,7 @@ export function PropertyDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f4df] pb-44 pt-20 md:pb-8">
+    <div className="premium-page min-h-screen bg-[#f7f4df] pb-44 pt-20 md:pb-8">
       <SEO
         title={`${property.title} em ${property.region}`}
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
@@ -466,7 +466,7 @@ export function PropertyDetailsPage() {
 
         {/* IMAGE GALLERY */}
         <div className="mb-6 md:mb-8 lg:order-1 lg:col-span-2 lg:mb-0">
-          <div className="relative mb-4 overflow-hidden rounded-xl shadow-xl md:rounded-2xl md:shadow-2xl">
+          <div className="premium-media relative mb-4 overflow-hidden rounded-xl shadow-xl md:rounded-2xl md:shadow-2xl">
 
             <div className="relative h-72 sm:h-96 lg:h-[520px]">
               {currentMedia?.type === 'video' ? (
@@ -660,7 +660,7 @@ export function PropertyDetailsPage() {
             </div>
 
             {/* DESCRIPTION */}
-            <div className="rounded-2xl bg-[var(--gray-light)] p-5 md:p-6">
+            <div className="premium-panel rounded-2xl border border-[var(--green-dark)]/10 bg-[var(--gray-light)] p-5 md:p-6">
               <h2 className="mb-4 text-2xl font-bold text-[var(--green-dark)]">
                 Descrição
               </h2>
@@ -671,7 +671,7 @@ export function PropertyDetailsPage() {
             </div>
 
             {nearbyHighlights.length > 0 && (
-              <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
+              <div className="premium-panel rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-4 flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-[var(--green-dark)]" />
                   <h2 className="text-2xl font-bold text-[var(--green-dark)]">
@@ -706,7 +706,7 @@ export function PropertyDetailsPage() {
           <div className="lg:order-2 lg:col-span-1">
             <div className="sticky top-24 space-y-4">
 
-              <div className="hidden rounded-2xl border border-[var(--green-dark)]/15 bg-[#eef3ec] p-5 shadow-sm lg:block">
+              <div className="premium-panel hidden rounded-2xl border border-[var(--green-dark)]/15 bg-[#eef3ec] p-5 shadow-sm lg:block">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <span className="rounded-full bg-[var(--green-dark)]/10 px-3 py-1.5 text-sm font-bold text-[var(--green-dark)]">
                     {formatPropertyType(property)}
@@ -740,7 +740,7 @@ export function PropertyDetailsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] p-5 text-white md:p-6">
+              <div className="premium-price-card rounded-2xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] p-5 text-white md:p-6">
 
                 <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/80">
                   Por semana
@@ -764,7 +764,7 @@ export function PropertyDetailsPage() {
 
                 <button
                   onClick={handleWhatsApp}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] py-3.5 font-bold text-black md:py-4"
+                  className="premium-cta flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] py-3.5 font-bold text-black md:py-4"
                 >
                   <MessageCircle className="w-6 h-6" />
                   Falar no WhatsApp
@@ -789,7 +789,7 @@ export function PropertyDetailsPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
+      <div className="premium-floating-bar fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">

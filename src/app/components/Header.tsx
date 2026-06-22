@@ -91,7 +91,7 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`premium-header fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isTransparent
           ? 'bg-transparent'
           : 'border-b border-white/10 bg-[#153d2b]/95 backdrop-blur-xl shadow-[0_10px_35px_rgba(7,30,20,.20)]'
@@ -124,7 +124,7 @@ export function Header() {
 
             <button
               onClick={handleCatalogClick}
-              className="flex items-center gap-2 rounded-xl bg-[var(--yellow)] px-6 py-3 font-black text-[#102c20] shadow-[0_8px_24px_rgba(244,208,63,.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--yellow-dark)]"
+              className="premium-cta flex items-center gap-2 rounded-xl bg-[var(--yellow)] px-6 py-3 font-black text-[#102c20] shadow-[0_8px_24px_rgba(244,208,63,.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--yellow-dark)]"
             >
               <Search className="w-4 h-4" />
               Buscar imóveis

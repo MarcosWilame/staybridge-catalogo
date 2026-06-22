@@ -1175,7 +1175,7 @@ export function ListingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-40 pt-28 md:pb-10">
+    <div className="premium-page min-h-screen bg-gray-50 pb-40 pt-28 md:pb-10">
       <SEO
         title={listingTitle}
         description={listingDescription}
@@ -1293,7 +1293,7 @@ export function ListingPage() {
             }`}
           >
             <div className="min-w-0">
-              <div className="mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:z-20">
+              <div className="premium-panel mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:z-20">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-gray-500">Resultados</div>
@@ -1481,7 +1481,7 @@ export function ListingPage() {
         </div>
       )}
 
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,.10)] backdrop-blur md:hidden">
+      <div className="premium-floating-bar fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,.10)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="text-sm font-extrabold text-gray-900">Não encontrou o ideal?</div>
