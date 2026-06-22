@@ -2,6 +2,7 @@ import { useState, useEffect, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
+import { BrandLogo } from './BrandLogo';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -97,21 +98,11 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
+        <div className="flex h-20 items-center justify-between md:h-24">
 
           {/* Logo */}
-          <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer">
-            <img
-              src="/img/logo-white.png"
-              alt="Staybridge London"
-              width="489"
-              height="356"
-              decoding="async"
-              loading="eager"
-              fetchPriority="high"
-              className="h-16 w-auto object-contain md:h-[70px]"
-              style={{ mixBlendMode: 'screen' }}
-            />
+          <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer" aria-label="Staybridge London — início">
+            <BrandLogo className="h-20 w-32 sm:w-36 md:h-24 md:w-44" priority />
           </NavLink>
 
           {/* Desktop Navigation */}

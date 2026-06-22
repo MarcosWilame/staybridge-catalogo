@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Search } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
+import { BrandLogo } from './BrandLogo';
 
 export function CTASection() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export function CTASection() {
       <div className="relative mx-auto grid max-w-7xl gap-8 overflow-hidden rounded-[2rem] bg-[#173627] px-6 py-10 text-white shadow-[0_28px_80px_rgba(23,54,39,.28)] md:px-12 md:py-14 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(244,208,63,.16),transparent_62%)]" />
         <div className="relative max-w-3xl">
+          <BrandLogo className="mb-4 h-16 w-28 opacity-90" />
           <p className="text-xs font-black uppercase tracking-[.16em] text-[var(--yellow)]">Explore no seu ritmo</p>
           <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-.035em] md:text-5xl">Sua próxima acomodação pode estar a poucos cliques.</h2>
           <p className="mt-4 max-w-2xl text-white/70 md:text-lg">Compare valores, fotos, regiões e disponibilidade com autonomia.</p>

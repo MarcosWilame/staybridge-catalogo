@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Instagram, Search } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 
 export function Footer() {
   return (
@@ -8,10 +9,10 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="mb-4 inline-block rounded-lg bg-[var(--yellow)] px-4 py-3 text-black md:px-6">
-              <span className="text-base font-bold tracking-wider md:text-xl">STAYBRIDGE LONDON</span>
-            </div>
-            <p className="text-gray-300 mb-4 leading-relaxed">
+            <Link to="/" className="mb-5 inline-flex transition hover:opacity-85" aria-label="Staybridge London — início">
+              <BrandLogo className="h-24 w-44 sm:h-28 sm:w-52" />
+            </Link>
+            <p className="mb-5 max-w-xl leading-relaxed text-gray-300">
               Conectando brasileiros às melhores acomodações em Londres.
               Atendimento especializado e suporte em português.
             </p>

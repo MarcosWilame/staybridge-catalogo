@@ -30,7 +30,7 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="relative min-h-[780px] overflow-hidden bg-[#102c20] pt-20 text-white md:min-h-[760px]">
+    <section id="hero" className="relative min-h-[780px] overflow-hidden bg-[#102c20] pt-20 text-white md:min-h-[760px] md:pt-24">
       <div className="absolute inset-0">
         <ImageWithFallback
           src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=1800&q=78"
