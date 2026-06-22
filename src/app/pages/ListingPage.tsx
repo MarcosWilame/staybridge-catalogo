@@ -1505,7 +1505,6 @@ export function ListingPage() {
         isOpen={isLeadFormOpen}
         intent={leadIntent}
         source="property_listing"
-        onIntentChange={setLeadIntent}
         onClose={() => setIsLeadFormOpen(false)}
       />
 

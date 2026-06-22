@@ -1,12 +1,11 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarDays, MessageCircle, X } from 'lucide-react';
+import { CalendarDays, Check, MapPin, MessageCircle, ShieldCheck, Users, X } from 'lucide-react';
 import type { Property } from '../data/properties';
 import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
 import {
   buildLeadMessage,
-  leadIntentLabels,
   type LeadDetails,
   type LeadIntent,
 } from '../utils/leadCapture';
@@ -17,16 +16,20 @@ interface LeadCaptureModalProps {
   source: string;
   property?: Property;
   onClose: () => void;
-  onIntentChange?: (intent: LeadIntent) => void;
 }
 
-const intentIcons = {
-  visit: CalendarDays,
-  whatsapp: MessageCircle,
-};
+const EMPTY_DETAILS: LeadDetails = { name: '', moveInDate: '', people: '' };
+const STORAGE_KEY = 'staybridge-lead-inquiry-v2';
 
-const EMPTY_DETAILS: LeadDetails = { name: '', moveInDate: '', people: '', note: '' };
-const STORAGE_KEY = 'staybridge-lead-draft-v1';
+const moveInOptions = [
+  'Immediately',
+  'This Month',
+  'Next Month',
+  'In 2-3 Months',
+  'Just Researching',
+];
+
+const occupantOptions = ['1 Person', '2 People', '3+ People'];
 
 export function LeadCaptureModal({
   isOpen,
@@ -34,7 +37,6 @@ export function LeadCaptureModal({
   source,
   property,
   onClose,
-  onIntentChange,
 }: LeadCaptureModalProps) {
   const titleId = useId();
   const [details, setDetails] = useState<LeadDetails>(EMPTY_DETAILS);
@@ -97,9 +99,13 @@ export function LeadCaptureModal({
     onClose();
   };
 
+  const propertyLocation = property
+    ? [property.localArea, property.postcode, property.region].filter(Boolean).join(' · ')
+    : 'London';
+
   return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
+      className="modal-backdrop fixed inset-0 z-[80] flex items-end justify-center bg-[#071f16]/70 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -108,105 +114,120 @@ export function LeadCaptureModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="max-h-[92svh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:max-w-xl sm:rounded-3xl"
+        className="modal-card max-h-[94svh] w-full overflow-y-auto rounded-t-[28px] bg-[#fffdf7] shadow-[0_28px_80px_rgba(0,0,0,.3)] sm:max-w-lg sm:rounded-[28px]"
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 bg-white px-5 py-4 sm:px-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--green-medium)]">
-              Resposta rápida pelo WhatsApp
-            </p>
-            <h2 id={titleId} className="mt-1 text-xl font-extrabold text-gray-900">
-              {property ? property.title : 'Como podemos ajudar?'}
-            </h2>
+        <div className="sticky top-0 z-10 border-b border-[#dfe7e1] bg-[#fffdf7]/95 px-5 py-4 backdrop-blur sm:px-7 sm:py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 id={titleId} className="truncate text-xl font-black tracking-[-.02em] text-gray-950 sm:text-2xl">
+                {property ? property.title : 'Find your home in London'}
+              </h2>
+              <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                <MapPin className="h-4 w-4 shrink-0 text-[var(--green-medium)]" />
+                <span className="truncate">{propertyLocation}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 rounded-full border border-gray-200 bg-white p-2.5 text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950"
+              aria-label="Close inquiry"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full bg-gray-100 p-2" aria-label="Fechar formulário">
-            <X className="h-5 w-5" />
-          </button>
+          <p className="mt-2.5 text-sm leading-relaxed text-gray-600">
+            Receive availability and more information via WhatsApp.
+          </p>
         </div>
 
-        <form onSubmit={submit} className="space-y-5 p-5 sm:p-6">
-          <fieldset>
-            <legend className="mb-2 text-sm font-bold text-gray-800">O que você precisa?</legend>
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(leadIntentLabels) as LeadIntent[]).map((item) => {
-                const Icon = intentIcons[item];
-                const selected = item === intent;
-                return (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => onIntentChange?.(item)}
-                    aria-pressed={selected}
-                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-center text-xs font-bold transition ${
-                      selected
-                        ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--green-dark)]'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    {item === 'visit' ? 'Agendar visita' : 'Falar agora'}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-
+        <form onSubmit={submit} className="space-y-4 p-5 sm:px-7 sm:py-5">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-bold text-gray-800">Seu nome *</span>
+            <span className="mb-2 block text-sm font-extrabold text-gray-900">
+              Full Name <span className="text-[var(--green-medium)]">*</span>
+            </span>
             <input
               autoFocus
               required
               autoComplete="name"
               value={details.name}
               onChange={(event) => updateDetail('name', event.target.value)}
-              placeholder="Como podemos chamar você?"
-              className="min-h-12 w-full rounded-xl border border-gray-300 px-4 text-base outline-none transition focus:border-[var(--green-dark)] focus:ring-2 focus:ring-[var(--green-dark)]/20"
+              placeholder="How should we call you?"
+              className="min-h-[52px] w-full rounded-2xl border border-gray-300 bg-white px-4 py-3.5 text-base text-gray-950 outline-none transition placeholder:text-gray-400 focus:border-[var(--green-dark)] focus:ring-4 focus:ring-[var(--green-dark)]/10"
             />
           </label>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-bold text-gray-800">Quando pretende mudar?</span>
-              <input
-                type="date"
-                value={details.moveInDate}
-                onChange={(event) => updateDetail('moveInDate', event.target.value)}
-                className="min-h-12 w-full rounded-xl border border-gray-300 px-4 text-base outline-none focus:border-[var(--green-dark)]"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-bold text-gray-800">Quantas pessoas?</span>
-              <select
-                value={details.people}
-                onChange={(event) => updateDetail('people', event.target.value)}
-                className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 text-base outline-none focus:border-[var(--green-dark)]"
-              >
-                <option value="">Selecionar</option>
-                <option value="1">1 pessoa</option>
-                <option value="2">2 pessoas</option>
-                <option value="3">3 pessoas</option>
-                <option value="4+">4 ou mais</option>
-              </select>
-            </label>
-          </div>
+          <fieldset>
+            <legend className="mb-2.5 flex w-full items-center justify-between gap-3 text-sm font-extrabold text-gray-900">
+              <span className="flex items-center gap-2">
+                <CalendarDays className="h-[18px] w-[18px] text-[var(--green-medium)]" />
+                Expected Move-In
+              </span>
+              <span className="text-xs font-semibold text-gray-400">Optional</span>
+            </legend>
+            <div className="grid grid-cols-2 gap-2">
+              {moveInOptions.map((option, index) => {
+                const selected = details.moveInDate === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => updateDetail('moveInDate', selected ? '' : option)}
+                    aria-pressed={selected}
+                    className={`relative min-h-11 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
+                      index === moveInOptions.length - 1 ? 'col-span-2' : ''
+                    } ${
+                      selected
+                        ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--green-dark)]/50 hover:bg-[var(--green-dark)]/[.03]'
+                    }`}
+                  >
+                    {selected && <Check className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />}
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
 
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-bold text-gray-800">Mensagem opcional</span>
-            <textarea
-              rows={2}
-              value={details.note}
-              onChange={(event) => updateDetail('note', event.target.value)}
-              placeholder="Alguma preferência ou dúvida?"
-              className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:border-[var(--green-dark)]"
-            />
-          </label>
+          <fieldset>
+            <legend className="mb-2.5 flex items-center gap-2 text-sm font-extrabold text-gray-900">
+              <Users className="h-[18px] w-[18px] text-[var(--green-medium)]" />
+              Number of Occupants
+            </legend>
+            <div className="grid grid-cols-3 gap-2">
+              {occupantOptions.map((option) => {
+                const selected = details.people === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => updateDetail('people', selected ? '' : option)}
+                    aria-pressed={selected}
+                    className={`min-h-11 rounded-xl border px-2 py-2.5 text-sm font-bold transition ${
+                      selected
+                        ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--green-dark)]/50 hover:bg-[var(--green-dark)]/[.03]'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
 
-          <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-5 py-3.5 font-extrabold text-white shadow-lg transition hover:bg-[var(--green-medium)]">
+          <button
+            type="submit"
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--green-dark)] px-5 py-4 text-base font-black text-white shadow-[0_10px_24px_rgba(10,61,41,.24)] transition hover:-translate-y-0.5 hover:bg-[var(--green-medium)] hover:shadow-[0_14px_30px_rgba(10,61,41,.3)] active:translate-y-0"
+          >
             <MessageCircle className="h-5 w-5" />
-            Continuar no WhatsApp
+            Check Availability on WhatsApp
           </button>
-          <p className="text-center text-xs leading-relaxed text-gray-500">
-            Sua mensagem será aberta para revisão. Nada é enviado automaticamente.
+
+          <p className="flex items-start justify-center gap-2 px-2 text-center text-xs leading-relaxed text-gray-500">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-medium)]" />
+            Your message opens in WhatsApp for review. Nothing is sent automatically.
           </p>
         </form>
       </section>

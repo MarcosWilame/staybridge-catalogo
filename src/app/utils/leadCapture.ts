@@ -6,42 +6,36 @@ export interface LeadDetails {
   name: string;
   moveInDate?: string;
   people?: string;
-  note?: string;
 }
 
-const intentLabels: Record<LeadIntent, string> = {
-  visit: 'agendar uma visita',
-  whatsapp: 'falar com a equipe pelo WhatsApp',
-};
-
 export function buildLeadMessage(
-  intent: LeadIntent,
+  _intent: LeadIntent,
   details: LeadDetails,
   property?: Pick<Property, 'id' | 'title' | 'region' | 'price'>,
-  origin = typeof window !== 'undefined' ? window.location.origin : ''
+  _origin = typeof window !== 'undefined' ? window.location.origin : ''
 ) {
+  const propertyName = property?.title ?? 'Available properties in London';
   const lines = [
-    `Olá! Meu nome é ${details.name.trim()}.`,
-    `Quero ${intentLabels[intent]}.`,
+    'Hello!',
+    '',
+    'I am interested in the following property:',
+    '',
+    `🏠 ${propertyName}`,
+    '',
+    `👤 Name: ${details.name.trim()}`,
+    '',
+    `📅 Expected move-in: ${details.moveInDate || 'Not provided'}`,
+    '',
+    `👥 Number of occupants: ${details.people || 'Not provided'}`,
+    '',
+    'I would like to know:',
+    '',
+    '• Is the property still available?',
+    '• What are the move-in costs?',
+    '• Could you send me more photos or videos?',
+    '',
+    'Thank you!',
   ];
-
-  if (property) {
-    lines.push(
-      '',
-      `Imóvel: ${property.title}`,
-      `Região: ${property.region}`,
-      `Valor: ${property.price}`,
-      `ID: ${property.id}`,
-      `Link: ${origin}/property/${property.id}`
-    );
-  }
-
-  if (details.moveInDate) lines.push(`Mudança prevista: ${details.moveInDate}`);
-  if (details.people) lines.push(`Número de pessoas: ${details.people}`);
-  if (details.note?.trim()) lines.push(`Observação: ${details.note.trim()}`);
-  lines.push('', 'Pode me ajudar com os próximos passos?');
 
   return lines.join('\n');
 }
-
-export const leadIntentLabels = intentLabels;

@@ -81,9 +81,22 @@ main:focus-visible {
 .whatsapp-enter { animation: whatsapp-enter 300ms ease-out both; }
 .whatsapp-pulse { animation: whatsapp-pulse 2.5s ease-out infinite; }
 
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-card-in {
+  from { opacity: 0; transform: translateY(28px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-backdrop { animation: modal-backdrop-in 180ms ease-out both; }
+.modal-card { animation: modal-card-in 300ms cubic-bezier(.2,.85,.2,1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
-  .hero-reveal, .whatsapp-enter, .whatsapp-pulse { animation: none !important; }
+  .hero-reveal, .whatsapp-enter, .whatsapp-pulse, .modal-backdrop, .modal-card { animation: none !important; }
   .reveal-section { opacity: 1 !important; transform: none !important; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }

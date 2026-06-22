@@ -824,7 +824,6 @@ export function PropertyDetailsPage() {
         intent={leadIntent}
         source="property_details"
         property={property}
-        onIntentChange={setLeadIntent}
         onClose={() => setIsLeadFormOpen(false)}
       />
 
