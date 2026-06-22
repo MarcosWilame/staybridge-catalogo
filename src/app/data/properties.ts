@@ -171,7 +171,7 @@ export const properties: Property[] = [
   price: '£160/week',
 
   description:
-    'Quarto individual confortável em Neasden.',
+    'Single Room confortável em Neasden.',
 
   longDescription:
     'Single room totalmente mobiliado em ótima localização de Neasden. Ambiente confortável, com fácil acesso ao transporte público e bills inclusas.',

@@ -10,7 +10,7 @@ export function PropertyCategories() {
 
   const categories = [
     {
-      name: 'Estúdios',
+      name: 'Studios',
       icon: Home,
       description: 'Espaços independentes completos',
       count: countByCategory('studio'),
@@ -18,7 +18,7 @@ export function PropertyCategories() {
       category: 'studio',
     },
     {
-      name: 'Suítes',
+      name: 'Ensuites',
       icon: Bed,
       description: 'Quartos com banheiro privativo',
       count: countByCategory('ensuite'),
@@ -26,9 +26,9 @@ export function PropertyCategories() {
       category: 'ensuite',
     },
     {
-      name: 'Apartamentos',
+      name: 'Flats',
       icon: Building2,
-      description: 'Apartamentos completos',
+      description: 'Flats completos',
       count: countByCategory('flat'),
       color: 'from-[var(--green-dark)] to-[var(--green-medium)]',
       category: 'flat',

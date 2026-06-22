@@ -364,7 +364,7 @@ export function PropertyDetailsPage() {
           })),
           {
             '@type': 'LocationFeatureSpecification',
-            name: 'Contas inclusas',
+            name: 'Bills inclusas',
             value: property.billsIncluded,
           },
           {
@@ -538,7 +538,7 @@ export function PropertyDetailsPage() {
 
                 {property.billsIncluded && (
                   <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
-                    Contas inclusas
+                    Bills inclusas
                   </span>
                 )}
               </div>

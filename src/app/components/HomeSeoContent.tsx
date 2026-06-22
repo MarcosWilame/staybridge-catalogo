@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 const questions = [
   {
     question: 'Quais tipos de acomodação estão disponíveis em Londres?',
-    answer: 'O catálogo reúne quartos, suítes, estúdios e apartamentos. Use os filtros para comparar região, preço semanal, capacidade e data de entrada.',
+    answer: 'O catálogo reúne Rooms, Ensuites, Studios e Flats. Use os filtros para comparar região, preço semanal, capacidade e data de entrada.',
   },
   {
-    question: 'As contas estão incluídas no aluguel?',
-    answer: 'Algumas unidades incluem bills. Essa informação aparece no anúncio e também pode ser selecionada como filtro no catálogo.',
+    question: 'As bills estão inclusas no aluguel?',
+    answer: 'Algumas unidades têm Bills inclusas. Essa informação aparece no anúncio e também pode ser selecionada como filtro no catálogo.',
   },
   {
     question: 'Posso receber atendimento em português?',
@@ -31,7 +31,7 @@ export function HomeSeoContent() {
             Encontre sua acomodação em Londres
           </h2>
           <p className="mt-4 max-w-xl leading-relaxed text-gray-700">
-            Compare quartos, suítes, estúdios e apartamentos por preço, região e disponibilidade — com atendimento em português.
+            Compare Rooms, Ensuites, Studios e Flats por preço, região e disponibilidade — com atendimento em português.
           </p>
           <Link
             to="/properties"

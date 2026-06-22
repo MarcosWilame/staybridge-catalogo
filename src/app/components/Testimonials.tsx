@@ -5,7 +5,7 @@ const testimonials = [
     name: 'Maria Silva',
     role: 'Estudante em Londres',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
-    text: 'Encontrei meu studio perfeito em North London. O atendimento em português fez toda diferença! Bills inclusas e entrada imediata.',
+    text: 'Encontrei meu Studio perfeito em North London. O atendimento em português fez toda diferença! Bills inclusas e entrada imediata.',
     rating: 5,
   },
   {

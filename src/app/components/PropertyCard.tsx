@@ -318,7 +318,7 @@ export function PropertyCard({
           </div>
           {property.billsIncluded && (
             <div className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-[var(--green-dark)] shadow-sm">
-              Contas inclusas
+              Bills inclusas
             </div>
           )}
         </div>
