@@ -7,8 +7,11 @@ import { PropertyMap } from '../components/PropertyMap';
 import { getAvailabilityInfo } from '../utils/availability';
 import { WHATSAPP_URL } from '../config/contact';
 import { SEO } from '../components/SEO';
+import { LeadCaptureModal } from '../components/LeadCaptureModal';
+import type { LeadIntent } from '../utils/leadCapture';
 import { trackEvent } from '../utils/analytics';
 import { getAbsoluteUrl, SITE_NAME } from '../config/site';
+import { getPropertyImageAlt } from '../utils/imageAlt';
 import {
   MAX_COMPARE_ITEMS,
   getCompareProperties,
@@ -22,6 +25,7 @@ import {
   Home,
   KeyRound,
   MapPin,
+  MessageCircle,
   Scale,
   Search,
   SlidersHorizontal,
@@ -143,6 +147,9 @@ export function ListingPage() {
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [compareMessage, setCompareMessage] = useState('');
+  const [leadIntent, setLeadIntent] = useState<LeadIntent>('whatsapp');
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const mobileFilterCloseRef = useRef<HTMLButtonElement>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(
     properties[0]
   );
@@ -153,6 +160,24 @@ export function ListingPage() {
   useEffect(() => {
     filtersRef.current = filters;
   }, [filters]);
+
+  useEffect(() => {
+    if (!showMobileFilters) return;
+
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowMobileFilters(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    window.requestAnimationFrame(() => mobileFilterCloseRef.current?.focus());
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [showMobileFilters]);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -487,23 +512,62 @@ export function ListingPage() {
     ? `Veja ${sortedProperties.length} opcoes em Londres para ${activeFilterSummary}. Studios, ensuites, rooms e flats com atendimento em portugues.`
     : 'Compare studios, ensuites, rooms e flats em Londres com filtros por regiao, valor, capacidade, bills inclusas e disponibilidade agora.';
 
-  const listingJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: `${listingTitle} | ${SITE_NAME}`,
-    description: listingDescription,
-    url: getAbsoluteUrl('/properties'),
-    mainEntity: {
-      '@type': 'ItemList',
-      numberOfItems: sortedProperties.length,
-      itemListElement: visibleProperties.slice(0, 12).map((property, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        url: getAbsoluteUrl(`/property/${property.id}`),
-        name: property.title,
-      })),
+  const listingJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': `${getAbsoluteUrl('/properties')}#collection`,
+      name: `${listingTitle} | ${SITE_NAME}`,
+      description: listingDescription,
+      url: getAbsoluteUrl('/properties'),
+      inLanguage: ['pt-BR', 'en-GB'],
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: sortedProperties.length,
+        itemListElement: visibleProperties.slice(0, 12).map((property, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          item: {
+            '@type': 'RealEstateListing',
+            name: property.title,
+            description: property.description,
+            image: property.image,
+            url: getAbsoluteUrl(`/property/${property.id}`),
+            mainEntity: {
+              '@type': ['flat', 'studio', 'apartment'].includes(property.category.toLowerCase())
+                ? ['Residence', 'Apartment']
+                : 'Residence',
+              name: property.title,
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: property.localArea || property.region,
+                postalCode: property.postcode,
+                addressCountry: 'GB',
+              },
+            },
+          },
+        })),
+      },
     },
-  };
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Início',
+          item: getAbsoluteUrl('/'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Imóveis em Londres',
+          item: getAbsoluteUrl('/properties'),
+        },
+      ],
+    },
+  ];
 
   const peopleOptions = [
     { value: '', label: 'Qualquer' },
@@ -638,13 +702,13 @@ export function ListingPage() {
     return (
       <div className="mb-6 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <label
-            htmlFor={`price-${isMobile ? 'mobile' : 'desktop'}`}
+          <div
+            id={`price-label-${isMobile ? 'mobile' : 'desktop'}`}
             className="flex items-center gap-2 font-bold text-sm"
           >
             <Banknote className="h-4 w-4" />
             Valor
-          </label>
+          </div>
           <span className="shrink-0 rounded-full bg-[var(--green-dark)]/10 px-3 py-1 text-sm font-bold text-[var(--green-dark)]">
             {hasPriceFilter ? `Ate £${draftPrice}` : 'Qualquer'}
           </span>
@@ -658,6 +722,7 @@ export function ListingPage() {
           aria-valuemax={availableMaxPrice}
           aria-valuenow={draftPrice}
           aria-valuetext={hasPriceFilter ? `Ate £${draftPrice} por semana` : 'Qualquer valor'}
+          aria-labelledby={`price-label-${isMobile ? 'mobile' : 'desktop'}`}
           className="group relative h-10 cursor-grab touch-none select-none active:cursor-grabbing"
           onPointerDown={(event) => {
             event.preventDefault();
@@ -754,8 +819,6 @@ export function ListingPage() {
         )}
       </div>
 
-      <PriceSliderFilter isMobile={isMobile} />
-
       <div className="mb-6">
         <label
           htmlFor={`search-${isMobile ? 'mobile' : 'desktop'}`}
@@ -769,6 +832,8 @@ export function ListingPage() {
           <input
             id={`search-${isMobile ? 'mobile' : 'desktop'}`}
             type="search"
+            inputMode="search"
+            autoComplete="off"
             value={filters.search}
             onChange={(event) =>
               updateFilter('search', event.target.value, { syncUrl: false })
@@ -778,6 +843,8 @@ export function ListingPage() {
           />
         </div>
       </div>
+
+      <PriceSliderFilter isMobile={isMobile} />
 
       {/* REGION */}
       <div className="space-y-2">
@@ -890,7 +957,7 @@ export function ListingPage() {
               onClick={() => updateFilter('availableNow', !filters.availableNow)}
               className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
                 filters.availableNow
-                  ? 'border-[var(--yellow)] bg-[var(--yellow)] text-black shadow-sm'
+                  ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
                   : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
             >
@@ -1043,7 +1110,7 @@ export function ListingPage() {
                       <div className="mb-2 aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
                         <img
                           src={property.image}
-                          alt={property.title}
+                          alt={getPropertyImageAlt(property)}
                           className="h-full w-full object-cover"
                           loading="lazy"
                         />
@@ -1081,16 +1148,18 @@ export function ListingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28 pt-28 md:pb-10">
+    <div className="min-h-screen bg-gray-50 pb-40 pt-28 md:pb-10">
       <SEO
         title={listingTitle}
         description={listingDescription}
+        imageAlt="Imóveis e quartos para alugar em Londres"
+        canonicalPath="/properties"
         jsonLd={listingJsonLd}
       />
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-5">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Propriedades</h1>
+            <h1 className="text-3xl font-bold mb-2">{listingTitle}</h1>
             <p>
               {isLoading ? 'Sincronizando propriedades...' : `${filteredProperties.length} resultados`}
             </p>
@@ -1166,7 +1235,7 @@ export function ListingPage() {
               onClick={() => updateFilter('availableNow', !filters.availableNow)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
                 filters.availableNow
-                  ? 'bg-[var(--yellow)] text-black shadow'
+                  ? 'bg-[var(--green-dark)] text-white shadow'
                   : 'bg-gray-100 text-gray-700'
               }`}
             >
@@ -1201,7 +1270,7 @@ export function ListingPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-gray-500">Resultados</div>
-                    <div className="text-lg font-bold text-gray-900">
+                    <div className="text-lg font-bold text-gray-900" role="status" aria-live="polite">
                       {isLoading
                         ? 'Buscando unidades...'
                         : `${sortedProperties.length} propriedade${sortedProperties.length !== 1 ? 's' : ''}`}
@@ -1230,6 +1299,17 @@ export function ListingPage() {
                       <option value="type">Tipo</option>
                     </select>
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLeadIntent('whatsapp');
+                      setIsLeadFormOpen(true);
+                    }}
+                    className="hidden min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-4 py-2 text-sm font-bold text-black xl:flex"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Ajuda para escolher
+                  </button>
                 </div>
 
                 {activeFilterChips.length > 0 && (
@@ -1336,6 +1416,9 @@ export function ListingPage() {
       {showMobileFilters && (
         <div
           className="fixed inset-0 z-[60] flex justify-end bg-black/50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filtros de imóveis"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowMobileFilters(false);
           }}
@@ -1346,6 +1429,7 @@ export function ListingPage() {
                 Filtros
               </span>
               <button
+                ref={mobileFilterCloseRef}
                 type="button"
                 onClick={() => setShowMobileFilters(false)}
                 className="rounded-full bg-gray-100 p-2 text-gray-700"
@@ -1369,6 +1453,34 @@ export function ListingPage() {
           </div>
         </div>
       )}
+
+      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,.10)] backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-sm font-extrabold text-gray-900">Não encontrou o ideal?</div>
+            <div className="truncate text-xs text-gray-600">Receba ajuda em português</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setLeadIntent('whatsapp');
+              setIsLeadFormOpen(true);
+            }}
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-[var(--yellow)] px-4 py-2.5 text-sm font-extrabold text-black shadow"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Quero ajuda
+          </button>
+        </div>
+      </div>
+
+      <LeadCaptureModal
+        isOpen={isLeadFormOpen}
+        intent={leadIntent}
+        source="property_listing"
+        onIntentChange={setLeadIntent}
+        onClose={() => setIsLeadFormOpen(false)}
+      />
 
       <ComparePanel />
     </div>

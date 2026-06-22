@@ -11,6 +11,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
   }
 
   const { src, alt, style, className, ...rest } = props
+  const resolvedAlt = alt === '' ? '' : alt?.trim() || 'Imagem de acomodação em Londres'
 
   useEffect(() => {
     setDidError(false)
@@ -22,10 +23,10 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       style={style}
     >
       <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
+        <img src={ERROR_IMG_SRC} alt={resolvedAlt ? `${resolvedAlt} — imagem indisponível` : ''} {...rest} data-original-url={src} />
       </div>
     </div>
   ) : (
-    <img src={src} alt={alt} className={className} style={style} {...rest} onError={handleError} />
+    <img src={src} alt={resolvedAlt} className={className} style={style} {...rest} onError={handleError} />
   )
 }

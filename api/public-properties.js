@@ -52,7 +52,7 @@ export default async function handler(req, res) {
 
     res.setHeader(
       'Cache-Control',
-      'no-store, no-cache, must-revalidate, max-age=0'
+      'public, s-maxage=300, stale-while-revalidate=3600'
     );
 
     res.setHeader('X-Content-Type-Options', 'nosniff');

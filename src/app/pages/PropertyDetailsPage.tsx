@@ -9,7 +9,10 @@ import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 import { WHATSAPP_URL } from '../config/contact';
 import { SEO } from '../components/SEO';
-import { getAbsoluteUrl, SITE_NAME } from '../config/site';
+import { LeadCaptureModal } from '../components/LeadCaptureModal';
+import type { LeadIntent } from '../utils/leadCapture';
+import { getPropertyImageAlt } from '../utils/imageAlt';
+import { getAbsoluteUrl } from '../config/site';
 import { trackEvent } from '../utils/analytics';
 
 import {
@@ -128,6 +131,8 @@ export function PropertyDetailsPage() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [shareStatus, setShareStatus] = useState('');
+  const [leadIntent, setLeadIntent] = useState<LeadIntent>('whatsapp');
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const mediaItems = useMemo(
     () => (property ? getMediaItems(property) : []),
     [property]
@@ -152,6 +157,13 @@ export function PropertyDetailsPage() {
 
   const propertyNotFoundContent = !property ? (
       <div className="min-h-screen flex items-center justify-center">
+        {!isLoading && (
+          <SEO
+            noIndex
+            title="Imóvel não encontrado"
+            description="Este imóvel não está disponível no catálogo. Consulte outras acomodações em Londres."
+          />
+        )}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             {isLoading ? 'Carregando propriedade...' : 'Propriedade não encontrada'}
@@ -201,6 +213,16 @@ export function PropertyDetailsPage() {
       `${WHATSAPP_URL}?text=${message}`,
       '_blank'
     );
+  };
+
+  const openLeadForm = (intent: LeadIntent, source: string) => {
+    setLeadIntent(intent);
+    setIsLeadFormOpen(true);
+    trackEvent('lead_cta_click', {
+      source,
+      intent,
+      property_id: property?.id,
+    });
   };
 
   const handleShare = async () => {
@@ -254,42 +276,104 @@ export function PropertyDetailsPage() {
   const propertyDescription =
     property.description ||
     `${property.type} em ${property.region} com atendimento em portugues.`;
+  const propertyUrl = getAbsoluteUrl(`/property/${property.id}`);
+  const residenceId = `${propertyUrl}#residence`;
+  const listingId = `${propertyUrl}#listing`;
+  const isApartment = ['flat', 'studio', 'apartment'].includes(
+    property.category.toLowerCase()
+  );
+  const propertyImages = Array.from(
+    new Set([property.image, ...(property.images || [])].filter(Boolean))
+  );
+  const hasValidCoordinates =
+    Number.isFinite(property.coordinates?.lat) &&
+    Number.isFinite(property.coordinates?.lng) &&
+    property.coordinates.lat !== 0 &&
+    property.coordinates.lng !== 0;
   const propertyJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Accommodation',
-    name: property.title,
-    description: propertyDescription,
-    image: (property.images?.length ? property.images : [property.image]).filter(Boolean),
-    url: getAbsoluteUrl(`/property/${property.id}`),
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: property.localArea || property.region,
-      postalCode: property.postcode,
-      streetAddress: property.address,
-      addressCountry: 'GB',
-    },
-    amenityFeature: property.amenities.map((amenity) => ({
-      '@type': 'LocationFeatureSpecification',
-      name: amenity,
-      value: true,
-    })),
-    offers: {
-      '@type': 'Offer',
-      price: getPriceValue(property.price),
-      priceCurrency: 'GBP',
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
-        price: getPriceValue(property.price),
-        priceCurrency: 'GBP',
-        unitText: 'week',
+    '@graph': [
+      {
+        '@type': 'RealEstateListing',
+        '@id': listingId,
+        name: property.title,
+        headline: `${property.title} para alugar em ${property.region}`,
+        description: propertyDescription,
+        url: propertyUrl,
+        image: propertyImages,
+        inLanguage: ['pt-BR', 'en-GB'],
+        mainEntity: { '@id': residenceId },
+        offers: {
+          '@type': 'Offer',
+          url: propertyUrl,
+          price: getPriceValue(property.price),
+          priceCurrency: 'GBP',
+          availability: property.available
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+          itemOffered: { '@id': residenceId },
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: getPriceValue(property.price),
+            priceCurrency: 'GBP',
+            unitText: 'WEEK',
+            billingDuration: 1,
+            billingIncrement: 1,
+          },
+          seller: { '@id': `${getAbsoluteUrl('/')}#business` },
+        },
       },
-      availability: property.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      url: getAbsoluteUrl(`/property/${property.id}`),
-      seller: {
-        '@type': 'Organization',
-        name: SITE_NAME,
+      {
+        '@type': isApartment ? ['Residence', 'Apartment'] : 'Residence',
+        '@id': residenceId,
+        name: property.title,
+        description: property.longDescription || propertyDescription,
+        url: propertyUrl,
+        image: propertyImages,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: property.localArea || property.region,
+          addressRegion: 'London',
+          postalCode: property.postcode,
+          streetAddress: property.address,
+          addressCountry: 'GB',
+        },
+        ...(hasValidCoordinates
+          ? {
+              geo: {
+                '@type': 'GeoCoordinates',
+                latitude: property.coordinates.lat,
+                longitude: property.coordinates.lng,
+              },
+            }
+          : {}),
+        numberOfBedrooms: property.bedrooms,
+        numberOfBathroomsTotal: property.bathrooms,
+        occupancy: {
+          '@type': 'QuantitativeValue',
+          maxValue: property.people,
+          unitText: 'PERSON',
+        },
+        accommodationCategory: property.type,
+        amenityFeature: [
+          ...property.amenities.map((amenity) => ({
+            '@type': 'LocationFeatureSpecification',
+            name: amenity,
+            value: true,
+          })),
+          {
+            '@type': 'LocationFeatureSpecification',
+            name: 'Bills included',
+            value: property.billsIncluded,
+          },
+          {
+            '@type': 'LocationFeatureSpecification',
+            name: 'Furnished',
+            value: Boolean(property.furnishing),
+          },
+        ],
       },
-    },
+    ],
   };
 
   const breadcrumbJsonLd = {
@@ -335,7 +419,9 @@ export function PropertyDetailsPage() {
         title={`${property.title} em ${property.region}`}
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
         image={property.image}
+        imageAlt={`${property.title} para alugar em ${property.region}`}
         type="article"
+        canonicalPath={`/property/${property.id}`}
         jsonLd={[propertyJsonLd, breadcrumbJsonLd]}
       />
 
@@ -344,7 +430,7 @@ export function PropertyDetailsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-gray-500 mb-3">
             <Link to="/" className="hover:text-[var(--green-dark)] transition-colors">
               Início
             </Link>
@@ -394,7 +480,7 @@ export function PropertyDetailsPage() {
               ) : (
                 <ImageWithFallback
                   src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')}
-                  alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                  alt={getPropertyImageAlt(property, currentImageIndex)}
                   className="w-full h-full object-cover"
                   loading="eager"
                   fetchPriority={currentImageIndex === 0 ? 'high' : 'auto'}
@@ -406,14 +492,18 @@ export function PropertyDetailsPage() {
               {mediaItems.length > 1 && (
                 <>
                   <button
+                    type="button"
                     onClick={prevImage}
+                    aria-label="Ver imagem anterior do imóvel"
                     className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:left-4 md:p-3"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={nextImage}
+                    aria-label="Ver próxima imagem do imóvel"
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:right-4 md:p-3"
                   >
                     <ChevronRight className="w-6 h-6" />
@@ -431,7 +521,7 @@ export function PropertyDetailsPage() {
                 <span
                   className={`rounded-full px-3 py-1.5 text-xs font-bold md:px-4 md:py-2 md:text-sm ${
                     isNow
-                      ? 'bg-[var(--yellow)] text-black'
+                      ? 'bg-[var(--green-dark)] text-white'
                       : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1.5'
                   }`}
                 >
@@ -459,7 +549,10 @@ export function PropertyDetailsPage() {
             {mediaItems.slice(0, 8).map((item, index) => (
               <button
                 key={index}
+                type="button"
                 onClick={() => setCurrentImageIndex(index)}
+                aria-label={item.type === 'video' ? `Reproduzir vídeo de ${property.title}` : `Ver ${getPropertyImageAlt(property, index)}`}
+                aria-current={currentImageIndex === index ? 'true' : undefined}
                 className={`aspect-square overflow-hidden rounded-lg border-2 transition-all md:h-24 md:aspect-auto ${
                   currentImageIndex === index
                     ? 'border-[var(--green-dark)] scale-105'
@@ -470,6 +563,7 @@ export function PropertyDetailsPage() {
                   <div className="relative h-full w-full bg-black">
                     <ImageWithFallback
                       src={getOptimizedImageUrl(videoThumbnail, 'thumb')}
+                      alt=""
                       className="h-full w-full object-cover opacity-60"
                       loading="lazy"
                       decoding="async"
@@ -481,6 +575,7 @@ export function PropertyDetailsPage() {
                 ) : (
                   <ImageWithFallback
                     src={getOptimizedImageUrl(item.src, 'thumb')}
+                    alt=""
                     className="w-full h-full object-cover"
                     loading="eager"
                     decoding="async"
@@ -516,7 +611,7 @@ export function PropertyDetailsPage() {
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold ${
                         isNow
-                          ? 'bg-[var(--yellow)] text-black'
+                          ? 'bg-[var(--green-dark)] text-white'
                           : 'bg-gray-100 text-gray-700'
                       }`}
                     >
@@ -624,7 +719,7 @@ export function PropertyDetailsPage() {
                 <div
                   className={`mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${
                     isNow
-                      ? 'bg-[var(--yellow)] text-black'
+                      ? 'bg-white text-[var(--green-dark)]'
                       : 'bg-white/20 text-white'
                   }`}
                 >
@@ -639,6 +734,25 @@ export function PropertyDetailsPage() {
                   <MessageCircle className="w-6 h-6" />
                   Falar no WhatsApp
                 </button>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openLeadForm('visit', 'property_sidebar')}
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+                  >
+                    <Calendar className="h-5 w-5" />
+                    Agendar visita
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openLeadForm('video', 'property_sidebar')}
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+                  >
+                    <Play className="h-5 w-5" />
+                    Pedir vídeo
+                  </button>
+                </div>
 
                 <a
                   href={getGoogleMapsUrl(property)}
@@ -665,7 +779,7 @@ export function PropertyDetailsPage() {
       </div>
 
       <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
+        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Week
@@ -676,14 +790,32 @@ export function PropertyDetailsPage() {
           </div>
 
           <button
+            type="button"
+            onClick={() => openLeadForm('visit', 'property_mobile_sticky')}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[var(--green-dark)] px-3 py-2.5 text-sm font-bold text-[var(--green-dark)]"
+          >
+            <Calendar className="h-4 w-4" />
+            Visita
+          </button>
+
+          <button
             onClick={handleWhatsApp}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-5 py-3 font-bold text-black shadow-lg"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[var(--yellow)] px-3 py-2.5 text-sm font-bold text-black shadow-lg"
           >
             <MessageCircle className="h-5 w-5" />
             WhatsApp
           </button>
         </div>
       </div>
+
+      <LeadCaptureModal
+        isOpen={isLeadFormOpen}
+        intent={leadIntent}
+        source="property_details"
+        property={property}
+        onIntentChange={setLeadIntent}
+        onClose={() => setIsLeadFormOpen(false)}
+      />
 
     </div>
   );

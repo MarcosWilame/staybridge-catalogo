@@ -18,6 +18,56 @@ body,
   overflow-x: hidden;
 }
 
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--yellow) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px var(--green-dark) !important;
+}
+
+:where(button, [role='button'], a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+main:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.deferred-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
+}
+
+@keyframes hero-reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-reveal {
+  animation: hero-reveal 480ms ease-out both;
+}
+.hero-delay-1 { animation-delay: 80ms; }
+.hero-delay-2 { animation-delay: 140ms; }
+.hero-delay-3 { animation-delay: 200ms; }
+.hero-delay-4 { animation-delay: 260ms; }
+
+@keyframes whatsapp-enter {
+  from { opacity: 0; transform: scale(.75); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes whatsapp-pulse {
+  0% { opacity: .55; transform: scale(1); }
+  70%, 100% { opacity: 0; transform: scale(1.5); }
+}
+.whatsapp-enter { animation: whatsapp-enter 300ms ease-out both; }
+.whatsapp-pulse { animation: whatsapp-pulse 2.5s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  .hero-reveal, .whatsapp-enter, .whatsapp-pulse { animation: none !important; }
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
 .price-range-control {
   --min-percent: 0%;
   --max-percent: 100%;

@@ -59,6 +59,7 @@ export function PropertyMap({
             href={getGoogleMapsUrl(selectedProperty)}
             target="_blank"
             rel="noreferrer"
+            aria-label={`Abrir localização aproximada de ${selectedProperty?.title || 'acomodações em Londres'} no Google Maps`}
             className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--green-medium)]"
           >
             <ExternalLink className="w-4 h-4" />
@@ -88,7 +89,10 @@ export function PropertyMap({
           {properties.map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => onSelectProperty?.(item)}
+              aria-pressed={selectedProperty?.id === item.id}
+              aria-label={`Mostrar ${item.title} no mapa`}
               className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors ${
                 selectedProperty?.id === item.id
                   ? 'bg-[var(--green-dark)]/10 text-[var(--green-dark)] font-semibold'

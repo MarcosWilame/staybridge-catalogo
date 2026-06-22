@@ -43,22 +43,22 @@ export function ProfilePage() {
           </div>
 
           <div className="mt-10 border-t border-gray-200 pt-6 md:mt-12 md:pt-8">
-            <h3 className="font-bold text-gray-900 mb-4">Serviços Disponíveis</h3>
+            <h2 className="font-bold text-gray-900 mb-4">Serviços Disponíveis</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               <div className="bg-[var(--gray-light)] rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Agendamento de Visitas</h4>
+                <h3 className="font-semibold text-gray-900 mb-2">Agendamento de Visitas</h3>
                 <p className="text-sm text-gray-600">Agende visitas presenciais ou virtuais</p>
               </div>
               <div className="bg-[var(--gray-light)] rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Processo de Reserva</h4>
+                <h3 className="font-semibold text-gray-900 mb-2">Processo de Reserva</h3>
                 <p className="text-sm text-gray-600">Documentação e contratos seguros</p>
               </div>
               <div className="bg-[var(--gray-light)] rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Suporte Contínuo</h4>
+                <h3 className="font-semibold text-gray-900 mb-2">Suporte Contínuo</h3>
                 <p className="text-sm text-gray-600">Assistência durante toda sua estadia</p>
               </div>
               <div className="bg-[var(--gray-light)] rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Atendimento em Português</h4>
+                <h3 className="font-semibold text-gray-900 mb-2">Atendimento em Português</h3>
                 <p className="text-sm text-gray-600">Equipe brasileira disponível</p>
               </div>
             </div>

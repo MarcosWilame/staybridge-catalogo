@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ArrowRight, Bed, Building2, Home, MessageCircle, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
 
@@ -31,9 +30,15 @@ export function Hero() {
       {/* BACKGROUND */}
       <div className="absolute inset-0">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=1920&q=85"
+          src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=1600&q=76"
           alt="Vista clara e aconchegante de Londres durante o dia"
           className="w-full h-full object-cover"
+          width={1600}
+          height={1067}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#07140f]/86 via-[#173627]/48 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/40 via-transparent to-transparent" />
@@ -44,11 +49,8 @@ export function Hero() {
         <div className="max-w-3xl">
 
           {/* TITLE */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-5 break-words text-4xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)] sm:text-6xl lg:text-7xl"
+          <h1
+            className="hero-reveal mb-5 break-words text-4xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)] sm:text-6xl lg:text-7xl"
           >
             Sua Nova
             <br />
@@ -70,14 +72,11 @@ export function Hero() {
             </span>
             <br />
             <span className="text-[var(--yellow)]">em Londres</span>
-          </motion.h1>
+          </h1>
 
           {/* DESCRIPTION */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-7 inline-block rounded-xl bg-black/35 px-4 py-3 text-base leading-relaxed text-white shadow-lg backdrop-blur-[2px] sm:text-xl"
+          <p
+            className="hero-reveal hero-delay-1 mb-7 inline-block rounded-xl bg-black/35 px-4 py-3 text-base leading-relaxed text-white shadow-lg backdrop-blur-[2px] sm:text-xl"
           >
             Studios, ensuites e flats prontos para você morar.
             <br />
@@ -85,14 +84,11 @@ export function Hero() {
               Atendimento em português
             </strong>{' '}
             e entrada imediata.
-          </motion.p>
+          </p>
 
           {/* BUTTONS */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col gap-3 sm:flex-row sm:gap-4"
+          <div
+            className="hero-reveal hero-delay-2 flex flex-col gap-3 sm:flex-row sm:gap-4"
           >
             <button
               onClick={goToProperties}
@@ -109,13 +105,10 @@ export function Hero() {
               <MessageCircle className="w-5 h-5" />
               Falar no WhatsApp
             </button>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-5 rounded-2xl bg-black/35 p-3 backdrop-blur-[2px] sm:mt-6 sm:inline-block"
+          <div
+            className="hero-reveal hero-delay-3 mt-5 rounded-2xl bg-black/35 p-3 backdrop-blur-[2px] sm:mt-6 sm:inline-block"
           >
             <div className="mb-2 text-xs font-bold uppercase tracking-wide text-white/75">
               Buscar rápido
@@ -144,14 +137,11 @@ export function Hero() {
                 );
               })}
             </div>
-          </motion.div>
+          </div>
 
           {/* TRUST */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.55 }}
-            className="mt-8 flex flex-wrap gap-2 text-sm text-white sm:mt-12 sm:gap-3"
+          <div
+            className="hero-reveal hero-delay-4 mt-8 flex flex-wrap gap-2 text-sm text-white sm:mt-12 sm:gap-3"
           >
             <div className="flex items-center gap-2 rounded-full bg-black/28 px-3 py-2 backdrop-blur-[2px]">
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
@@ -165,7 +155,7 @@ export function Hero() {
               <div className="w-2 h-2 bg-[var(--yellow)] rounded-full" />
               <span>Disponível agora</span>
             </div>
-          </motion.div>
+          </div>
 
         </div>
       </div>

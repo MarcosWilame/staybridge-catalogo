@@ -20,7 +20,6 @@ Responsive property catalog for Brazilian customers looking for rooms, studios, 
 - TypeScript
 - Vite 5
 - Tailwind CSS 3
-- Framer Motion 11
 - Lucide React
 - Supabase REST/Auth/Storage
 

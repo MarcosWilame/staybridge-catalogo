@@ -47,6 +47,15 @@ export function Header() {
     return () => cancelAnimationFrame(raf);
   }, [isHome]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isMobileMenuOpen]);
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: 'smooth' });
@@ -95,13 +104,18 @@ export function Header() {
             <img
               src="/img/logo-white.png"
               alt="Staybridge London"
+              width="489"
+              height="356"
+              decoding="async"
+              loading="eager"
+              fetchPriority="high"
               className="h-20 w-auto object-contain md:h-[86px]"
               style={{ mixBlendMode: 'screen' }}
             />
           </NavLink>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav aria-label="Navegação principal" className="hidden md:flex items-center gap-8">
             <NavLink to="/" end onClick={handleLogoClick} className={navLinkClass}>
               Início
             </NavLink>
@@ -128,7 +142,11 @@ export function Header() {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation"
             className="md:hidden p-2 rounded-lg transition-colors text-white"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -137,8 +155,8 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-green-700 bg-[#2d6a4f]">
-            <nav className="flex flex-col gap-4">
+          <div id="mobile-navigation" className="md:hidden py-4 border-t border-green-700 bg-[#2d6a4f]">
+            <nav aria-label="Navegação mobile" className="flex flex-col gap-4">
               <NavLink
                 to="/"
                 end

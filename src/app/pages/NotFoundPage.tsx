@@ -6,6 +6,7 @@ export function NotFoundPage() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 pb-24 pt-24">
       <SEO
+        noIndex
         title="Pagina nao encontrada"
         description="A pagina solicitada nao existe. Veja as propriedades disponiveis da Staybridge London."
       />

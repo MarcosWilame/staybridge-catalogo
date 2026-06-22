@@ -71,7 +71,7 @@ export function Testimonials() {
               <div className="flex items-center gap-4">
                 <img
                   src={testimonial.image}
-                  alt={testimonial.name}
+                  alt={`Foto de ${testimonial.name}`}
                   className="w-12 h-12 rounded-full object-cover border-2 border-[var(--green-dark)]"
                 />
                 <div>

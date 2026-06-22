@@ -2,66 +2,62 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/img/logo-white.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Staybridge London | Acomodações para Brasileiros em Londres</title>
+    <title>Acomodações para Brasileiros em Londres | Staybridge London</title>
 
     <meta
       name="description"
-      content="Studios, ensuites e flats em Londres com bills inclusas, entrada imediata e atendimento em português. Mais de 500 brasileiros atendidos."
+      content="Quartos, studios, ensuites e apartamentos para alugar em Londres, com filtros por preço, região e disponibilidade e atendimento em português."
     />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
 
     <link rel="canonical" href="https://staybridgelondon.com/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Staybridge London | Acomodacoes para brasileiros em Londres" />
-    <meta property="og:description" content="Studios, ensuites e flats em Londres com bills inclusas, entrada imediata e atendimento em portugues." />
+    <meta property="og:site_name" content="Staybridge London" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Acomodações para Brasileiros em Londres | Staybridge London" />
+    <meta property="og:description" content="Quartos, studios, ensuites e apartamentos para alugar em Londres com atendimento em português." />
     <meta property="og:url" content="https://staybridgelondon.com/" />
     <meta property="og:image" content="https://staybridgelondon.com/img/logo-white.png" />
+    <meta property="og:image:secure_url" content="https://staybridgelondon.com/img/logo-white.png" />
+    <meta property="og:image:alt" content="Staybridge London — acomodações para alugar em Londres" />
     <meta name="twitter:card" content="summary_large_image" />
-
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9D1KS9Y74"></script>
-
-    <script>
-      window.dataLayer = window.dataLayer || [];
-
-      function gtag() {
-        dataLayer.push(arguments);
+    <meta name="twitter:title" content="Acomodações para Brasileiros em Londres | Staybridge London" />
+    <meta name="twitter:description" content="Quartos, studios, ensuites e apartamentos para alugar em Londres com atendimento em português." />
+    <meta name="twitter:image" content="https://staybridgelondon.com/img/logo-white.png" />
+    <meta name="twitter:image:alt" content="Staybridge London — acomodações para alugar em Londres" />
+    <script id="site-json-ld" type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": ["LocalBusiness", "RealEstateAgent"],
+            "@id": "https://staybridgelondon.com/#business",
+            "name": "Staybridge London",
+            "url": "https://staybridgelondon.com/",
+            "logo": "https://staybridgelondon.com/img/logo-white.png",
+            "image": "https://staybridgelondon.com/img/logo-white.png",
+            "priceRange": "££",
+            "knowsLanguage": ["pt-BR", "en-GB"],
+            "areaServed": { "@type": "City", "name": "London" },
+            "sameAs": ["https://instagram.com/staybridge_london"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://staybridgelondon.com/#website",
+            "name": "Staybridge London",
+            "url": "https://staybridgelondon.com/"
+          }
+        ]
       }
-
-      gtag('js', new Date());
-      gtag('config', 'G-V9D1KS9Y74', { send_page_view: false });
     </script>
-
-    <!-- Meta Pixel -->
-    <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}
-      (window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-
-      fbq('init', '824860120424535');
-    </script>
-    <!-- End Meta Pixel -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
   </head>
 
   <body>
-    <!-- Meta Pixel (noscript) -->
-    <noscript>
-      <img
-        height="1"
-        width="1"
-        style="display:none"
-        src="https://www.facebook.com/tr?id=824860120424535&ev=PageView&noscript=1"
-      />
-    </noscript>
-
     <div id="root"></div>
 
     <script type="module" src="/src/main.tsx"></script>

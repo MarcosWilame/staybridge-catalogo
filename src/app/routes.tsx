@@ -1,11 +1,20 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { RootLayout } from './layouts/RootLayout';
 import { HomePage } from './pages/HomePage';
-import { ListingPage } from './pages/ListingPage';
-import { PropertyDetailsPage } from './pages/PropertyDetailsPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { NotFoundPage } from './pages/NotFoundPage';
+
+const ListingPage = lazy(() =>
+  import('./pages/ListingPage').then((module) => ({ default: module.ListingPage }))
+);
+const PropertyDetailsPage = lazy(() =>
+  import('./pages/PropertyDetailsPage').then((module) => ({ default: module.PropertyDetailsPage }))
+);
+const ProfilePage = lazy(() =>
+  import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage }))
+);
+const NotFoundPage = lazy(() =>
+  import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage }))
+);
 
 const AdminPage = lazy(() =>
   import('./pages/AdminPage').then((module) => ({ default: module.AdminPage }))
@@ -27,16 +36,24 @@ function AdminRoute() {
   );
 }
 
+function DeferredRoute({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<div className="min-h-[70vh] bg-white" aria-busy="true" />}>
+      {children}
+    </Suspense>
+  );
+}
+
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
       { path: '/', element: <HomePage /> },
-      { path: '/properties', element: <ListingPage /> },
-      { path: '/property/:id', element: <PropertyDetailsPage /> },
-      { path: '/profile', element: <ProfilePage /> },
+      { path: '/properties', element: <DeferredRoute><ListingPage /></DeferredRoute> },
+      { path: '/property/:id', element: <DeferredRoute><PropertyDetailsPage /></DeferredRoute> },
+      { path: '/profile', element: <DeferredRoute><ProfilePage /></DeferredRoute> },
       { path: '/admin/*', element: <AdminRoute /> },
-      { path: '*', element: <NotFoundPage /> },
+      { path: '*', element: <DeferredRoute><NotFoundPage /></DeferredRoute> },
     ],
   },
 ]);

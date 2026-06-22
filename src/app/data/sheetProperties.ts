@@ -3,6 +3,19 @@ import type { Property } from './properties';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
+const CACHE_KEY = 'staybridge-public-properties-v1';
+const CACHE_TTL = 5 * 60 * 1000;
+
+function readSessionCache() {
+  try {
+    const value = sessionStorage.getItem(CACHE_KEY);
+    if (!value) return null;
+    const parsed = JSON.parse(value) as { timestamp: number; properties: Property[] };
+    return Date.now() - parsed.timestamp < CACHE_TTL ? parsed.properties : null;
+  } catch {
+    return null;
+  }
+}
 
 function isListedProperty(property: Property) {
   return property.listed !== false;
@@ -12,9 +25,15 @@ async function loadPropertiesFromSource() {
   if (cachedProperties) return cachedProperties;
   if (cachedError) throw new Error(cachedError);
 
+  const storedProperties = readSessionCache();
+  if (storedProperties) {
+    cachedProperties = storedProperties;
+    return storedProperties;
+  }
+
   try {
     const response = await fetch('/api/public-properties', {
-      cache: 'no-store',
+      cache: 'default',
     });
 
     const contentType = response.headers.get('content-type') || '';
@@ -33,6 +52,14 @@ async function loadPropertiesFromSource() {
     cachedProperties = Array.isArray(data)
       ? (data as Property[]).filter(isListedProperty)
       : [];
+    try {
+      sessionStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ timestamp: Date.now(), properties: cachedProperties })
+      );
+    } catch {
+      // Storage can be unavailable in privacy modes; memory cache still works.
+    }
     return cachedProperties;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';

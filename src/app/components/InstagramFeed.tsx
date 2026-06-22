@@ -41,7 +41,8 @@ function CarouselCard() {
         <img
           key={i}
           src={src}
-          alt={`Carousel ${i + 1}`}
+          alt={i === current ? `Acomodação em Londres, foto ${i + 1} do Instagram da Staybridge` : ''}
+          aria-hidden={i !== current}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
             i === current ? 'opacity-100' : 'opacity-0'
           }`}
@@ -107,7 +108,7 @@ export function InstagramFeed() {
             >
               <img
                 src={post.image}
-                alt={`Instagram post ${index + 1}`}
+                alt={`Acomodação em Londres na publicação ${index + 1} da Staybridge`}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">

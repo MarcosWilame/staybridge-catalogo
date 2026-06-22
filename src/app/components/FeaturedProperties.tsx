@@ -4,7 +4,6 @@ import { ArrowRight } from 'lucide-react';
 import { PropertyCard } from './PropertyCard';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
-import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 function pickFirstUnused(
   properties: Property[],
@@ -73,49 +72,17 @@ function getPropertyImageCandidates(property: Property) {
   });
 }
 
-function canLoadImage(src: string) {
-  return new Promise<boolean>((resolve) => {
-    const image = new Image();
-    const timeout = window.setTimeout(() => resolve(false), 5000);
-
-    image.onload = () => {
-      window.clearTimeout(timeout);
-      resolve(Boolean(image.naturalWidth && image.naturalHeight));
-    };
-
-    image.onerror = () => {
-      window.clearTimeout(timeout);
-      resolve(false);
-    };
-
-    image.src = getOptimizedImageUrl(src, 'card');
-  });
-}
-
-async function propertyHasLoadableImage(property: Property) {
-  for (const image of getPropertyImageCandidates(property)) {
-    if (await canLoadImage(image)) return true;
-  }
-
-  return false;
-}
-
 export function FeaturedProperties() {
   const { properties } = useProperties();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [verifiedImageIds, setVerifiedImageIds] = useState<Set<number>>(new Set());
 
   const availableProperties = useMemo(
     () => properties.filter((property) => property.available && hasDisplayImage(property)),
     [properties]
   );
-  const imageReadyProperties = useMemo(
-    () => availableProperties.filter((property) => verifiedImageIds.has(property.id)),
-    [availableProperties, verifiedImageIds]
-  );
   const featuredProperties = useMemo(
-    () => pickFeaturedProperties(imageReadyProperties),
-    [imageReadyProperties]
+    () => pickFeaturedProperties(availableProperties),
+    [availableProperties]
   );
   const carouselProperties = featuredProperties.length
     ? Array.from(
@@ -123,30 +90,6 @@ export function FeaturedProperties() {
         (_, index) => featuredProperties[(activeIndex + index) % featuredProperties.length]
       )
     : [];
-
-  useEffect(() => {
-    let isMounted = true;
-
-    setVerifiedImageIds(new Set());
-
-    availableProperties.forEach((property) => {
-      propertyHasLoadableImage(property).then((hasImage) => {
-        if (!isMounted || !hasImage) return;
-
-        setVerifiedImageIds((current) => {
-          if (current.has(property.id)) return current;
-
-          const next = new Set(current);
-          next.add(property.id);
-          return next;
-        });
-      });
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [availableProperties]);
 
   useEffect(() => {
     if (featuredProperties.length <= 1) return;
@@ -182,7 +125,7 @@ export function FeaturedProperties() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[var(--green-dark)] shadow-sm">
-              {imageReadyProperties.length} opções disponíveis
+              {availableProperties.length} opções disponíveis
             </div>
             <Link
               to="/properties"

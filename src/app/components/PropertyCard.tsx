@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import {
   MapPin,
   Bed,
-  MessageCircle,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
@@ -14,12 +13,11 @@ import {
   Share2,
 } from 'lucide-react';
 import { Property } from '../data/properties';
-import { getPropertyAttributes } from '../utils/propertyAttributes';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
-import { WHATSAPP_URL } from '../config/contact';
-import { createWhatsAppLeadMessage, shareProperty } from '../utils/shareProperty';
+import { shareProperty } from '../utils/shareProperty';
 import { trackEvent } from '../utils/analytics';
+import { getPropertyImageAlt } from '../utils/imageAlt';
 
 interface PropertyCardProps {
   property: Property;
@@ -116,15 +114,6 @@ export function PropertyCard({
     bills_included: property.billsIncluded,
   });
 
-  const handleWhatsApp = () => {
-    const message = encodeURIComponent(createWhatsAppLeadMessage(property));
-    trackEvent('whatsapp_click', {
-      source: 'property_card',
-      ...getPropertyTrackingParams(),
-    });
-    window.open(`${WHATSAPP_URL}?text=${message}`, '_blank');
-  };
-
   const handleShare = async () => {
     try {
       const result = await shareProperty(property);
@@ -149,30 +138,23 @@ export function PropertyCard({
   };
 
   const showPreviousImage = () => {
+    const nextIndex = (currentImageIndex - 1 + images.length) % images.length;
+    preloadImage(getOptimizedImageUrl(images[nextIndex], 'card'));
     setCurrentImageIndex((current) =>
       (current - 1 + images.length) % images.length
     );
   };
 
   const showNextImage = () => {
+    const nextIndex = (currentImageIndex + 1) % images.length;
+    preloadImage(getOptimizedImageUrl(images[nextIndex], 'card'));
     setCurrentImageIndex((current) => (current + 1) % images.length);
   };
 
-  useEffect(() => {
-    if (!hasCarousel) return;
-
-    const nextImage = images[(currentImageIndex + 1) % images.length];
-    const previousImage =
-      images[(currentImageIndex - 1 + images.length) % images.length];
-
-    preloadImage(getOptimizedImageUrl(nextImage, 'card'));
-    preloadImage(getOptimizedImageUrl(previousImage, 'card'));
-  }, [currentImageIndex, hasCarousel, images]);
-
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-2xl md:rounded-2xl">
+    <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--green-dark)] hover:shadow-xl md:rounded-2xl">
       {/* Image Container */}
-      <div className="relative h-56 shrink-0 overflow-hidden sm:h-64">
+      <div className="relative h-52 shrink-0 overflow-hidden sm:h-56">
         <Link
           to={`/property/${property.id}`}
           className="block h-full"
@@ -180,10 +162,13 @@ export function PropertyCard({
         >
           <ImageWithFallback
             src={getOptimizedImageUrl(currentImage, 'card')}
-            alt={property.title}
+            alt={getPropertyImageAlt(property, currentImageIndex)}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             loading="lazy"
             decoding="async"
+            width={720}
+            height={520}
+            sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
           />
         </Link>
 
@@ -192,7 +177,7 @@ export function PropertyCard({
           <span
             className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
               isNow
-                ? 'bg-[var(--yellow)] text-black'
+                ? 'bg-[var(--green-dark)] text-white'
                 : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1'
             }`}
           >
@@ -205,19 +190,6 @@ export function PropertyCard({
               </>
             )}
           </span>
-          {property.billsIncluded && (
-            <span className="bg-white/95 backdrop-blur text-[var(--green-dark)] px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
-              Bills Inclusas
-            </span>
-          )}
-        </div>
-
-        {/* Price Badge */}
-        <div className="absolute bottom-3 right-3 hidden sm:block">
-          <div className="rounded-xl bg-[var(--green-dark)] px-3 py-2 text-white shadow-2xl backdrop-blur-sm md:px-4 md:py-2.5">
-            <div className="text-xs font-medium uppercase tracking-wide opacity-90">Week</div>
-            <div className="text-xl font-bold md:text-2xl">{weeklyPrice}</div>
-          </div>
         </div>
 
         {hasCarousel && (
@@ -255,8 +227,8 @@ export function PropertyCard({
               disabled={isCompareDisabled && !isCompareSelected}
               className={`rounded-full p-2 shadow-lg transition ${
                 isCompareSelected
-                  ? 'bg-[var(--yellow)] text-black'
-                  : 'bg-white/95 text-[var(--green-dark)] hover:bg-[var(--yellow)]'
+                  ? 'bg-[var(--green-dark)] text-white'
+                  : 'bg-white/95 text-[var(--green-dark)] hover:bg-[var(--green-dark)] hover:text-white'
               } disabled:cursor-not-allowed disabled:opacity-50`}
               aria-pressed={isCompareSelected}
               aria-label={isCompareSelected ? 'Remover da comparacao' : 'Adicionar a comparacao'}
@@ -269,7 +241,7 @@ export function PropertyCard({
           <button
             type="button"
             onClick={handleShare}
-            className="rounded-full bg-white/95 p-2 text-[var(--green-dark)] shadow-lg transition hover:bg-[var(--yellow)] hover:text-black"
+            className="rounded-full bg-white/95 p-2 text-[var(--green-dark)] shadow-lg transition hover:bg-[var(--green-dark)] hover:text-white"
             aria-label="Compartilhar imovel"
             title="Compartilhar"
           >
@@ -282,7 +254,7 @@ export function PropertyCard({
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-4 md:p-5">
+      <div className="flex flex-1 flex-col p-4">
         {/* Type and Region */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--green-dark)] font-bold text-xs uppercase tracking-wide bg-[var(--green-dark)]/10 px-2.5 py-1 rounded-lg">
@@ -302,64 +274,30 @@ export function PropertyCard({
           </h3>
         </Link>
 
-        <div className="mb-3 flex items-end justify-between gap-3 rounded-xl bg-[var(--green-dark)]/5 px-3 py-2 sm:hidden">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-[var(--green-dark)]/5 px-3 py-2.5">
           <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Week</div>
+            <div className="text-xs font-semibold text-gray-500">Por semana</div>
             <div className="truncate text-2xl font-extrabold leading-tight text-[var(--green-dark)]">
               {weeklyPrice}
             </div>
           </div>
-          <div
-            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-              isNow
-                ? 'bg-[var(--yellow)] text-black'
-                : 'bg-white text-[var(--green-dark)]'
-            }`}
-          >
-            {availabilityLabel}
-          </div>
-        </div>
-
-        {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-          {property.description}
-        </p>
-
-        {/* Features */}
-        <div className="mb-4 max-h-[48px] space-y-1 overflow-hidden">
-          {getPropertyAttributes(property).slice(0, 4).map((attribute) => {
-            const Icon = attribute.icon;
-
-            return (
-              <div
-                key={attribute.label}
-                className="flex items-start gap-2 text-sm leading-5 text-gray-600"
-              >
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-dark)]" />
-                <span className="line-clamp-1 break-words">{attribute.label}</span>
-              </div>
-            );
-          })}
+          {property.billsIncluded && (
+            <div className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-[var(--green-dark)] shadow-sm">
+              Contas inclusas
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-auto flex gap-2">
+        <div className="mt-auto">
           <Link
             to={`/property/${property.id}`}
             onClick={() => trackPropertyOpen('card_button')}
-            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-3 py-2.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] md:hover:scale-105 md:px-4"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--yellow)] px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-[var(--yellow-dark)]"
           >
             <span className="truncate">Ver Detalhes</span>
             <ArrowRight className="h-4 w-4 shrink-0" />
           </Link>
-          <button
-            onClick={handleWhatsApp}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-3 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-[var(--green-medium)] md:hover:scale-105 md:px-4"
-            title="Falar no WhatsApp"
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span className="sm:hidden">WhatsApp</span>
-          </button>
         </div>
 
         {shareStatus && (

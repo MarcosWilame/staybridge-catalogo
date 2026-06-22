@@ -18,7 +18,13 @@ function escapeXml(value) {
     .replace(/'/g, '&apos;');
 }
 
-async function loadPropertyIds() {
+function normalizeLastModified(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+async function loadPropertyEntries() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !SUPABASE_TABLE) return [];
 
   const response = await fetch(
@@ -40,41 +46,38 @@ async function loadPropertyIds() {
         .map((row) => ({
           id: Number(row?.data?.id || row?.id),
           listed: row?.data?.listed,
+          lastmod: normalizeLastModified(
+            row?.data?.updatedAt || row?.data?.updated_at || row?.data?.lastModified
+          ),
         }))
         .filter((property) => Number.isFinite(property.id) && property.listed !== false)
-        .map((property) => property.id)
+        .filter(
+          (property, index, entries) =>
+            entries.findIndex((candidate) => candidate.id === property.id) === index
+        )
     : [];
 }
 
 export default async function handler(req, res) {
-  const now = new Date().toISOString();
-  const propertyIds = await loadPropertyIds();
-  const staticPaths = ['/', '/properties', '/profile'];
-  const catalogFilterPaths = [
-    '/properties?type=studio',
-    '/properties?type=ensuite',
-    '/properties?type=flat',
-    '/properties?availableNow=1',
-    '/properties?billsIncluded=1',
-    '/properties?region=north',
-    '/properties?region=south',
-    '/properties?region=east',
-    '/properties?region=west',
-  ];
-  const propertyPaths = propertyIds.map((id) => `/property/${id}`);
-  const urls = [...staticPaths, ...catalogFilterPaths, ...propertyPaths]
+  const propertyEntries = await loadPropertyEntries();
+  const staticEntries = ['/', '/properties', '/profile'].map((path) => ({ path, lastmod: '' }));
+  const propertyPaths = propertyEntries.map(({ id, lastmod }) => ({
+    path: `/property/${id}`,
+    lastmod,
+  }));
+  const urls = [...staticEntries, ...propertyPaths]
     .map(
-      (path) => `  <url>
-    <loc>${escapeXml(`${SITE_URL}${path}`)}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${path.startsWith('/property/') ? 'weekly' : 'daily'}</changefreq>
-    <priority>${path === '/' ? '1.0' : path === '/properties' ? '0.9' : path.startsWith('/properties?') ? '0.8' : '0.7'}</priority>
+      ({ path, lastmod }) => `  <url>
+    <loc>${escapeXml(`${SITE_URL}${path}`)}</loc>${
+      lastmod ? `\n    <lastmod>${escapeXml(lastmod)}</lastmod>` : ''
+    }
   </url>`
     )
     .join('\n');
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('X-Robots-Tag', 'noindex');
   return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}

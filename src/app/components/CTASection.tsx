@@ -1,14 +1,19 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { MessageCircle, ArrowRight } from 'lucide-react';
-import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
+import { LeadCaptureModal } from './LeadCaptureModal';
+import type { LeadIntent } from '../utils/leadCapture';
 
 export function CTASection() {
   const navigate = useNavigate();
+  const [leadIntent, setLeadIntent] = useState<LeadIntent>('whatsapp');
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
 
   const handleWhatsApp = () => {
-    trackEvent('whatsapp_click', { source: 'home_cta' });
-    openWhatsApp();
+    trackEvent('lead_cta_click', { source: 'home_cta', intent: 'whatsapp' });
+    setLeadIntent('whatsapp');
+    setIsLeadFormOpen(true);
   };
 
   const goToProperties = () => {
@@ -87,6 +92,13 @@ export function CTASection() {
           </div>
         </div>
       </div>
+      <LeadCaptureModal
+        isOpen={isLeadFormOpen}
+        intent={leadIntent}
+        source="home_cta"
+        onIntentChange={setLeadIntent}
+        onClose={() => setIsLeadFormOpen(false)}
+      />
     </section>
   );
 }

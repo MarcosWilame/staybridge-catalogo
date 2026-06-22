@@ -6,7 +6,10 @@ interface SEOProps {
   title: string;
   description: string;
   image?: string;
+  imageAlt?: string;
   type?: 'website' | 'article';
+  noIndex?: boolean;
+  canonicalPath?: string;
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
@@ -42,30 +45,44 @@ export function SEO({
   title,
   description,
   image,
+  imageAlt,
   type = 'website',
+  noIndex = false,
+  canonicalPath,
   jsonLd,
 }: SEOProps) {
   const location = useLocation();
 
   useEffect(() => {
     const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
-    const canonicalUrl = getAbsoluteUrl(location.pathname);
+    const canonicalUrl = getAbsoluteUrl(canonicalPath || location.pathname);
     const socialImage = getImageUrl(image);
+    const socialImageAlt = imageAlt || `${title} — ${SITE_NAME}`;
 
     document.title = fullTitle;
     setMeta('meta[name="description"]', 'content', description);
+    setMeta(
+      'meta[name="robots"]',
+      'content',
+      noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'
+    );
     setMeta('link[rel="canonical"]', 'href', canonicalUrl);
 
     setMeta('meta[property="og:type"]', 'content', type);
+    setMeta('meta[property="og:site_name"]', 'content', SITE_NAME);
+    setMeta('meta[property="og:locale"]', 'content', 'pt_BR');
     setMeta('meta[property="og:title"]', 'content', fullTitle);
     setMeta('meta[property="og:description"]', 'content', description);
     setMeta('meta[property="og:url"]', 'content', canonicalUrl);
     setMeta('meta[property="og:image"]', 'content', socialImage);
+    setMeta('meta[property="og:image:secure_url"]', 'content', socialImage);
+    setMeta('meta[property="og:image:alt"]', 'content', socialImageAlt);
 
     setMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
     setMeta('meta[name="twitter:title"]', 'content', fullTitle);
     setMeta('meta[name="twitter:description"]', 'content', description);
     setMeta('meta[name="twitter:image"]', 'content', socialImage);
+    setMeta('meta[name="twitter:image:alt"]', 'content', socialImageAlt);
 
     const scriptId = 'page-json-ld';
     document.getElementById(scriptId)?.remove();
@@ -77,7 +94,7 @@ export function SEO({
       script.textContent = JSON.stringify(Array.isArray(jsonLd) ? jsonLd : [jsonLd]);
       document.head.appendChild(script);
     }
-  }, [description, image, jsonLd, location.pathname, title, type]);
+  }, [canonicalPath, description, image, imageAlt, jsonLd, location.pathname, noIndex, title, type]);
 
   return null;
 }
