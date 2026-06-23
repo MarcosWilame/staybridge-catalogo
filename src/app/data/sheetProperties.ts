@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react';
 import type { Property } from './properties';
+import {
+  getPublicPropertiesRevision,
+  PUBLIC_PROPERTIES_CACHE_KEY,
+} from './propertyCache.ts';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
-const CACHE_KEY = 'staybridge-public-properties-v1';
+let cachedRevision = '';
 const CACHE_TTL = 5 * 60 * 1000;
 
 function readSessionCache(allowStale = false) {
   try {
-    const value = sessionStorage.getItem(CACHE_KEY);
+    const value = sessionStorage.getItem(PUBLIC_PROPERTIES_CACHE_KEY);
     if (!value) return null;
-    const parsed = JSON.parse(value) as { timestamp: number; properties: Property[] };
-    return allowStale || Date.now() - parsed.timestamp < CACHE_TTL
+    const parsed = JSON.parse(value) as {
+      timestamp: number;
+      revision: string;
+      properties: Property[];
+    };
+    const matchesRevision = parsed.revision === getPublicPropertiesRevision();
+    return matchesRevision && (allowStale || Date.now() - parsed.timestamp < CACHE_TTL)
       ? parsed.properties
       : null;
   } catch {
@@ -28,7 +37,7 @@ async function fetchPropertiesWithRetry() {
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const response = await fetch('/api/public-properties', { cache: 'default' });
+      const response = await fetch('/api/public-properties', { cache: 'no-store' });
       if (response.ok || response.status < 500 || attempt === 1) return response;
     } catch (error) {
       lastError = error;
@@ -42,10 +51,12 @@ async function fetchPropertiesWithRetry() {
 }
 
 async function loadPropertiesFromSource() {
-  if (cachedProperties) return cachedProperties;
+  const revision = getPublicPropertiesRevision();
+  if (cachedProperties && cachedRevision === revision) return cachedProperties;
   const storedProperties = readSessionCache();
   if (storedProperties) {
     cachedProperties = storedProperties;
+    cachedRevision = revision;
     return storedProperties;
   }
 
@@ -68,11 +79,12 @@ async function loadPropertiesFromSource() {
     cachedProperties = Array.isArray(data)
       ? (data as Property[]).filter(isListedProperty)
       : [];
+    cachedRevision = revision;
     cachedError = null;
     try {
       sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({ timestamp: Date.now(), properties: cachedProperties })
+        PUBLIC_PROPERTIES_CACHE_KEY,
+        JSON.stringify({ timestamp: Date.now(), revision, properties: cachedProperties })
       );
     } catch {
       // Storage can be unavailable in privacy modes; memory cache still works.

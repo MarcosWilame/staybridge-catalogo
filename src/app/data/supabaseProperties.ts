@@ -1,6 +1,7 @@
 import type { Property } from './properties';
 import { formatEuroPrice } from '../utils/price.ts';
 import { StorageClient } from '@supabase/storage-js';
+import { invalidatePublicPropertiesCache } from './propertyCache.ts';
 
 const env = import.meta.env || {};
 const SUPABASE_URL = env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
@@ -795,6 +796,7 @@ export async function savePropertyToSupabase(
     method: 'POST',
     body: JSON.stringify({ property: normalizedProperty }),
   });
+  invalidatePublicPropertiesCache();
 
   return rows.map(fromRow).find((item): item is Property => Boolean(item)) || normalizedProperty;
 }
@@ -807,6 +809,7 @@ export async function deletePropertyFromSupabase(
   await adminRequest<void>(`/api/admin-properties?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
+  invalidatePublicPropertiesCache();
 }
 
 export async function replacePropertiesInSupabase(
@@ -824,6 +827,7 @@ export async function replacePropertiesInSupabase(
     method: 'PUT',
     body: JSON.stringify({ properties: normalizedProperties }),
   });
+  invalidatePublicPropertiesCache();
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));
 }
