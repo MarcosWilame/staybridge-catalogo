@@ -97,6 +97,16 @@ import {
   type AdminStatusFilter,
 } from './admin/adminConfig';
 
+function getMfaQrImageSrc(qrCode?: string) {
+  const value = qrCode?.trim() || '';
+  if (!value) return '';
+  if (/^(data:image\/|https?:\/\/)/i.test(value)) return value;
+  if (value.startsWith('<svg')) {
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(value)}`;
+  }
+  return '';
+}
+
 export function AdminPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -1108,13 +1118,19 @@ export function AdminPage() {
                 </div>
               </div>
 
-              {mfaFlow.isEnrollment && mfaFlow.qrCode && (
+              {mfaFlow.isEnrollment && (
                 <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
-                  <img
-                    src={mfaFlow.qrCode}
-                    alt="QR Code para configurar autenticação em duas etapas"
-                    className="mx-auto h-48 w-48"
-                  />
+                  {getMfaQrImageSrc(mfaFlow.qrCode) ? (
+                    <img
+                      src={getMfaQrImageSrc(mfaFlow.qrCode)}
+                      alt="QR Code para configurar autenticação em duas etapas"
+                      className="mx-auto h-48 w-48"
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-700">
+                      Use o código manual abaixo no seu aplicativo autenticador.
+                    </p>
+                  )}
                   {mfaFlow.secret && (
                     <p className="mt-3 break-all text-xs text-gray-600">
                       Código manual: <strong>{mfaFlow.secret}</strong>
