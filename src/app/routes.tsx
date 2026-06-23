@@ -1,22 +1,56 @@
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { RootLayout } from './layouts/RootLayout';
 import { HomePage } from './pages/HomePage';
 
-const ListingPage = lazy(() =>
+const CHUNK_RELOAD_KEY = 'staybridge:chunk-reload';
+
+function isChunkLoadError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || '');
+  return /failed to fetch dynamically imported module|importing a module script failed|loading chunk|chunkloaderror/i.test(message);
+}
+
+function handleChunkLoadError(error: unknown): Promise<never> {
+  if (
+    typeof window !== 'undefined' &&
+    isChunkLoadError(error) &&
+    window.sessionStorage.getItem(CHUNK_RELOAD_KEY) !== '1'
+  ) {
+    window.sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
+    window.location.reload();
+    return new Promise(() => {});
+  }
+
+  throw error;
+}
+
+function lazyRoute<T extends ComponentType>(loader: () => Promise<{ default: T }>) {
+  return lazy(() =>
+    loader()
+      .then((module) => {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+        }
+        return module;
+      })
+      .catch(handleChunkLoadError)
+  );
+}
+
+const ListingPage = lazyRoute(() =>
   import('./pages/ListingPage').then((module) => ({ default: module.ListingPage }))
 );
-const PropertyDetailsPage = lazy(() =>
+const PropertyDetailsPage = lazyRoute(() =>
   import('./pages/PropertyDetailsPage').then((module) => ({ default: module.PropertyDetailsPage }))
 );
-const ProfilePage = lazy(() =>
+const ProfilePage = lazyRoute(() =>
   import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage }))
 );
-const NotFoundPage = lazy(() =>
+const NotFoundPage = lazyRoute(() =>
   import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage }))
 );
 
-const AdminPage = lazy(() =>
+const AdminPage = lazyRoute(() =>
   import('./pages/AdminPage').then((module) => ({ default: module.AdminPage }))
 );
 
