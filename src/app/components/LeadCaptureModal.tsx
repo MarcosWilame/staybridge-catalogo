@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarDays, Check, MapPin, MessageCircle, ShieldCheck, Users, X } from 'lucide-react';
+import { CalendarDays, Check, Languages, MapPin, MessageCircle, ShieldCheck, Users, X } from 'lucide-react';
 import type { Property } from '../data/properties';
 import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
@@ -8,6 +8,7 @@ import {
   buildLeadMessage,
   type LeadDetails,
   type LeadIntent,
+  type LeadLanguage,
 } from '../utils/leadCapture';
 
 interface LeadCaptureModalProps {
@@ -39,12 +40,14 @@ export function LeadCaptureModal({
 }: LeadCaptureModalProps) {
   const titleId = useId();
   const [details, setDetails] = useState<LeadDetails>(EMPTY_DETAILS);
+  const [messageLanguage, setMessageLanguage] = useState<LeadLanguage>('pt');
 
   useEffect(() => {
     if (!isOpen) return;
     const previousFocus = document.activeElement as HTMLElement | null;
     const appRoot = document.getElementById('root');
     setDetails(EMPTY_DETAILS);
+    setMessageLanguage('pt');
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -82,8 +85,9 @@ export function LeadCaptureModal({
       property_id: property?.id,
       has_move_in_date: Boolean(details.moveInDate),
       people: details.people || undefined,
+      message_language: messageLanguage,
     });
-    openWhatsApp(buildLeadMessage(intent, details, property));
+    openWhatsApp(buildLeadMessage(intent, details, property, messageLanguage));
     setDetails(EMPTY_DETAILS);
     onClose();
   };
@@ -206,12 +210,44 @@ export function LeadCaptureModal({
             </div>
           </fieldset>
 
+          <fieldset>
+            <legend className="mb-2.5 flex items-center gap-2 text-sm font-extrabold text-gray-900">
+              <Languages className="h-[18px] w-[18px] text-[var(--green-medium)]" />
+              WhatsApp Message Language
+            </legend>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="WhatsApp message language">
+              {([
+                { value: 'pt', label: 'Português' },
+                { value: 'en', label: 'English' },
+              ] as const).map((option) => {
+                const selected = messageLanguage === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setMessageLanguage(option.value)}
+                    aria-pressed={selected}
+                    className={`min-h-11 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
+                      selected
+                        ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--green-dark)]/50 hover:bg-[var(--green-dark)]/[.03]'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
           <button
             type="submit"
             className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--green-dark)] px-5 py-4 text-base font-black text-white shadow-[0_10px_24px_rgba(10,61,41,.24)] transition hover:-translate-y-0.5 hover:bg-[var(--green-medium)] hover:shadow-[0_14px_30px_rgba(10,61,41,.3)] active:translate-y-0"
           >
             <MessageCircle className="h-5 w-5" />
-            Check Availability on WhatsApp
+            {messageLanguage === 'pt'
+              ? 'Open WhatsApp in Portuguese'
+              : 'Open WhatsApp in English'}
           </button>
 
           <p className="flex items-start justify-center gap-2 px-2 text-center text-xs leading-relaxed text-gray-500">
