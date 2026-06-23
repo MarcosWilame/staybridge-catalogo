@@ -16,6 +16,7 @@ import {
   ImagePlus,
   ListChecks,
   Lock,
+  ShieldCheck,
   LogIn,
   LogOut,
   MapPin,
@@ -46,8 +47,10 @@ import {
   signInAdmin,
   signOutAdmin,
   validateAdminSession,
+  verifyAdminMfa,
   normalizeImageUrl,
   normalizeVideoUrl,
+  type AdminMfaFlow,
   type SupabaseAuthSession,
   type StorageFolderItem,
   type StorageImageItem,
@@ -110,6 +113,9 @@ export function AdminPage() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [pendingMfaSession, setPendingMfaSession] = useState<SupabaseAuthSession | null>(null);
+  const [mfaFlow, setMfaFlow] = useState<AdminMfaFlow | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -195,6 +201,9 @@ export function AdminPage() {
   const handleSignOut = () => {
     signOutAdmin();
     setSession(null);
+    setPendingMfaSession(null);
+    setMfaFlow(null);
+    setMfaCode('');
     navigate('/admin');
   };
 
@@ -232,8 +241,9 @@ export function AdminPage() {
     setIsSigningIn(true);
 
     try {
-      const signedSession = await signInAdmin(authEmail.trim(), authPassword);
-      setSession(signedSession);
+      const login = await signInAdmin(authEmail.trim(), authPassword);
+      setPendingMfaSession(login.pendingSession);
+      setMfaFlow(login.mfaFlow);
       setAuthPassword('');
       setSyncError('');
     } catch (error) {
@@ -318,6 +328,30 @@ export function AdminPage() {
         image: prev.image || imageUrl
       }));
       setImageInput('');
+    }
+  };
+
+  const handleVerifyMfa = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!pendingMfaSession || !mfaFlow) return;
+
+    setAuthError('');
+    setIsSigningIn(true);
+    try {
+      const verifiedSession = await verifyAdminMfa(
+        pendingMfaSession,
+        mfaFlow,
+        mfaCode
+      );
+      setSession(verifiedSession);
+      setPendingMfaSession(null);
+      setMfaFlow(null);
+      setMfaCode('');
+      setSyncError('');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Codigo invalido');
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -1054,6 +1088,86 @@ export function AdminPage() {
   }
 
   if (!session) {
+    if (pendingMfaSession && mfaFlow) {
+      return (
+        <div className="min-h-screen bg-[image:var(--soft-gradient)] pt-28 pb-20">
+          <div className="mx-auto max-w-md px-4">
+            <form
+              onSubmit={handleVerifyMfa}
+              className="rounded-lg border border-[var(--surface-border)] bg-white p-6 shadow-[var(--surface-shadow)]"
+            >
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--green-dark)] text-white">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">Verificação em duas etapas</h1>
+                  <p className="text-sm text-gray-600">
+                    {mfaFlow.isEnrollment ? 'Configure seu aplicativo autenticador' : 'Digite o código do autenticador'}
+                  </p>
+                </div>
+              </div>
+
+              {mfaFlow.isEnrollment && mfaFlow.qrCode && (
+                <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
+                  <img
+                    src={mfaFlow.qrCode}
+                    alt="QR Code para configurar autenticação em duas etapas"
+                    className="mx-auto h-48 w-48"
+                  />
+                  {mfaFlow.secret && (
+                    <p className="mt-3 break-all text-xs text-gray-600">
+                      Código manual: <strong>{mfaFlow.secret}</strong>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <label className="mb-2 block text-sm font-bold" htmlFor="admin-mfa-code">
+                Código de 6 dígitos
+              </label>
+              <input
+                id="admin-mfa-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                value={mfaCode}
+                onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, ''))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-3 text-center text-xl font-black tracking-[.35em]"
+                required
+                autoFocus
+              />
+
+              {authError && (
+                <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                  <AlertCircle className="h-4 w-4" />
+                  {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSigningIn || mfaCode.length !== 6}
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-4 py-3 font-bold text-white hover:bg-[var(--green-medium)] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <ShieldCheck className="h-5 w-5" />
+                {isSigningIn ? 'Verificando...' : 'Verificar e entrar'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="mt-3 w-full px-4 py-2 text-sm font-bold text-gray-600"
+              >
+                Cancelar
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-[image:var(--soft-gradient)] pt-28 pb-20">
         <div className="mx-auto max-w-md px-4">

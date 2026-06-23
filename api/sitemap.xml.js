@@ -1,13 +1,8 @@
 const SITE_URL = (process.env.SITE_URL || 'https://staybridgelondon.com').replace(/\/$/, '');
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
-const SUPABASE_SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  '';
-const SUPABASE_TABLE =
-  process.env.SUPABASE_PROPERTIES_TABLE ||
-  process.env.VITE_SUPABASE_PROPERTIES_TABLE ||
-  'properties';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const LEGACY_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
+const TABLE = process.env.SUPABASE_PROPERTIES_TABLE || process.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 
 function escapeXml(value) {
   return String(value)
@@ -25,18 +20,31 @@ function normalizeLastModified(value) {
 }
 
 async function loadPropertyEntries() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !SUPABASE_TABLE) return [];
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return [];
 
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,data&order=id.asc`,
+  let response = await fetch(
+    `${SUPABASE_URL}/rest/v1/rpc/get_public_properties`,
     {
+      method: 'POST',
       headers: {
-        apikey: SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
+      body: '{}',
     }
   );
+
+  if (!response.ok && LEGACY_SERVICE_KEY) {
+    response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=id,data&order=id.asc`, {
+      headers: {
+        apikey: LEGACY_SERVICE_KEY,
+        Authorization: `Bearer ${LEGACY_SERVICE_KEY}`,
+        Accept: 'application/json',
+      },
+    });
+  }
 
   if (!response.ok) return [];
 
@@ -50,7 +58,7 @@ async function loadPropertyEntries() {
             row?.data?.updatedAt || row?.data?.updated_at || row?.data?.lastModified
           ),
         }))
-        .filter((property) => Number.isFinite(property.id) && property.listed !== false)
+        .filter((property) => Number.isFinite(property.id) && property.listed === true)
         .filter(
           (property, index, entries) =>
             entries.findIndex((candidate) => candidate.id === property.id) === index
@@ -59,6 +67,13 @@ async function loadPropertyEntries() {
 }
 
 export default async function handler(req, res) {
+  applyApiSecurityHeaders(res);
+  if (!enforceRateLimit(req, res, { limit: 30, namespace: 'sitemap' })) return;
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const propertyEntries = await loadPropertyEntries();
   const staticEntries = ['/', '/properties'].map((path) => ({ path, lastmod: '' }));
   const propertyPaths = propertyEntries.map(({ id, lastmod }) => ({
@@ -83,3 +98,4 @@ export default async function handler(req, res) {
 ${urls}
 </urlset>`);
 }
+import { applyApiSecurityHeaders, enforceRateLimit } from './_security.js';

@@ -8,6 +8,7 @@ Responsive property catalog for Brazilian customers looking for rooms, studios, 
 - Property details page with gallery, video support, approximate map, WhatsApp CTA, and share action.
 - Property comparison on the listing page, with up to 3 properties at a time.
 - Admin page backed by Supabase for creating, editing, hiding, restoring, deleting, importing, and uploading media.
+- Admin access protected by mandatory TOTP MFA and HttpOnly, Secure, SameSite cookies.
 - Public properties API via `/api/public-properties`.
 - SEO support with dynamic titles, descriptions, Open Graph/Twitter tags, JSON-LD for property pages, `robots.txt`, and `/sitemap.xml`.
 - Consent-gated GA4 and Meta Pixel page views plus custom CTA tracking events.
@@ -22,6 +23,7 @@ Responsive property catalog for Brazilian customers looking for rooms, studios, 
 - Tailwind CSS 3
 - Lucide React
 - Supabase REST/Auth/Storage
+- Supabase RLS, audit history and private media proxy
 
 ## Scripts
 
@@ -46,6 +48,8 @@ VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 VITE_SUPABASE_PROPERTIES_TABLE=properties
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+CRON_SECRET=GENERATE_A_LONG_RANDOM_VALUE
 SITE_URL=https://staybridgelondon.com
 ```
 
@@ -64,7 +68,7 @@ VITE_CLOUDINARY_FOLDER=staybridge/properties
 - `id` integer
 - `data` jsonb
 
-The public API reads `id,data`, returns only explicitly allowed fields, and includes only properties where `listed === true`. Exact addresses and coordinates stay private.
+The public API reads through the sanitized `get_public_properties` RPC using the anon key. Direct anonymous table access is denied by RLS. Exact addresses and coordinates stay private.
 
 ## Routes
 
@@ -97,5 +101,8 @@ Tracked examples:
 - Favorites were removed for now.
 - Property WhatsApp CTAs use the short inquiry modal to qualify leads before opening WhatsApp.
 - The admin page is lazily loaded and has begun being split into smaller admin-specific modules.
-- Admin sessions use `sessionStorage`, so credentials are cleared when the browser session ends.
+- Admin tokens never reach browser JavaScript: the server keeps them in HttpOnly cookies.
+- TOTP MFA is mandatory on the admin login. First access displays a QR code for enrollment.
+- Supabase media is served through `/api/property-media` and unpublished files remain private.
+- Daily encrypted-at-rest catalog snapshots are written to the private `backups` bucket.
 - See `SUPABASE_SECURITY.md` before deploying Supabase policy changes.

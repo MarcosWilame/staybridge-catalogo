@@ -1,11 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { toPublicProperty } from './public-property-fields.js';
+import { applyApiSecurityHeaders, enforceRateLimit } from './_security.js';
 
 const SITE_URL = (process.env.SITE_URL || 'https://staybridgelondon.com').replace(/\/$/, '');
 const SITE_NAME = 'Staybridge London';
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const LEGACY_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
 const SUPABASE_TABLE = process.env.SUPABASE_PROPERTIES_TABLE || process.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 
 function escapeHtml(value) {
@@ -43,16 +45,31 @@ async function loadTemplate() {
 
 async function loadProperty(id) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return null;
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,data&id=eq.${encodeURIComponent(id)}&limit=1`,
+  let response = await fetch(
+    `${SUPABASE_URL}/rest/v1/rpc/get_public_property`,
     {
+      method: 'POST',
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ property_id: id }),
     }
   );
+  if (!response.ok && LEGACY_SERVICE_KEY) {
+    response = await fetch(
+      `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,data&id=eq.${encodeURIComponent(id)}&limit=1`,
+      {
+        headers: {
+          apikey: LEGACY_SERVICE_KEY,
+          Authorization: `Bearer ${LEGACY_SERVICE_KEY}`,
+          Accept: 'application/json',
+        },
+      }
+    );
+  }
   if (!response.ok) return null;
   const rows = await response.json();
   return Array.isArray(rows) && rows[0] ? toPublicProperty(rows[0]) : null;
@@ -133,7 +150,9 @@ export function buildStructuredData(property, url) {
 export function injectPropertyMetadata(template, property, url) {
   const title = `${property.title} em ${property.region} | ${SITE_NAME}`;
   const description = `${property.description} ${property.price}. ${property.available ? 'Disponível' : 'Consulte disponibilidade'}.`.slice(0, 160);
-  const image = property.image || `${SITE_URL}/img/logo-white.png`;
+  const image = property.image
+    ? property.image.startsWith('/') ? `${SITE_URL}${property.image}` : property.image
+    : `${SITE_URL}/img/logo-white.png`;
   let html = setTitle(template, title);
   html = setCanonical(html, url);
   html = setMeta(html, 'name', 'description', description);
@@ -157,6 +176,9 @@ export function injectPropertyMetadata(template, property, url) {
 }
 
 export default async function handler(req, res) {
+  applyApiSecurityHeaders(res);
+  if (!enforceRateLimit(req, res, { limit: 120, namespace: 'property-page' })) return;
+
   const id = Number(req.query?.id);
   let template;
   try {

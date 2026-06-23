@@ -1,14 +1,19 @@
 import type { Property } from './properties';
 import { formatEuroPrice } from '../utils/price.ts';
+import { StorageClient } from '@supabase/storage-js';
 
 const env = import.meta.env || {};
 const SUPABASE_URL = env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
 const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY || '';
-const SUPABASE_TABLE =
-  env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 const SUPABASE_STORAGE_BUCKET =
   env.VITE_SUPABASE_STORAGE_BUCKET || 'property-images';
-const AUTH_STORAGE_KEY = 'staybridge_admin_session';
+const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
+const storageClient = SUPABASE_URL && SUPABASE_ANON_KEY
+  ? new StorageClient(`${SUPABASE_URL}/storage/v1`, { apikey: SUPABASE_ANON_KEY })
+  : null;
 
 type SupabasePropertyRow = {
   id: number;
@@ -48,75 +53,42 @@ export type SupabaseAuthSession = {
   expires_at: number;
   user?: {
     email?: string;
+    factors?: Array<{
+      id: string;
+      factor_type?: string;
+      status?: string;
+    }>;
   };
 };
 
+export type AdminMfaFlow = {
+  factorId: string;
+  challengeId: string;
+  qrCode?: string;
+  secret?: string;
+  isEnrollment: boolean;
+};
+
 function isSupabaseConfigured() {
-  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_TABLE);
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
 
-function getHeaders(accessToken?: string) {
-  return {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Prefer: 'return=representation',
-  };
-}
-
-async function requestJson<T>(
-  path: string,
-  init?: RequestInit,
-  accessToken?: string
-): Promise<T> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase não configurado');
-  }
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
     ...init,
+    credentials: 'same-origin',
     headers: {
-      ...getHeaders(accessToken),
-      ...(init?.headers || {}),
-    },
-  });
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(
-      detail || `Falha ao acessar Supabase (${response.status})`
-    );
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-}
-
-async function requestAuth<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase nao configurado');
-  }
-
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json',
       Accept: 'application/json',
+      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
       ...(init?.headers || {}),
     },
   });
-
   if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Falha na autenticacao (${response.status})`);
+    const detail = await response.json().catch(() => null);
+    throw new Error(detail?.error || `Falha administrativa (${response.status})`);
   }
-
-  return (await response.json()) as T;
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
 }
 
 function getSupabaseHostname() {
@@ -146,7 +118,20 @@ function encodeStoragePath(value: string) {
 }
 
 function getStoragePublicUrl(objectPath: string) {
-  return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/${encodeStoragePath(objectPath)}`;
+  return `/api/property-media?path=${encodeURIComponent(objectPath)}`;
+}
+
+function getPropertyMediaProxyUrl(value: string) {
+  try {
+    const url = new URL(value);
+    const marker = `/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/`;
+    const index = url.pathname.indexOf(marker);
+    if (index < 0) return '';
+    const path = decodeURIComponent(url.pathname.slice(index + marker.length));
+    return getStoragePublicUrl(path);
+  } catch {
+    return '';
+  }
 }
 
 async function listStorageObjects(prefix: string, accessToken: string) {
@@ -154,31 +139,31 @@ async function listStorageObjects(prefix: string, accessToken: string) {
     throw new Error('Supabase nao configurado');
   }
 
-  const response = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/list/${SUPABASE_STORAGE_BUCKET}`,
-    {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        limit: 100,
-        offset: 0,
-        prefix,
-        sortBy: { column: 'name', order: 'asc' },
-      }),
-    }
+  void accessToken;
+  return adminRequest<SupabaseStorageObject[]>(
+    `/api/admin-storage?prefix=${encodeURIComponent(prefix)}`
   );
+}
 
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Falha ao buscar imagens (${response.status})`);
-  }
-
-  return (await response.json()) as SupabaseStorageObject[];
+async function uploadWithSignedUrl(file: File, objectPath: string) {
+  if (!storageClient) throw new Error('Supabase nao configurado');
+  const signed = await adminRequest<{ token: string; path: string }>('/api/admin-storage', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'sign-upload',
+      path: objectPath,
+      mimeType: file.type,
+      size: file.size,
+    }),
+  });
+  const { error } = await storageClient
+    .from(SUPABASE_STORAGE_BUCKET)
+    .uploadToSignedUrl(signed.path, signed.token, file, {
+      upsert: true,
+      contentType: file.type,
+      cacheControl: '31536000',
+    });
+  if (error) throw new Error(error.message || 'Falha ao enviar arquivo');
 }
 
 function isStorageFolder(item: SupabaseStorageObject) {
@@ -385,31 +370,13 @@ export async function uploadPropertyImageToStorage({
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase nao configurado');
   }
+  validateUploadFile(file, 'image');
 
   const cleanRelativePath =
     sanitizeStoragePath(relativePath || file.name) || `image-${Date.now()}`;
   const objectPath = `property-${propertyId}/${batchId}/${cleanRelativePath}`;
-  const encodedPath = encodeStoragePath(objectPath);
-
-  const response = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${encodedPath}`,
-    {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': file.type || 'application/octet-stream',
-        'Cache-Control': '31536000',
-        'x-upsert': 'true',
-      },
-      body: file,
-    }
-  );
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Falha ao enviar imagem (${response.status})`);
-  }
+  void accessToken;
+  await uploadWithSignedUrl(file, objectPath);
 
   return getStoragePublicUrl(objectPath);
 }
@@ -426,31 +393,13 @@ export async function uploadLibraryImageToStorage({
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase nao configurado');
   }
+  validateUploadFile(file, 'image');
 
   const cleanRelativePath =
     sanitizeStoragePath(relativePath || file.name) || `image-${Date.now()}`;
   const objectPath = `library/${cleanRelativePath}`;
-  const encodedPath = encodeStoragePath(objectPath);
-
-  const response = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${encodedPath}`,
-    {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': file.type || 'application/octet-stream',
-        'Cache-Control': '31536000',
-        'x-upsert': 'true',
-      },
-      body: file,
-    }
-  );
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Falha ao enviar imagem (${response.status})`);
-  }
+  void accessToken;
+  await uploadWithSignedUrl(file, objectPath);
 
   return getStoragePublicUrl(objectPath);
 }
@@ -467,93 +416,70 @@ export async function uploadPropertyVideoToStorage({
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase nao configurado');
   }
+  validateUploadFile(file, 'video');
 
   const cleanFileName = sanitizeStoragePath(file.name) || `video-${Date.now()}`;
   const objectPath = `videos/property-${propertyId}/${cleanFileName}`;
-  const encodedPath = encodeStoragePath(objectPath);
-
-  const response = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/${SUPABASE_STORAGE_BUCKET}/${encodedPath}`,
-    {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': file.type || 'application/octet-stream',
-        'Cache-Control': '31536000',
-        'x-upsert': 'true',
-      },
-      body: file,
-    }
-  );
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Falha ao enviar video (${response.status})`);
-  }
+  void accessToken;
+  await uploadWithSignedUrl(file, objectPath);
 
   return getStoragePublicUrl(objectPath);
 }
 
-function persistSession(session: SupabaseAuthSession) {
-  sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  localStorage.removeItem(AUTH_STORAGE_KEY);
-}
-
 export function getStoredAdminSession() {
-  const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
-  if (!stored) return null;
-
-  try {
-    const session = JSON.parse(stored) as SupabaseAuthSession;
-    const hasValidToken =
-      typeof session.access_token === 'string' &&
-      session.access_token.length > 0 &&
-      typeof session.expires_at === 'number' &&
-      session.expires_at > Math.floor(Date.now() / 1000);
-
-    if (!hasValidToken) {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      return null;
-    }
-
-    return session;
-  } catch {
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    return null;
-  }
+  return {
+    access_token: 'http-only',
+    expires_at: Math.floor(Date.now() / 1000) + 60,
+  } satisfies SupabaseAuthSession;
 }
 
 export async function signInAdmin(email: string, password: string) {
-  const response = await requestAuth<{
-    access_token: string;
-    refresh_token?: string;
-    expires_in?: number;
-    user?: { email?: string };
-  }>('token?grant_type=password', {
+  const flow = await adminRequest<AdminMfaFlow & { mfaRequired: true }>('/api/admin-session', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ action: 'login', email, password }),
   });
-
-  const session: SupabaseAuthSession = {
-    access_token: response.access_token,
-    refresh_token: response.refresh_token,
-    expires_at:
-      Math.floor(Date.now() / 1000) + Math.max(0, response.expires_in || 3600),
-    user: response.user,
+  return {
+    pendingSession: {
+      access_token: 'http-only-pending',
+      expires_at: Math.floor(Date.now() / 1000) + 600,
+    } satisfies SupabaseAuthSession,
+    mfaFlow: flow,
   };
+}
 
-  persistSession(session);
-  return session;
+export async function verifyAdminMfa(
+  session: SupabaseAuthSession,
+  flow: AdminMfaFlow,
+  code: string
+) {
+  void session;
+  const response = await adminRequest<{ user?: SupabaseAuthSession['user'] }>('/api/admin-session', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'verify',
+      factorId: flow.factorId,
+      challengeId: flow.challengeId,
+      code: code.replace(/\s/g, ''),
+    }),
+  });
+  return {
+    access_token: 'http-only',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    user: response.user,
+  } satisfies SupabaseAuthSession;
 }
 
 export function signOutAdmin() {
-  sessionStorage.removeItem(AUTH_STORAGE_KEY);
-  localStorage.removeItem(AUTH_STORAGE_KEY);
+  void fetch('/api/admin-session', {
+    method: 'DELETE',
+    credentials: 'same-origin',
+  });
 }
 
-function toStringValue(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback;
+function toStringValue(value: unknown, fallback = '', maxLength = 5_000) {
+  return typeof value === 'string'
+    ? value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, maxLength)
+    : fallback;
 }
 
 function toBooleanValue(value: unknown, fallback = false) {
@@ -575,38 +501,42 @@ function toNumberValue(value: unknown, fallback = 0) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
-function toStringArray(value: unknown) {
+function toStringArray(value: unknown, limit = 30, itemLength = 180) {
   return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
+    ? value
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => toStringValue(item, '', itemLength))
+        .filter(Boolean)
+        .slice(0, limit)
     : [];
 }
 
+function validateUploadFile(file: File, kind: 'image' | 'video') {
+  const allowedTypes = kind === 'image' ? ALLOWED_IMAGE_TYPES : ALLOWED_VIDEO_TYPES;
+  const maxBytes = kind === 'image' ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
+
+  if (!allowedTypes.has(file.type.toLowerCase())) {
+    throw new Error(`Formato de ${kind === 'image' ? 'imagem' : 'video'} nao permitido`);
+  }
+  if (file.size <= 0 || file.size > maxBytes) {
+    throw new Error(
+      `${kind === 'image' ? 'Imagem' : 'Video'} excede o limite de ${Math.round(maxBytes / 1024 / 1024)} MB`
+    );
+  }
+}
+
 export async function validateAdminSession(session: SupabaseAuthSession) {
-  if (!session.access_token || session.expires_at <= Math.floor(Date.now() / 1000)) {
-    signOutAdmin();
+  void session;
+  try {
+    const response = await adminRequest<{ user?: SupabaseAuthSession['user'] }>('/api/admin-session');
+    return {
+      access_token: 'http-only',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user: response.user,
+    } satisfies SupabaseAuthSession;
+  } catch {
     return null;
   }
-
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${session.access_token}`,
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    signOutAdmin();
-    return null;
-  }
-
-  const user = (await response.json()) as { email?: string };
-  const validatedSession = {
-    ...session,
-    user: { email: user.email },
-  };
-  persistSession(validatedSession);
-  return validatedSession;
 }
 
 export function normalizeImageUrl(value: string) {
@@ -614,6 +544,7 @@ export function normalizeImageUrl(value: string) {
   const supabaseHostname = getSupabaseHostname();
 
   if (!trimmed) return '';
+  if (trimmed.startsWith('/api/property-media?path=')) return trimmed.slice(0, 2_048);
   if (
     !isAllowedMediaUrl(trimmed, [
       'drive.google.com',
@@ -633,7 +564,7 @@ export function normalizeImageUrl(value: string) {
     return `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w2000`;
   }
 
-  return trimmed;
+  return getPropertyMediaProxyUrl(trimmed) || trimmed;
 }
 
 export function normalizeVideoUrl(value: string) {
@@ -641,6 +572,7 @@ export function normalizeVideoUrl(value: string) {
   const supabaseHostname = getSupabaseHostname();
 
   if (!trimmed) return '';
+  if (trimmed.startsWith('/api/property-media?path=')) return trimmed.slice(0, 2_048);
   if (
     !isAllowedMediaUrl(trimmed, [
       'drive.google.com',
@@ -660,7 +592,7 @@ export function normalizeVideoUrl(value: string) {
     return `https://drive.google.com/file/d/${driveFileId}/preview`;
   }
 
-  return trimmed;
+  return getPropertyMediaProxyUrl(trimmed) || trimmed;
 }
 
 function getGoogleDriveFileId(url: string) {
@@ -672,10 +604,9 @@ function getGoogleDriveFileId(url: string) {
 }
 
 function isAllowedMediaUrl(value: string, allowedHosts: string[]) {
-  if (value.startsWith('data:image/')) return true;
-
   try {
     const url = new URL(value);
+    if (url.protocol !== 'https:') return false;
     return allowedHosts.some(
       (host) => url.hostname === host || url.hostname.endsWith(`.${host}`)
     );
@@ -738,12 +669,12 @@ function normalizeStatus(
 export function normalizeProperty(input: PropertyInput): Property | null {
   const id = toNumberValue(input.id, Number.NaN);
 
-  if (!Number.isFinite(id)) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
     return null;
   }
 
   const image = normalizeImageUrl(toStringValue(input.image));
-  const images = toImageArray(input.images);
+  const images = toImageArray(input.images).slice(0, 15);
   const available = toBooleanValue(input.available, true);
   const listed = toBooleanValue(input.listed, true);
 
@@ -752,14 +683,14 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     image: image || images[0] || '',
     images: images.length ? images : image ? [image] : [],
     video: normalizeVideoUrl(toStringValue(input.video)),
-    type: toStringValue(input.type),
-    title: toStringValue(input.title),
-    region: toStringValue(input.region),
+    type: toStringValue(input.type, '', 80),
+    title: toStringValue(input.title, '', 140),
+    region: toStringValue(input.region, '', 80),
     localArea:
-      typeof input.localArea === 'string' ? input.localArea : undefined,
-    price: formatEuroPrice(toStringValue(input.price)),
-    description: toStringValue(input.description),
-    longDescription: toStringValue(input.longDescription),
+      typeof input.localArea === 'string' ? toStringValue(input.localArea, '', 100) : undefined,
+    price: formatEuroPrice(toStringValue(input.price, '', 40)),
+    description: toStringValue(input.description, '', 500),
+    longDescription: toStringValue(input.longDescription, '', 5_000),
     available,
     listed,
     status: normalizeStatus(input.status, available, listed),
@@ -767,27 +698,27 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     billsIncluded: toBooleanValue(input.billsIncluded, false),
     bedrooms:
       typeof input.bedrooms === 'number' && Number.isFinite(input.bedrooms)
-        ? input.bedrooms
+        ? Math.min(20, Math.max(0, input.bedrooms))
         : 1,
     bathrooms:
       typeof input.bathrooms === 'number' && Number.isFinite(input.bathrooms)
-        ? input.bathrooms
+        ? Math.min(20, Math.max(0, input.bathrooms))
         : 0,
     category: normalizeCategory(input.category, input.type),
-    amenities: toStringArray(input.amenities),
+    amenities: toStringArray(input.amenities, 30, 120),
     deposit:
       typeof input.deposit === 'number' && Number.isFinite(input.deposit)
-        ? input.deposit
+        ? Math.min(100_000, Math.max(0, input.deposit))
         : 0,
-    nearbyStations: toStringArray(input.nearbyStations),
+    nearbyStations: toStringArray(input.nearbyStations, 30, 180),
     coordinates: toCoordinates(input.coordinates),
-    furnishing: toStringValue(input.furnishing, 'Mobiliado'),
-    moveInDate: toStringValue(input.moveInDate, 'Disponível agora'),
-    postcode: toStringValue(input.postcode),
-    address: toStringValue(input.address),
+    furnishing: toStringValue(input.furnishing, 'Mobiliado', 80),
+    moveInDate: toStringValue(input.moveInDate, 'Disponível agora', 80),
+    postcode: toStringValue(input.postcode, '', 16),
+    address: toStringValue(input.address, '', 240),
     people:
       typeof input.people === 'number' && Number.isFinite(input.people)
-        ? input.people
+        ? Math.min(20, Math.max(1, input.people))
         : 1,
   };
 }
@@ -795,7 +726,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
 export function normalizeProperties(input: unknown) {
   if (!Array.isArray(input)) return [];
 
-  return input
+  return input.slice(0, 500)
     .map((item) =>
       item && typeof item === 'object'
         ? normalizeProperty(item as PropertyInput)
@@ -831,13 +762,8 @@ function fromRow(row: SupabasePropertyRow) {
 }
 
 export async function loadPropertiesFromSupabase(accessToken?: string) {
-  const rows = await requestJson<SupabasePropertyRow[]>(
-    `${SUPABASE_TABLE}?select=id,data&order=id.asc`,
-    {
-      method: 'GET',
-    },
-    accessToken
-  );
+  void accessToken;
+  const rows = await adminRequest<SupabasePropertyRow[]>('/api/admin-properties');
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));
 }
@@ -852,17 +778,11 @@ export async function savePropertyToSupabase(
     throw new Error('Imovel invalido');
   }
 
-  const rows = await requestJson<SupabasePropertyRow[]>(
-    `${SUPABASE_TABLE}?on_conflict=id`,
-    {
-      method: 'POST',
-      headers: {
-        Prefer: 'resolution=merge-duplicates,return=representation',
-      },
-      body: JSON.stringify([toRecord(normalizedProperty)]),
-    },
-    accessToken
-  );
+  void accessToken;
+  const rows = await adminRequest<SupabasePropertyRow[]>('/api/admin-properties', {
+    method: 'POST',
+    body: JSON.stringify({ property: normalizedProperty }),
+  });
 
   return rows.map(fromRow).find((item): item is Property => Boolean(item)) || normalizedProperty;
 }
@@ -871,9 +791,10 @@ export async function deletePropertyFromSupabase(
   id: number,
   accessToken?: string
 ) {
-  await requestJson<null>(`${SUPABASE_TABLE}?id=eq.${id}`, {
+  void accessToken;
+  await adminRequest<void>(`/api/admin-properties?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
-  }, accessToken);
+  });
 }
 
 export async function replacePropertiesInSupabase(
@@ -886,28 +807,11 @@ export async function replacePropertiesInSupabase(
     throw new Error('Nenhum imovel valido para importar');
   }
 
-  const existingProperties = await loadPropertiesFromSupabase(accessToken);
-
-  const rows = await requestJson<SupabasePropertyRow[]>(
-    `${SUPABASE_TABLE}?on_conflict=id`,
-    {
-      method: 'POST',
-      headers: {
-        Prefer: 'resolution=merge-duplicates,return=representation',
-      },
-      body: JSON.stringify(normalizedProperties.map(toRecord)),
-    },
-    accessToken
-  );
-
-  const importedIds = new Set(normalizedProperties.map((property) => property.id));
-  const staleProperties = existingProperties.filter(
-    (property) => !importedIds.has(property.id)
-  );
-
-  for (const property of staleProperties) {
-    await deletePropertyFromSupabase(property.id, accessToken);
-  }
+  void accessToken;
+  const rows = await adminRequest<SupabasePropertyRow[]>('/api/admin-properties', {
+    method: 'PUT',
+    body: JSON.stringify({ properties: normalizedProperties }),
+  });
 
   return rows.map(fromRow).filter((property): property is Property => Boolean(property));
 }

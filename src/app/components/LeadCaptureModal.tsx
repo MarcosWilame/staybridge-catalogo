@@ -19,7 +19,6 @@ interface LeadCaptureModalProps {
 }
 
 const EMPTY_DETAILS: LeadDetails = { name: '', moveInDate: '', people: '' };
-const STORAGE_KEY = 'staybridge-lead-inquiry-v2';
 
 const moveInOptions = [
   'Immediately',
@@ -45,12 +44,7 @@ export function LeadCaptureModal({
     if (!isOpen) return;
     const previousFocus = document.activeElement as HTMLElement | null;
     const appRoot = document.getElementById('root');
-    try {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved) setDetails({ ...EMPTY_DETAILS, ...JSON.parse(saved) });
-    } catch {
-      // Session storage is optional; the form remains fully functional without it.
-    }
+    setDetails(EMPTY_DETAILS);
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -75,13 +69,7 @@ export function LeadCaptureModal({
   if (!isOpen) return null;
 
   const updateDetail = (key: keyof LeadDetails, value: string) => {
-    const next = { ...details, [key]: value };
-    setDetails(next);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Ignore storage failures in private browsing modes.
-    }
+    setDetails((current) => ({ ...current, [key]: value }));
   };
 
   const submit = (event: FormEvent) => {
@@ -96,6 +84,7 @@ export function LeadCaptureModal({
       people: details.people || undefined,
     });
     openWhatsApp(buildLeadMessage(intent, details, property));
+    setDetails(EMPTY_DETAILS);
     onClose();
   };
 
@@ -227,7 +216,7 @@ export function LeadCaptureModal({
 
           <p className="flex items-start justify-center gap-2 px-2 text-center text-xs leading-relaxed text-gray-500">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-medium)]" />
-            Your message opens in WhatsApp for review. Nothing is sent automatically.
+            Your message opens in WhatsApp for review. Nothing is sent automatically or stored on this site.
           </p>
         </form>
       </section>

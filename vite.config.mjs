@@ -13,14 +13,9 @@ function localPublicPropertiesApi() {
         env.VITE_SUPABASE_URL ||
         ''
       ).replace(/\/$/, '');
-      const serviceKey =
-        env.SUPABASE_SERVICE_ROLE_KEY ||
-        env.SUPABASE_SERVICE_KEY ||
-        '';
-      const table =
-        env.SUPABASE_PROPERTIES_TABLE ||
-        env.VITE_SUPABASE_PROPERTIES_TABLE ||
-        'properties';
+      const anonKey = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '';
+      const legacyServiceKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || '';
+      const table = env.SUPABASE_PROPERTIES_TABLE || env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 
       server.middlewares.use('/api/public-properties', async (req, res) => {
         if (req.method !== 'GET') {
@@ -34,23 +29,36 @@ function localPublicPropertiesApi() {
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.setHeader('X-Content-Type-Options', 'nosniff');
 
-        if (!supabaseUrl || !serviceKey || !table) {
+        if (!supabaseUrl || !anonKey) {
           res.statusCode = 500;
           res.end(JSON.stringify({ error: 'Supabase server config missing' }));
           return;
         }
 
         try {
-          const response = await fetch(
-            `${supabaseUrl}/rest/v1/${table}?select=id,data&order=id.asc`,
+          let response = await fetch(
+            `${supabaseUrl}/rest/v1/rpc/get_public_properties`,
             {
+              method: 'POST',
               headers: {
-                apikey: serviceKey,
-                Authorization: `Bearer ${serviceKey}`,
+                apikey: anonKey,
+                Authorization: `Bearer ${anonKey}`,
                 Accept: 'application/json',
+                'Content-Type': 'application/json',
               },
+              body: '{}',
             }
           );
+
+          if (!response.ok && legacyServiceKey) {
+            response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=id,data&order=id.asc`, {
+              headers: {
+                apikey: legacyServiceKey,
+                Authorization: `Bearer ${legacyServiceKey}`,
+                Accept: 'application/json',
+              },
+            });
+          }
 
           if (!response.ok) {
             const detail = await response.text();
