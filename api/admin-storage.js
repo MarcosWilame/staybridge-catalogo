@@ -5,14 +5,16 @@ const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || process.env.VITE_SUPABASE_
 const IMAGE_TYPES = new Set(['image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/webp']);
 const VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
 
-function sanitizePath(value) {
-  return String(value || '')
-    .replace(/\\/g, '/')
-    .split('/')
-    .map((part) => part.trim().replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, ''))
-    .filter((part) => part && part !== '.' && part !== '..')
-    .join('/')
-    .slice(0, 800);
+export function sanitizeStoragePath(value) {
+  const normalized = String(value || '').replace(/\\/g, '/').slice(0, 800);
+  if (!normalized || normalized.startsWith('/') || /[\u0000-\u001f\u007f]/.test(normalized)) {
+    return '';
+  }
+
+  const parts = normalized.split('/').map((part) => part.trim()).filter(Boolean);
+  if (parts.some((part) => part === '.' || part === '..')) return '';
+
+  return parts.join('/');
 }
 
 function encodePath(value) {
@@ -31,7 +33,7 @@ export default async function handler(req, res) {
   if (!admin) return;
 
   if (req.method === 'GET') {
-    const prefix = sanitizePath(req.query?.prefix || '');
+    const prefix = sanitizeStoragePath(req.query?.prefix || '');
     const response = await supabaseRequest(`/storage/v1/object/list/${encodeURIComponent(BUCKET)}`, {
       token: admin.accessToken,
       method: 'POST',
@@ -42,7 +44,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST' && req.body?.action === 'sign-upload') {
-    const path = sanitizePath(req.body?.path);
+    const path = sanitizeStoragePath(req.body?.path);
     const mimeType = typeof req.body?.mimeType === 'string' ? req.body.mimeType.toLowerCase() : '';
     const size = Number(req.body?.size);
     const isImage = IMAGE_TYPES.has(mimeType) && size > 0 && size <= 12 * 1024 * 1024;
