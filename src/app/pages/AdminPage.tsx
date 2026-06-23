@@ -252,8 +252,15 @@ export function AdminPage() {
 
     try {
       const login = await signInAdmin(authEmail.trim(), authPassword);
-      setPendingMfaSession(login.pendingSession);
-      setMfaFlow(login.mfaFlow);
+      if ('session' in login) {
+        setSession(login.session);
+        setPendingMfaSession(null);
+        setMfaFlow(null);
+        setMfaCode('');
+      } else {
+        setPendingMfaSession(login.pendingSession);
+        setMfaFlow(login.mfaFlow);
+      }
       setAuthPassword('');
       setSyncError('');
     } catch (error) {

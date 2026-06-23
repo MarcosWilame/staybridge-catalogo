@@ -90,7 +90,7 @@ export async function verifyAdminToken(token, { requireAal2 = true } = {}) {
 export async function requireAdmin(req, res) {
   const cookies = parseCookies(req);
   let accessToken = cookies[ADMIN_SESSION_COOKIE] || '';
-  let user = await verifyAdminToken(accessToken);
+  let user = await verifyAdminToken(accessToken, { requireAal2: false });
 
   if (!user && cookies[ADMIN_REFRESH_COOKIE]) {
     const refreshResponse = await supabaseRequest('/auth/v1/token?grant_type=refresh_token', {
@@ -100,7 +100,7 @@ export async function requireAdmin(req, res) {
     if (refreshResponse.ok) {
       const refreshed = await refreshResponse.json();
       accessToken = refreshed.access_token || '';
-      user = await verifyAdminToken(accessToken);
+      user = await verifyAdminToken(accessToken, { requireAal2: false });
       if (user) {
         res.setHeader('Set-Cookie', [
           createSecureCookie(ADMIN_SESSION_COOKIE, accessToken, refreshed.expires_in || 3600),

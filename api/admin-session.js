@@ -58,6 +58,13 @@ export default async function handler(req, res) {
     const user = await verifyAdminToken(login.access_token, { requireAal2: false });
     if (!user) return res.status(403).json({ error: 'Conta sem permissao administrativa' });
 
+    res.setHeader('Set-Cookie', [
+      createSecureCookie(ADMIN_SESSION_COOKIE, login.access_token, login.expires_in || 3600),
+      createSecureCookie(ADMIN_REFRESH_COOKIE, login.refresh_token || '', 60 * 60 * 24 * 7),
+      createSecureCookie(ADMIN_PENDING_COOKIE, '', 0),
+    ]);
+    return res.status(200).json({ user: safeUser(user) });
+
     const factor = user.factors?.find(
       (item) => item.factor_type === 'totp' && item.status === 'verified'
     );

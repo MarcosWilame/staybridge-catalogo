@@ -77,7 +77,9 @@ export default async function handler(req, res) {
   if (!path || !SUPABASE_URL || !SERVICE_KEY) return res.status(404).end();
 
   const cookies = parseCookies(req);
-  const isAdmin = Boolean(await verifyAdminToken(cookies[ADMIN_SESSION_COOKIE] || ''));
+  const isAdmin = Boolean(
+    await verifyAdminToken(cookies[ADMIN_SESSION_COOKIE] || '', { requireAal2: false })
+  );
   if (!isAdmin) {
     const publishedPaths = await getPublishedPaths().catch(() => new Set());
     if (!publishedPaths.has(path)) return res.status(404).end();

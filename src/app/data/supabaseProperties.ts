@@ -434,16 +434,28 @@ export function getStoredAdminSession() {
 }
 
 export async function signInAdmin(email: string, password: string) {
-  const flow = await adminRequest<AdminMfaFlow & { mfaRequired: true }>('/api/admin-session', {
+  const response = await adminRequest<
+    | { user?: SupabaseAuthSession['user'] }
+    | (AdminMfaFlow & { mfaRequired: true })
+  >('/api/admin-session', {
     method: 'POST',
     body: JSON.stringify({ action: 'login', email, password }),
   });
+  if (!('mfaRequired' in response)) {
+    return {
+      session: {
+        access_token: 'http-only',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        user: response.user,
+      } satisfies SupabaseAuthSession,
+    };
+  }
   return {
     pendingSession: {
       access_token: 'http-only-pending',
       expires_at: Math.floor(Date.now() / 1000) + 600,
     } satisfies SupabaseAuthSession,
-    mfaFlow: flow,
+    mfaFlow: response,
   };
 }
 
