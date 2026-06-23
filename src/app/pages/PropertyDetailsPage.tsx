@@ -15,6 +15,7 @@ import { formatPropertyType } from '../utils/propertyType';
 import { getAbsoluteUrl } from '../config/site';
 import { trackEvent } from '../utils/analytics';
 import { isIllustrativePropertyImage } from '../utils/propertyMedia';
+import { parsePropertyDescription } from '../utils/propertyDescription';
 
 import {
   ArrowLeft,
@@ -190,6 +191,9 @@ export function PropertyDetailsPage() {
   const nearbyHighlights = property
     ? property.nearbyStations.filter((item) => item.trim().length > 0)
     : [];
+  const descriptionContent = parsePropertyDescription(
+    property?.longDescription || property?.description || ''
+  );
 
   const openLeadForm = (intent: LeadIntent, source: string) => {
     setLeadIntent(intent);
@@ -645,9 +649,33 @@ export function PropertyDetailsPage() {
                 Descrição
               </h2>
 
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {property.longDescription}
-              </p>
+              <div className="space-y-5 text-gray-700">
+                {descriptionContent.title && (
+                  <div className="flex items-start gap-3">
+                    <Home className="mt-0.5 h-5 w-5 shrink-0 text-[var(--green-medium)]" />
+                    <h3 className="text-base font-bold leading-7 text-gray-900 md:text-lg">
+                      {descriptionContent.title}
+                    </h3>
+                  </div>
+                )}
+
+                {descriptionContent.paragraphs.map((paragraph, index) => (
+                  <p key={`${paragraph}-${index}`} className="max-w-3xl text-base leading-7">
+                    {paragraph}
+                  </p>
+                ))}
+
+                {descriptionContent.highlights.length > 0 && (
+                  <ul className="grid gap-x-6 gap-y-3 border-t border-[var(--green-dark)]/10 pt-5 sm:grid-cols-2">
+                    {descriptionContent.highlights.map((highlight) => (
+                      <li key={highlight} className="flex items-start gap-2.5 text-sm leading-6 md:text-base">
+                        <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-medium)] md:h-5 md:w-5" />
+                        <span>{highlight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             {nearbyHighlights.length > 0 && (

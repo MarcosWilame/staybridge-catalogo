@@ -1,0 +1,11 @@
+﻿{
+    "created_at":  "2026-06-23T14:07:38.6407845Z",
+    "supabase_url":  "https://jfddutcdcmvqcmmhjapu.supabase.co",
+    "table":  "properties",
+    "rows_exported":  95,
+    "files":  [
+                  "properties.json",
+                  "migrations/"
+              ],
+    "note":  "API-level backup using Supabase REST with the project service role key. This is not a full pg_dump of database roles/extensions/auth unless a direct database connection is used."
+}
