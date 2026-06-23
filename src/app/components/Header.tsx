@@ -11,6 +11,7 @@ export function Header() {
   const location = useLocation();
 
   const isHome = location.pathname === '/';
+  const isPropertyDetails = location.pathname.startsWith('/property/');
   const isTransparent = isHome && !isScrolled && !isMobileMenuOpen;
 
   useEffect(() => {
@@ -98,11 +99,23 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between md:h-24">
+        <div
+          className={`flex items-center justify-between ${
+            isPropertyDetails ? 'h-[68px] md:h-20' : 'h-20 md:h-24'
+          }`}
+        >
 
           {/* Logo */}
           <NavLink to="/" onClick={handleLogoClick} className="flex h-full items-center cursor-pointer" aria-label="Staybridge London — início">
-            <BrandLogo className="h-20 w-32 sm:w-36 md:h-24 md:w-44" priority />
+            <BrandLogo
+              className={
+                isPropertyDetails
+                  ? 'h-14 w-24 md:h-16 md:w-28'
+                  : 'h-20 w-32 sm:w-36 md:h-24 md:w-44'
+              }
+              imageClassName={isPropertyDetails ? '!top-[55%] !h-[170%]' : ''}
+              priority
+            />
           </NavLink>
 
           {/* Desktop Navigation */}
