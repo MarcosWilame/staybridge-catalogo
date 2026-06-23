@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import type { Property } from './properties';
 import {
   getPublicPropertiesRevision,
+  getPublicPropertiesRequestPath,
   PUBLIC_PROPERTIES_CACHE_KEY,
+  PUBLIC_PROPERTIES_UPDATED_EVENT,
 } from './propertyCache.ts';
 
 let cachedProperties: Property[] | null = null;
 let cachedError: string | null = null;
 let cachedRevision = '';
+let pendingLoad: Promise<Property[]> | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
 
 function readSessionCache(allowStale = false) {
@@ -37,7 +40,10 @@ async function fetchPropertiesWithRetry() {
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const response = await fetch('/api/public-properties', { cache: 'no-store' });
+      const response = await fetch(getPublicPropertiesRequestPath(), {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (response.ok || response.status < 500 || attempt === 1) return response;
     } catch (error) {
       lastError = error;
@@ -50,17 +56,12 @@ async function fetchPropertiesWithRetry() {
   throw lastError instanceof Error ? lastError : new Error('Falha ao carregar propriedades');
 }
 
-async function loadPropertiesFromSource() {
+async function loadPropertiesFromSource(forceRefresh = false) {
   const revision = getPublicPropertiesRevision();
-  if (cachedProperties && cachedRevision === revision) return cachedProperties;
-  const storedProperties = readSessionCache();
-  if (storedProperties) {
-    cachedProperties = storedProperties;
-    cachedRevision = revision;
-    return storedProperties;
-  }
+  if (!forceRefresh && cachedProperties && cachedRevision === revision) return cachedProperties;
+  if (pendingLoad) return pendingLoad;
 
-  try {
+  pendingLoad = (async () => {
     const response = await fetchPropertiesWithRetry();
 
     const contentType = response.headers.get('content-type') || '';
@@ -79,18 +80,22 @@ async function loadPropertiesFromSource() {
     cachedProperties = Array.isArray(data)
       ? (data as Property[]).filter(isListedProperty)
       : [];
-    cachedRevision = revision;
+    cachedRevision = getPublicPropertiesRevision();
     cachedError = null;
     try {
       sessionStorage.setItem(
         PUBLIC_PROPERTIES_CACHE_KEY,
-        JSON.stringify({ timestamp: Date.now(), revision, properties: cachedProperties })
+        JSON.stringify({
+          timestamp: Date.now(),
+          revision: cachedRevision,
+          properties: cachedProperties,
+        })
       );
     } catch {
       // Storage can be unavailable in privacy modes; memory cache still works.
     }
     return cachedProperties;
-  } catch (err) {
+  })().catch((err) => {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
     cachedError = message;
     const staleProperties = readSessionCache(true);
@@ -99,7 +104,11 @@ async function loadPropertiesFromSource() {
       return staleProperties;
     }
     throw new Error(message);
-  }
+  }).finally(() => {
+    pendingLoad = null;
+  });
+
+  return pendingLoad;
 }
 
 export function useProperties() {
@@ -110,8 +119,8 @@ export function useProperties() {
   useEffect(() => {
     let isMounted = true;
 
-    loadPropertiesFromSource()
-      .then((loadedProperties) => {
+    const refresh = (forceRefresh = true) => {
+      loadPropertiesFromSource(forceRefresh).then((loadedProperties) => {
         if (!isMounted) return;
         setItems(loadedProperties);
         setError(null);
@@ -125,9 +134,28 @@ export function useProperties() {
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'staybridge-public-properties-revision') refresh(true);
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refresh(true);
+    };
+    const handleRefreshEvent = () => refresh(true);
+
+    refresh(true);
+    window.addEventListener('focus', handleRefreshEvent);
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener(PUBLIC_PROPERTIES_UPDATED_EVENT, handleRefreshEvent);
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       isMounted = false;
+      window.removeEventListener('focus', handleRefreshEvent);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(PUBLIC_PROPERTIES_UPDATED_EVENT, handleRefreshEvent);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 

@@ -1,5 +1,10 @@
 export const PUBLIC_PROPERTIES_CACHE_KEY = 'staybridge-public-properties-v2';
+export const PUBLIC_PROPERTIES_UPDATED_EVENT = 'staybridge:properties-updated';
 const PUBLIC_PROPERTIES_REVISION_KEY = 'staybridge-public-properties-revision';
+
+export function getPublicPropertiesRequestPath(timestamp = Date.now()) {
+  return `/api/public-properties?revision=${encodeURIComponent(timestamp)}`;
+}
 
 export function getPublicPropertiesRevision() {
   try {
@@ -17,6 +22,10 @@ export function invalidatePublicPropertiesCache() {
     localStorage.setItem(PUBLIC_PROPERTIES_REVISION_KEY, revision);
   } catch {
     // Storage can be unavailable in privacy modes.
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(PUBLIC_PROPERTIES_UPDATED_EVENT));
   }
 
   return revision;

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   getPublicPropertiesRevision,
+  getPublicPropertiesRequestPath,
   invalidatePublicPropertiesCache,
   PUBLIC_PROPERTIES_CACHE_KEY,
 } from '../src/app/data/propertyCache.ts';
@@ -25,4 +26,11 @@ test('property updates invalidate the browser cache and publish a new revision',
 
   delete globalThis.sessionStorage;
   delete globalThis.localStorage;
+});
+
+test('public property requests use a cache-busting revision', () => {
+  assert.equal(
+    getPublicPropertiesRequestPath(123456),
+    '/api/public-properties?revision=123456'
+  );
 });

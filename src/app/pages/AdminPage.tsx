@@ -252,14 +252,16 @@ export function AdminPage() {
 
     try {
       const login = await signInAdmin(authEmail.trim(), authPassword);
-      if ('session' in login) {
+      if (login.session) {
         setSession(login.session);
         setPendingMfaSession(null);
         setMfaFlow(null);
         setMfaCode('');
-      } else {
+      } else if (login.pendingSession && login.mfaFlow) {
         setPendingMfaSession(login.pendingSession);
         setMfaFlow(login.mfaFlow);
+      } else {
+        throw new Error('Resposta de autenticação incompleta');
       }
       setAuthPassword('');
       setSyncError('');
