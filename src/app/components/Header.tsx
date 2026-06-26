@@ -3,12 +3,14 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 import { BrandLogo } from './BrandLogo';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { language, setLanguage } = useLanguage();
 
   const isHome = location.pathname === '/';
   const isPropertyDetails = location.pathname.startsWith('/property/');
@@ -89,6 +91,29 @@ export function Header() {
     }`;
 
   const buttonClass = `font-semibold transition-all duration-300 rounded-xl px-4 py-2 text-white hover:bg-white/10 hover:text-[var(--yellow)]`;
+  const languageToggle = (
+    <div
+      className="flex w-fit items-center rounded-full border border-white/20 bg-white/10 p-1 text-xs font-black text-white"
+      aria-label="Selecionar idioma"
+      data-no-translate
+    >
+      {(['pt', 'en'] as const).map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => setLanguage(option)}
+          aria-pressed={language === option}
+          className={`min-h-8 rounded-full px-3 transition ${
+            language === option
+              ? 'bg-[var(--yellow)] text-[#102c20] shadow-sm'
+              : 'hover:bg-white/10'
+          }`}
+        >
+          {option.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <header
@@ -142,6 +167,7 @@ export function Header() {
               <Search className="w-4 h-4" />
               Buscar imóveis
             </button>
+            {languageToggle}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -161,6 +187,10 @@ export function Header() {
         {isMobileMenuOpen && (
           <div id="mobile-navigation" className="md:hidden py-4 border-t border-green-700 bg-[#2d6a4f]">
             <nav aria-label="Navegação mobile" className="flex flex-col gap-4">
+              <div className="px-4">
+                {languageToggle}
+              </div>
+
               <NavLink
                 to="/"
                 end
