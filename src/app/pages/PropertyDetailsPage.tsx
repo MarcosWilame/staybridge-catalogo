@@ -255,7 +255,7 @@ export function PropertyDetailsPage() {
 
   const propertyDescription =
     property.description ||
-    `${formatPropertyType(property)} em ${property.region} com atendimento em português.`;
+    `${formatPropertyType(property)} em ${property.region} com suporte especializado.`;
   const propertyUrl = getAbsoluteUrl(`/property/${property.id}`);
   const residenceId = `${propertyUrl}#residence`;
   const listingId = `${propertyUrl}#listing`;

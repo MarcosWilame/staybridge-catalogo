@@ -38,7 +38,7 @@ export function HomePage() {
       mainEntity: [
         ['Quais tipos de acomodação estão disponíveis em Londres?', 'O catálogo reúne Rooms, Ensuites, Studios e Flats com filtros por região, preço, capacidade e data de entrada.'],
         ['As bills estão inclusas no aluguel?', 'Algumas unidades têm Bills inclusas. A informação aparece no anúncio e pode ser selecionada como filtro.'],
-        ['Posso receber atendimento em português?', 'Sim. A equipe oferece atendimento em português pelo WhatsApp durante a busca e a reserva.'],
+        ['Posso receber atendimento em mais de um idioma?', 'Sim. A equipe oferece suporte em português e inglês pelo WhatsApp durante a busca e a reserva.'],
         ['Posso procurar acomodação antes de chegar a Londres?', 'Sim. É possível consultar fotos, detalhes, localização aproximada e disponibilidade online antes da mudança.'],
       ].map(([name, text]) => ({
         '@type': 'Question',
@@ -62,8 +62,8 @@ export function HomePage() {
   return (
     <div>
       <SEO
-        title="Acomodações para brasileiros em Londres"
-        description="Rooms, Studios, Ensuites e Flats para alugar em Londres, com filtros por preço, região e disponibilidade e atendimento em português."
+        title="Acomodações em Londres"
+        description="Rooms, Studios, Ensuites e Flats para alugar em Londres, com filtros por preço, região, disponibilidade e atendimento personalizado."
         imageAlt="Staybridge London — acomodações para alugar em Londres"
         canonicalPath="/"
         jsonLd={homeJsonLd}

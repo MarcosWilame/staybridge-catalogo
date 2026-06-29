@@ -3,8 +3,8 @@ import { MessageCircle, FileCheck, Zap, Shield, Users, CheckCircle } from 'lucid
 const benefits = [
   {
     icon: MessageCircle,
-    title: 'Atendimento em Português',
-    description: 'Equipe brasileira para ajudar você em cada etapa',
+    title: 'Atendimento personalizado',
+    description: 'Equipe preparada para ajudar você em cada etapa',
   },
   {
     icon: FileCheck,
@@ -51,7 +51,7 @@ export function Benefits() {
             <span className="text-[var(--yellow)]">em Londres</span>
           </h2>
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 md:text-xl">
-            Mais de 500 brasileiros já encontraram seu lar conosco
+            Mais de 500 pessoas já encontraram seu lar conosco
           </p>
         </div>
 

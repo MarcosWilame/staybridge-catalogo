@@ -4,7 +4,7 @@ const proofPoints = [
   { icon: KeyRound, value: '300+', label: 'imóveis alugados em Londres' },
   { icon: ShieldCheck, value: '10+', label: 'anos de experiência no mercado' },
   { icon: Building2, value: 'Estrutura local', label: 'operação profissional em Londres' },
-  { icon: Headphones, value: 'Em português', label: 'suporte humano até a mudança' },
+  { icon: Headphones, value: 'Suporte próximo', label: 'atendimento humano até a mudança' },
 ];
 
 export function HomeProofBar() {

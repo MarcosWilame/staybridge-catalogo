@@ -536,7 +536,7 @@ export function ListingPage() {
         : 'Imóveis e quartos em Londres';
 
   const listingDescription = activeFilterSummary
-    ? `Veja ${sortedProperties.length} opções em Londres para ${activeFilterSummary}. Studios, Ensuites, Rooms e Flats com atendimento em português.`
+    ? `Veja ${sortedProperties.length} opções em Londres para ${activeFilterSummary}. Studios, Ensuites, Rooms e Flats com atendimento personalizado.`
     : 'Compare Studios, Ensuites, Rooms e Flats em Londres com filtros por região, valor, capacidade, Bills inclusas e disponibilidade.';
 
   const listingJsonLd = [
@@ -1486,7 +1486,7 @@ export function ListingPage() {
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="text-sm font-extrabold text-gray-900">Não encontrou o ideal?</div>
-            <div className="truncate text-xs text-gray-600">Receba ajuda em português</div>
+            <div className="truncate text-xs text-gray-600">Receba ajuda da equipe</div>
           </div>
           <button
             type="button"

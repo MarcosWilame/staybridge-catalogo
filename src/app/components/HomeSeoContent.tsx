@@ -10,8 +10,8 @@ const questions = [
     answer: 'Algumas unidades têm Bills inclusas. Essa informação aparece no anúncio e também pode ser selecionada como filtro no catálogo.',
   },
   {
-    question: 'Posso receber atendimento em português?',
-    answer: 'Sim. A equipe atende brasileiros e outros interessados em português pelo WhatsApp durante a busca e a reserva.',
+    question: 'Posso receber atendimento em mais de um idioma?',
+    answer: 'Sim. A equipe oferece suporte em português e inglês pelo WhatsApp durante a busca e a reserva.',
   },
   {
     question: 'Posso procurar acomodação antes de chegar a Londres?',
@@ -31,7 +31,7 @@ export function HomeSeoContent() {
             Encontre sua acomodação em Londres
           </h2>
           <p className="mt-4 max-w-xl leading-relaxed text-gray-700">
-            Compare Rooms, Ensuites, Studios e Flats por preço, região e disponibilidade — com atendimento em português.
+            Compare Rooms, Ensuites, Studios e Flats por preço, região e disponibilidade — com atendimento personalizado.
           </p>
           <Link
             to="/properties"

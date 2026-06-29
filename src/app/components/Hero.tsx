@@ -52,13 +52,13 @@ export function Hero() {
         <div className="max-w-4xl">
           <div className="hero-reveal mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-black uppercase tracking-[.14em] text-white backdrop-blur-md sm:text-xs">
             <MapPin className="h-4 w-4 text-[var(--yellow)]" />
-            Acomodação em Londres • Atendimento em português
+            Acomodação em Londres • Atendimento personalizado
           </div>
           <h1 className="hero-reveal hero-delay-1 max-w-4xl text-[clamp(2.7rem,7vw,5.25rem)] font-black leading-[.98] tracking-[-.05em] text-white">
             Encontre sua acomodação <span className="text-[var(--yellow)]">em Londres.</span>
           </h1>
           <p className="hero-reveal hero-delay-2 mt-6 max-w-2xl text-base leading-relaxed text-white/82 sm:text-xl">
-            Busque por região, estação ou postcode e veja opções disponíveis com preço claro e atendimento em português.
+            Busque por região, estação ou postcode e veja opções disponíveis com preço claro e suporte especializado.
           </p>
 
           <form onSubmit={handleSearch} className="hero-reveal hero-delay-3 mt-8 grid gap-2 rounded-[1.35rem] border border-white/30 bg-white/95 p-2.5 shadow-[0_28px_80px_rgba(0,0,0,.38)] backdrop-blur-xl sm:grid-cols-[1fr_auto]" aria-label="Buscar acomodação">
@@ -86,7 +86,7 @@ export function Hero() {
 
           <div className="hero-reveal hero-delay-4 mt-4 flex flex-col gap-4 text-sm text-white/80 sm:flex-row sm:items-center">
             <div className="flex flex-wrap gap-x-5 gap-y-2">
-              {['Valores semanais claros', 'Disponibilidade atualizada', 'Suporte em português'].map((item) => (
+              {['Valores semanais claros', 'Disponibilidade atualizada', 'Atendimento personalizado'].map((item) => (
                 <span key={item} className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-[var(--yellow)]" /> {item}</span>
               ))}
             </div>

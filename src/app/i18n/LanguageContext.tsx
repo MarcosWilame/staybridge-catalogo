@@ -34,12 +34,15 @@ const textTranslations: Record<string, string> = {
   'Fechar menu': 'Close menu',
   'Abrir menu': 'Open menu',
   'Acomodação em Londres • Atendimento em português': 'Accommodation in London • Support in Portuguese',
+  'Acomodação em Londres • Atendimento personalizado': 'Accommodation in London • Personalized support',
   'Encontre sua acomodação': 'Find your accommodation',
   'em Londres.': 'in London.',
   'em Londres': 'in London',
   'Encontre sua acomodação em Londres.': 'Find your accommodation in London.',
   'Busque por região, estação ou postcode e veja opções disponíveis com preço claro e atendimento em português.':
     'Search by area, station, or postcode and see available options with clear pricing and Portuguese-speaking support.',
+  'Busque por região, estação ou postcode e veja opções disponíveis com preço claro e suporte especializado.':
+    'Search by area, station, or postcode and see available options with clear pricing and specialist support.',
   'Buscar acomodação': 'Search accommodation',
   'Região, estação ou postcode': 'Area, station, or postcode',
   'Buscas rápidas': 'Quick searches',
@@ -49,6 +52,7 @@ const textTranslations: Record<string, string> = {
   'Valores semanais claros': 'Clear weekly prices',
   'Disponibilidade atualizada': 'Updated availability',
   'Suporte em português': 'Portuguese-speaking support',
+  'Atendimento personalizado': 'Personalized support',
   'Resumo de disponibilidade': 'Availability summary',
   'Catálogo ativo agora': 'Live catalogue now',
   'opções disponíveis': 'available options',
@@ -61,8 +65,8 @@ const textTranslations: Record<string, string> = {
   'tipos de acomodação': 'accommodation types',
   'Decisão clara': 'Clear decision',
   'fotos, preço e detalhes': 'photos, price, and details',
-  'Conectando brasileiros às melhores acomodações em Londres. Atendimento especializado e suporte em português.':
-    'Connecting Brazilians with the best accommodation in London. Specialist support in Portuguese.',
+  'Conectando pessoas às melhores acomodações em Londres. Atendimento especializado e personalizado.':
+    'Connecting people with the best accommodation in London. Specialist personalized support.',
   'Links Rápidos': 'Quick Links',
   'Ver Unidades': 'View Properties',
   'Perguntas frequentes': 'FAQ',
@@ -102,8 +106,11 @@ const textTranslations: Record<string, string> = {
   'Ajuste os filtros ou fale conosco para encontrar uma opção ideal.':
     'Adjust the filters or talk to us to find the right option.',
   'Falar no WhatsApp': 'Chat on WhatsApp',
+  'Fale conosco no WhatsApp': 'Talk to us on WhatsApp',
+  'Falar com a Staybridge London no WhatsApp': 'Talk to Staybridge London on WhatsApp',
   'Não encontrou o ideal?': 'Did not find the right one?',
   'Receba ajuda em português': 'Get help in Portuguese',
+  'Receba ajuda da equipe': 'Get help from the team',
   'Quero ajuda': 'I want help',
   Comparar: 'Compare',
   'Remover da comparacao': 'Remove from comparison',
@@ -133,7 +140,7 @@ const textTranslations: Record<string, string> = {
   'Ver próxima imagem do imóvel': 'View next property image',
   'Agendar visita': 'Schedule a viewing',
   Visita: 'Viewing',
-  'Acomodações para brasileiros em Londres': 'Accommodation for Brazilians in London',
+  'Acomodações em Londres': 'Accommodation in London',
   'Imóveis e quartos em Londres': 'Properties and rooms in London',
   'Acomodações disponíveis agora em Londres': 'Accommodation available now in London',
   'Imóveis e quartos para alugar em Londres': 'Properties and rooms to rent in London',
@@ -153,6 +160,10 @@ const textTranslations: Record<string, string> = {
   Entrada: 'Move-in',
   Capacidade: 'Capacity',
   Local: 'Location',
+  Localização: 'Location',
+  'Abrir': 'Open',
+  'Raio aproximado da área': 'Approximate area radius',
+  Qualquer: 'Any',
   Preco: 'Price',
   Preço: 'Price',
   'Ajuste as preferências': 'Adjust preferences',
@@ -179,6 +190,36 @@ const textTranslations: Record<string, string> = {
   opção: 'option',
   opções: 'options',
   'Começar minha busca': 'Start my search',
+  'Moradia em Londres': 'Housing in London',
+  'Encontre sua acomodação em Londres': 'Find your accommodation in London',
+  'Compare Rooms, Ensuites, Studios e Flats por preço, região e disponibilidade — com atendimento em português.':
+    'Compare Rooms, Ensuites, Studios, and Flats by price, area, and availability, with Portuguese-speaking support.',
+  'Compare Rooms, Ensuites, Studios e Flats por preço, região e disponibilidade — com atendimento personalizado.':
+    'Compare Rooms, Ensuites, Studios, and Flats by price, area, and availability, with personalized support.',
+  'Explorar acomodações em Londres': 'Explore accommodation in London',
+  'Quais tipos de acomodação estão disponíveis em Londres?':
+    'What types of accommodation are available in London?',
+  'O catálogo reúne Rooms, Ensuites, Studios e Flats. Use os filtros para comparar região, preço semanal, capacidade e data de entrada.':
+    'The catalogue includes Rooms, Ensuites, Studios, and Flats. Use filters to compare area, weekly price, capacity, and move-in date.',
+  'As bills estão inclusas no aluguel?': 'Are bills included in the rent?',
+  'Algumas unidades têm Bills inclusas. Essa informação aparece no anúncio e também pode ser selecionada como filtro no catálogo.':
+    'Some properties have bills included. This information appears in the listing and can also be selected as a catalogue filter.',
+  'Posso receber atendimento em português?': 'Can I get support in Portuguese?',
+  'Posso receber atendimento em mais de um idioma?': 'Can I get support in more than one language?',
+  'Sim. A equipe oferece suporte em português e inglês pelo WhatsApp durante a busca e a reserva.':
+    'Yes. The team offers support in Portuguese and English via WhatsApp during the search and booking process.',
+  'Posso procurar acomodação antes de chegar a Londres?':
+    'Can I look for accommodation before arriving in London?',
+  'Sim. Você pode consultar fotos, detalhes, localização aproximada e disponibilidade online e falar com a equipe antes da mudança.':
+    'Yes. You can check photos, details, approximate location, and availability online, and speak with the team before moving.',
+  'Explore no seu ritmo': 'Explore at your own pace',
+  'Sua próxima acomodação pode estar a poucos cliques.':
+    'Your next accommodation could be just a few clicks away.',
+  'Compare valores, fotos, regiões e disponibilidade com autonomia.':
+    'Compare prices, photos, areas, and availability independently.',
+  'Filtros completos': 'Complete filters',
+  'Informações claras': 'Clear information',
+  'Imóveis atualizados': 'Updated properties',
   'Seleção disponível agora': 'Available selection now',
   'Disponíveis agora em Londres': 'Available now in London',
   'Compare fotos, valores semanais e localização antes de falar com a equipe.':
@@ -191,6 +232,10 @@ const textTranslations: Record<string, string> = {
   'Uma jornada objetiva para encontrar, confirmar e reservar sua acomodação em Londres.':
     'A straightforward journey to find, confirm, and book your accommodation in London.',
   'Atendimento em português': 'Portuguese-speaking support',
+  'Suporte próximo': 'Close support',
+  'atendimento humano até a mudança': 'human support until move-in',
+  'Equipe preparada para ajudar você em cada etapa': 'A team ready to help you at every step',
+  'Mais de 500 pessoas já encontraram seu lar conosco': 'More than 500 people have found their home with us',
   'Preço e detalhes transparentes': 'Transparent price and details',
   'Orientação até a mudança': 'Guidance until move-in',
   'PASSO': 'STEP',
@@ -224,6 +269,9 @@ const phraseTranslations: Array<[RegExp, string]> = [
   [/\bacomodação\b/gi, 'accommodation'],
   [/\bencontre sua\b/gi, 'find your'],
   [/\bsua\b/gi, 'your'],
+  [/\bpróxima\b/gi, 'next'],
+  [/\bpode estar\b/gi, 'could be'],
+  [/\ba poucos cliques\b/gi, 'just a few clicks away'],
   [/\bseu\b/gi, 'your'],
   [/\bvocê\b/gi, 'you'],
   [/\bpara você\b/gi, 'for you'],
@@ -284,6 +332,11 @@ const phraseTranslations: Array<[RegExp, string]> = [
   [/\bvoltar\b/gi, 'back'],
   [/\bagendar visita\b/gi, 'schedule a viewing'],
   [/\bfalar no whatsapp\b/gi, 'chat on WhatsApp'],
+  [/\bfale conosco no whatsapp\b/gi, 'talk to us on WhatsApp'],
+  [/\bno whatsapp\b/gi, 'on WhatsApp'],
+  [/\bqualquer\b/gi, 'any'],
+  [/\babrir\b/gi, 'open'],
+  [/\braio aproximado da área\b/gi, 'approximate area radius'],
   [/\bcarregando\b/gi, 'loading'],
   [/\bsincronizando\b/gi, 'syncing'],
   [/\bbuscando\b/gi, 'searching'],

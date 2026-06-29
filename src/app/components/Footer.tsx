@@ -13,8 +13,8 @@ export function Footer() {
               <BrandLogo className="h-24 w-44 sm:h-28 sm:w-52" />
             </Link>
             <p className="mb-5 max-w-xl leading-relaxed text-gray-300">
-              Conectando brasileiros às melhores acomodações em Londres.
-              Atendimento especializado e suporte em português.
+              Conectando pessoas às melhores acomodações em Londres.
+              Atendimento especializado e personalizado.
             </p>
             <div className="flex gap-4">
               <a

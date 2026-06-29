@@ -2,7 +2,7 @@ import { ArrowRight, CheckCircle2, FileText, Headphones, Home, Search, ShieldChe
 import { Link } from 'react-router-dom';
 
 const confidenceItems = [
-  { icon: Headphones, title: 'Atendimento em português' },
+  { icon: Headphones, title: 'Atendimento personalizado' },
   { icon: FileText, title: 'Preço e detalhes transparentes' },
   { icon: ShieldCheck, title: 'Orientação até a mudança' },
 ];

@@ -11,7 +11,7 @@ const steps = [
     icon: MessageCircle,
     number: '02',
     title: 'Fale com a equipe',
-    description: 'Tire dúvidas em português e solicite uma visita ou vídeo.',
+    description: 'Tire dúvidas com a equipe e solicite uma visita ou vídeo.',
   },
   {
     icon: CheckCircle,

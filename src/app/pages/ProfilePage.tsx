@@ -8,7 +8,7 @@ export function ProfilePage() {
     <div className="min-h-screen bg-[var(--gray-light)] px-4 pb-28 pt-28 md:pb-24">
       <SEO
         title="Atendimento e suporte"
-        description="Fale com a equipe Staybridge London para visitas, reservas, contratos e suporte em portugues durante sua estadia."
+        description="Fale com a equipe Staybridge London para visitas, reservas, contratos e suporte durante sua estadia."
         noIndex
       />
       <div className="mx-auto max-w-4xl">
@@ -59,8 +59,8 @@ export function ProfilePage() {
                 <p className="text-sm text-gray-600">Assistência durante toda sua estadia</p>
               </div>
               <div className="bg-[var(--gray-light)] rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Atendimento em Português</h3>
-                <p className="text-sm text-gray-600">Equipe brasileira disponível</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Atendimento personalizado</h3>
+                <p className="text-sm text-gray-600">Equipe disponível para orientar você</p>
               </div>
             </div>
           </div>
