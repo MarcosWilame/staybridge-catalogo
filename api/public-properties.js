@@ -23,28 +23,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    let response = await fetch(
-      `${SUPABASE_URL}/rest/v1/rpc/get_public_properties`,
-      {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: '{}',
-      }
-    );
-
-    if (!response.ok && LEGACY_SERVICE_KEY) {
-      response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=id,data&order=id.asc`, {
+    let response = LEGACY_SERVICE_KEY
+      ? await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=id,data&order=id.asc`, {
         headers: {
           apikey: LEGACY_SERVICE_KEY,
           Authorization: `Bearer ${LEGACY_SERVICE_KEY}`,
           Accept: 'application/json',
         },
-      });
+      })
+      : null;
+
+    if (!response?.ok) {
+      response = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/get_public_properties`,
+        {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+        }
+      );
     }
 
     if (!response.ok) {

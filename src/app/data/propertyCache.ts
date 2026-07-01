@@ -1,4 +1,4 @@
-export const PUBLIC_PROPERTIES_CACHE_KEY = 'staybridge-public-properties-v2';
+export const PUBLIC_PROPERTIES_CACHE_KEY = 'staybridge-public-properties-v3';
 export const PUBLIC_PROPERTIES_UPDATED_EVENT = 'staybridge:properties-updated';
 const PUBLIC_PROPERTIES_REVISION_KEY = 'staybridge-public-properties-revision';
 
