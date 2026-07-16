@@ -78,7 +78,9 @@ export function validateAdminProperty(input) {
     ? input.images.map(cleanUrl).filter(Boolean).slice(0, 15)
     : [];
   if (!data.image) data.image = data.images[0] || '';
-  if (!data.title || !data.image) throw new Error('Title and image are required');
+  if (!data.title || (!data.image && !data.video)) {
+    throw new Error('Title and image or video are required');
+  }
 
   const status = normalizeStatus(input.status, input.available === true, input.listed === true);
   Object.assign(data, visibilityFromStatus(status), { status });

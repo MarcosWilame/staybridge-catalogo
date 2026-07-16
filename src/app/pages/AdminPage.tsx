@@ -820,8 +820,8 @@ export function AdminPage() {
   };
 
   const handleSaveProperty = async () => {
-    if (!formData.title || !formData.image) {
-      alert('Título e imagem principal são obrigatórios');
+    if (!formData.title || (!formData.image && !formData.video)) {
+      alert('Título e imagem ou vídeo principal são obrigatórios');
       return;
     }
 

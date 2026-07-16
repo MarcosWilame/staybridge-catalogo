@@ -34,6 +34,19 @@ test('admin collection rejects duplicate IDs', () => {
   );
 });
 
+test('admin validation accepts a video-only cover', () => {
+  const property = validateAdminProperty({
+    id: 8,
+    title: 'Video Studio',
+    video: 'https://cdn.example.com/property.mp4',
+    listed: false,
+    available: false,
+  });
+
+  assert.equal(property.image, '');
+  assert.equal(property.video, 'https://cdn.example.com/property.mp4');
+});
+
 test('public fields reject unsafe media schemes and unknown hosts', () => {
   const property = toPublicProperty({
     id: 7,
