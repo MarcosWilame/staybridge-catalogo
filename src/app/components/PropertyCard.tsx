@@ -112,11 +112,12 @@ export function PropertyCard({
     [property.image, property.images]
   );
   const currentImage = images[currentImageIndex] || property.image;
-  const hasPhoto = Boolean(currentImage);
-  const hasVideo = !hasPhoto && Boolean(property.video);
+  const coverIsVideo = property.coverMedia === 'video' && Boolean(property.video);
+  const hasPhoto = !coverIsVideo && Boolean(currentImage);
+  const hasVideo = coverIsVideo || (!hasPhoto && Boolean(property.video));
   const videoEmbedUrl = property.video ? getVideoEmbedUrl(property.video) : '';
   const isIllustrativeImage = isIllustrativePropertyImage(currentImage);
-  const hasCarousel = images.length > 1;
+  const hasCarousel = !coverIsVideo && images.length > 1;
   const weeklyPrice = formatWeeklyPrice(property.price);
   const areaPreview = getAreaPreview(property);
 

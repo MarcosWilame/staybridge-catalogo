@@ -83,6 +83,7 @@ export function toPublicProperty(row) {
     image,
     images: images.length ? images : image ? [image] : [],
     video: mediaUrl(data.video),
+    coverMedia: data.coverMedia === 'video' && mediaUrl(data.video) ? 'video' : 'image',
     type: text(data.type, 80),
     title: text(data.title, 140),
     region: text(data.region, 80),

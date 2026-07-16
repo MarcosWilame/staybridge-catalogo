@@ -6,6 +6,7 @@ export const INITIAL_FORM: Omit<Property, 'id'> = {
   image: '',
   images: [],
   video: '',
+  coverMedia: 'image',
   type: 'Studio',
   title: '',
   region: '',

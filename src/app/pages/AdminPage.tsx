@@ -774,10 +774,15 @@ export function AdminPage() {
 
       return {
         ...prev,
+        coverMedia: 'image',
         image: selected,
         images: [selected, ...prev.images.filter((_, i) => i !== index)],
       };
     });
+  };
+
+  const handleSetCoverVideo = () => {
+    setFormData(prev => (prev.video ? { ...prev, coverMedia: 'video' } : prev));
   };
 
   const handleCategoryChange = (category: string) => {
@@ -2022,7 +2027,7 @@ export function AdminPage() {
                       src={img}
                       className="w-full h-24 object-cover rounded-lg border border-[var(--surface-border)]"
                     />
-                    {formData.image === img && (
+                    {formData.coverMedia !== 'video' && formData.image === img && (
                       <span className="absolute left-2 top-2 rounded-full bg-[var(--yellow)] px-2 py-1 text-[10px] font-black text-black">
                         Capa
                       </span>
@@ -2218,15 +2223,28 @@ export function AdminPage() {
                     </div>
                   )}
 
-                  {formData.video && (
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, video: '' }))}
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
-                    >
-                      <X className="h-4 w-4" />
-                      Remover video
-                    </button>
+                {formData.video && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSetCoverVideo}
+                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold ${
+                          formData.coverMedia === 'video'
+                            ? 'bg-[var(--yellow)] text-black'
+                            : 'border border-[var(--green-dark)] bg-white text-[var(--green-dark)] hover:bg-[var(--green-light)]'
+                        }`}
+                      >
+                        {formData.coverMedia === 'video' ? 'Vídeo definido como capa' : 'Usar vídeo como capa'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, video: '', coverMedia: prev.coverMedia === 'video' ? 'image' : prev.coverMedia }))}
+                        className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
+                      >
+                        <X className="h-4 w-4" />
+                        Remover video
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -2332,14 +2350,24 @@ export function AdminPage() {
               <h3 className="mb-4 text-lg font-extrabold text-[var(--green-dark)]">Pré-visualização</h3>
               <div className="max-w-md overflow-hidden rounded-lg border border-[var(--surface-border)] bg-white shadow-[var(--surface-shadow)]">
                 <div className="h-40 bg-[var(--gray-light)]">
-                  {formData.image ? (
+                  {formData.coverMedia === 'video' && formData.video ? (
+                    <video
+                      src={formData.video}
+                      className="h-full w-full object-cover"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      controls
+                    />
+                  ) : formData.image ? (
                     <ImageWithFallback
                       src={formData.image}
                       className="h-full w-full object-cover"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm font-bold text-gray-500">
-                      Imagem de capa
+                    Mídia de capa
                     </div>
                   )}
                 </div>

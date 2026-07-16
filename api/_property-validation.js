@@ -16,6 +16,7 @@ const STRING_LIMITS = {
   image: 2048,
   deletedAt: 40,
   status: 30,
+  coverMedia: 20,
 };
 
 function cleanString(value, max) {
@@ -78,6 +79,8 @@ export function validateAdminProperty(input) {
     ? input.images.map(cleanUrl).filter(Boolean).slice(0, 15)
     : [];
   if (!data.image) data.image = data.images[0] || '';
+  data.coverMedia = data.coverMedia === 'video' && data.video ? 'video' : 'image';
+  if (!data.image && data.video) data.coverMedia = 'video';
   if (!data.title || (!data.image && !data.video)) {
     throw new Error('Title and image or video are required');
   }

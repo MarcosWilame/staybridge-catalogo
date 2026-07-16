@@ -6,6 +6,7 @@ export interface Property {
   image: string;
   images: string[];
   video?: string;
+  coverMedia?: 'image' | 'video';
   type: string;
   title: string;
   region: string;

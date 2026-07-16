@@ -77,14 +77,15 @@ function getMediaItems(property: Property): MediaItem[] {
 
   if (!property.video) return imageItems;
 
-  return [
-    ...imageItems,
-    {
-      type: 'video' as const,
-      src: property.video,
-      embedSrc: getVideoEmbedUrl(property.video),
-    },
-  ];
+  const videoItem = {
+    type: 'video' as const,
+    src: property.video,
+    embedSrc: getVideoEmbedUrl(property.video),
+  };
+
+  return property.coverMedia === 'video'
+    ? [videoItem, ...imageItems]
+    : [...imageItems, videoItem];
 }
 
 function formatWeeklyPrice(price: string) {

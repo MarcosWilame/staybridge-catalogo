@@ -705,6 +705,10 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     image: image || images[0] || '',
     images: images.length ? images : image ? [image] : [],
     video: normalizeVideoUrl(toStringValue(input.video)),
+    coverMedia:
+      input.coverMedia === 'video' && toStringValue(input.video)
+        ? 'video'
+        : 'image',
     type: toStringValue(input.type, '', 80),
     title: toStringValue(input.title, '', 140),
     region: toStringValue(input.region, '', 80),
