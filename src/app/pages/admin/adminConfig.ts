@@ -2,6 +2,7 @@ import type { InputHTMLAttributes } from 'react';
 import type { Property } from '../../data/properties';
 
 export const INITIAL_FORM: Omit<Property, 'id'> = {
+  company: 'EasyShare',
   image: '',
   images: [],
   video: '',

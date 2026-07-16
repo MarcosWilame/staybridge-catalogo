@@ -32,3 +32,19 @@ test('public property API excludes hidden properties', () => {
   assert.equal(toPublicProperty({ id: 10, data: { listed: false } }), null);
   assert.equal(toPublicProperty({ id: 11, data: {} }), null);
 });
+
+test('public property API uses status to resolve stale visibility flags', () => {
+  const available = toPublicProperty({
+    id: 12,
+    data: { id: 12, title: 'Studio', status: 'available', available: false, listed: false },
+  });
+  const reserved = toPublicProperty({
+    id: 13,
+    data: { id: 13, title: 'Studio', status: 'reserved', available: true, listed: false },
+  });
+
+  assert.equal(available.available, true);
+  assert.equal(available.listed, true);
+  assert.equal(reserved.available, false);
+  assert.equal(reserved.listed, true);
+});

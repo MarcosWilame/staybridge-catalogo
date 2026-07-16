@@ -679,6 +679,12 @@ function normalizeStatus(
   return 'available';
 }
 
+function getVisibilityFromStatus(status: Property['status']) {
+  if (status === 'available') return { available: true, listed: true };
+  if (status === 'reserved') return { available: false, listed: true };
+  return { available: false, listed: false };
+}
+
 export function normalizeProperty(input: PropertyInput): Property | null {
   const id = toNumberValue(input.id, Number.NaN);
 
@@ -688,11 +694,14 @@ export function normalizeProperty(input: PropertyInput): Property | null {
 
   const image = normalizeImageUrl(toStringValue(input.image));
   const images = toImageArray(input.images).slice(0, 15);
-  const available = toBooleanValue(input.available, true);
-  const listed = toBooleanValue(input.listed, true);
+  const rawAvailable = toBooleanValue(input.available, true);
+  const rawListed = toBooleanValue(input.listed, true);
+  const status = normalizeStatus(input.status, rawAvailable, rawListed);
+  const { available, listed } = getVisibilityFromStatus(status);
 
   return {
     id,
+    company: toStringValue(input.company, 'EasyShare', 100),
     image: image || images[0] || '',
     images: images.length ? images : image ? [image] : [],
     video: normalizeVideoUrl(toStringValue(input.video)),
@@ -706,7 +715,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     longDescription: toStringValue(input.longDescription, '', 5_000),
     available,
     listed,
-    status: normalizeStatus(input.status, available, listed),
+    status,
     deletedAt: typeof input.deletedAt === 'string' ? input.deletedAt : undefined,
     billsIncluded: toBooleanValue(input.billsIncluded, false),
     bedrooms:

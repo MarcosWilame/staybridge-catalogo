@@ -1,4 +1,5 @@
 const STRING_LIMITS = {
+  company: 100,
   type: 80,
   title: 140,
   region: 80,
@@ -46,6 +47,21 @@ function cleanUrl(value) {
   }
 }
 
+function normalizeStatus(value, available, listed) {
+  const status = cleanString(value, STRING_LIMITS.status).toLowerCase();
+  if (['available', 'reserved', 'rented', 'hidden', 'maintenance'].includes(status)) return status;
+  if (!listed && !available) return 'rented';
+  if (!listed) return 'hidden';
+  if (!available) return 'reserved';
+  return 'available';
+}
+
+function visibilityFromStatus(status) {
+  if (status === 'available') return { available: true, listed: true };
+  if (status === 'reserved') return { available: false, listed: true };
+  return { available: false, listed: false };
+}
+
 export function validateAdminProperty(input) {
   if (!input || typeof input !== 'object') throw new Error('Invalid property');
   const id = Number(input.id);
@@ -55,6 +71,7 @@ export function validateAdminProperty(input) {
   for (const [field, max] of Object.entries(STRING_LIMITS)) {
     data[field] = cleanString(input[field], max);
   }
+  data.company = data.company || 'EasyShare';
   data.image = cleanUrl(input.image);
   data.video = cleanUrl(input.video);
   data.images = Array.isArray(input.images)
@@ -63,8 +80,8 @@ export function validateAdminProperty(input) {
   if (!data.image) data.image = data.images[0] || '';
   if (!data.title || !data.image) throw new Error('Title and image are required');
 
-  data.available = input.available === true;
-  data.listed = input.listed === true;
+  const status = normalizeStatus(input.status, input.available === true, input.listed === true);
+  Object.assign(data, visibilityFromStatus(status), { status });
   data.billsIncluded = input.billsIncluded === true;
   data.bedrooms = cleanNumber(input.bedrooms, 0, 20);
   data.bathrooms = cleanNumber(input.bathrooms, 0, 20);

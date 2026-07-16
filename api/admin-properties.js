@@ -41,6 +41,14 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       const properties = validateAdminProperties(req.body?.properties);
       const existing = await readRows(admin.accessToken);
+      const existingById = new Map(existing.map((row) => [Number(row.id), row]));
+      for (const property of properties) {
+        const existingRow = existingById.get(property.id);
+        const existingCompany = String(existingRow?.data?.company || 'EasyShare').trim();
+        if (existingRow && existingCompany !== property.company) {
+          throw new Error(`ID ${property.id} já pertence à empresa ${existingCompany}`);
+        }
+      }
       const response = await supabaseRequest(`/rest/v1/${TABLE}?on_conflict=id`, {
         token: admin.accessToken,
         method: 'POST',
@@ -49,8 +57,11 @@ export default async function handler(req, res) {
       });
       if (!response.ok) throw new Error('Unable to import properties');
       const importedIds = new Set(properties.map((property) => property.id));
+      const importedCompanies = new Set(properties.map((property) => property.company));
       for (const row of existing) {
         if (importedIds.has(Number(row.id))) continue;
+        const rowCompany = String(row.data?.company || 'EasyShare').trim();
+        if (!importedCompanies.has(rowCompany)) continue;
         const deleteResponse = await supabaseRequest(`/rest/v1/${TABLE}?id=eq.${encodeURIComponent(row.id)}`, {
           token: admin.accessToken,
           method: 'DELETE',

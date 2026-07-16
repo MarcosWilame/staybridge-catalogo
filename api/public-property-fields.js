@@ -49,9 +49,26 @@ function mediaUrl(value) {
   }
 }
 
+function normalizeStatus(value, available, listed) {
+  const status = text(value, 30).toLowerCase();
+  if (['available', 'reserved', 'rented', 'hidden', 'maintenance'].includes(status)) return status;
+  if (!listed && !available) return 'rented';
+  if (!listed) return 'hidden';
+  if (!available) return 'reserved';
+  return 'available';
+}
+
+function visibilityFromStatus(status) {
+  if (status === 'available') return { available: true, listed: true };
+  if (status === 'reserved') return { available: false, listed: true };
+  return { available: false, listed: false };
+}
+
 export function toPublicProperty(row) {
   const data = row?.data && typeof row.data === 'object' ? row.data : {};
-  if (data.listed !== true) return null;
+  const status = normalizeStatus(data.status, data.available === true, data.listed === true);
+  const visibility = visibilityFromStatus(status);
+  if (!visibility.listed) return null;
 
   const id = Number(data.id || row?.id);
   if (!Number.isSafeInteger(id) || id <= 0) return null;
@@ -73,7 +90,7 @@ export function toPublicProperty(row) {
     price: text(data.price, 40),
     description: text(data.description, 500),
     longDescription: text(data.longDescription, 5_000),
-    available: data.available === true,
+    available: visibility.available,
     listed: true,
     billsIncluded: data.billsIncluded === true,
     bedrooms: number(data.bedrooms, 0, 20),

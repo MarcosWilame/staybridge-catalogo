@@ -135,6 +135,7 @@ export function AdminPage() {
   const [formData, setFormData] = useState<Omit<Property, 'id'>>(INITIAL_FORM);
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all');
   const [adminTypeFilter, setAdminTypeFilter] = useState('');
+  const [adminCompanyFilter, setAdminCompanyFilter] = useState('');
   const [adminRegionFilter, setAdminRegionFilter] = useState('');
   const [adminAvailabilityFilter, setAdminAvailabilityFilter] =
     useState<AdminAvailabilityFilter>('all');
@@ -302,6 +303,9 @@ export function AdminPage() {
   const adminRegionOptions = Array.from(
     new Set(activeProperties.map((property) => property.region).filter(Boolean))
   ).sort();
+  const adminCompanyOptions = Array.from(
+    new Set(activeProperties.map((property) => property.company).filter(Boolean))
+  ).sort();
   const normalizedAdminSearch = adminSearchQuery.trim().toLowerCase();
   const adminPropertiesForStatus =
     statusFilter === 'trash' ? recoveryProperties : activeProperties;
@@ -311,6 +315,7 @@ export function AdminPage() {
       return false;
     }
     if (adminTypeFilter && property.category !== adminTypeFilter) return false;
+    if (adminCompanyFilter && property.company !== adminCompanyFilter) return false;
     if (adminRegionFilter && property.region !== adminRegionFilter) return false;
     if (adminAvailabilityFilter === 'available' && !property.available) return false;
     if (adminAvailabilityFilter === 'unavailable' && property.available) return false;
@@ -320,6 +325,7 @@ export function AdminPage() {
     return [
       String(property.id),
       property.title,
+      property.company,
       property.type,
       property.region,
       property.address,
@@ -1397,7 +1403,20 @@ export function AdminPage() {
               ))}
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-4">
+              <select
+                value={adminCompanyFilter}
+                onChange={(event) => setAdminCompanyFilter(event.target.value)}
+                className={adminInputClass}
+              >
+                <option value="">Todas as empresas</option>
+                {adminCompanyOptions.map((company) => (
+                  <option key={company} value={company}>
+                    {company}
+                  </option>
+                ))}
+              </select>
+
               <select
                 value={adminTypeFilter}
                 onChange={(event) => setAdminTypeFilter(event.target.value)}
@@ -1525,6 +1544,16 @@ export function AdminPage() {
               <h3 className="md:col-span-2 text-lg font-extrabold text-[var(--green-dark)]">
                 Dados principais
               </h3>
+              <div>
+                <AdminFieldLabel icon={Building2}>Empresa *</AdminFieldLabel>
+                <input
+                  type="text"
+                  value={formData.company}
+                  onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                  className={adminInputClass}
+                  placeholder="Ex: EasyShare"
+                />
+              </div>
               {/* TITLE */}
               <div>
                 <AdminFieldLabel icon={FileText}>Título *</AdminFieldLabel>

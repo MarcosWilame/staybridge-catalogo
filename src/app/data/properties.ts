@@ -2,6 +2,7 @@ export type PropertyStatus = 'available' | 'reserved' | 'rented' | 'hidden' | 'm
 
 export interface Property {
   id: number;
+  company: string;
   image: string;
   images: string[];
   video?: string;
