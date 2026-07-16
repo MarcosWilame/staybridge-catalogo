@@ -85,6 +85,7 @@ import {
 import {
   AMENITY_OPTIONS,
   CATEGORY_OPTIONS,
+  COMPANY_OPTIONS,
   INITIAL_FORM,
   MOVE_IN_OPTIONS,
   PRICE_PERIOD_OPTIONS,
@@ -304,7 +305,10 @@ export function AdminPage() {
     new Set(activeProperties.map((property) => property.region).filter(Boolean))
   ).sort();
   const adminCompanyOptions = Array.from(
-    new Set(activeProperties.map((property) => property.company).filter(Boolean))
+    new Set([
+      ...COMPANY_OPTIONS,
+      ...activeProperties.map((property) => property.company).filter(Boolean),
+    ])
   ).sort();
   const normalizedAdminSearch = adminSearchQuery.trim().toLowerCase();
   const adminPropertiesForStatus =
@@ -1546,13 +1550,17 @@ export function AdminPage() {
               </h3>
               <div>
                 <AdminFieldLabel icon={Building2}>Empresa *</AdminFieldLabel>
-                <input
-                  type="text"
+                <select
                   value={formData.company}
                   onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
                   className={adminInputClass}
-                  placeholder="Ex: EasyShare"
-                />
+                >
+                  {COMPANY_OPTIONS.map((company) => (
+                    <option key={company} value={company}>
+                      {company}
+                    </option>
+                  ))}
+                </select>
               </div>
               {/* TITLE */}
               <div>

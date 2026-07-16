@@ -30,6 +30,8 @@ export const INITIAL_FORM: Omit<Property, 'id'> = {
   people: 1,
 };
 
+export const COMPANY_OPTIONS = ['EasyShare', 'RuanRents'] as const;
+
 export type AdminStatusFilter =
   | 'all'
   | 'available'
