@@ -44,6 +44,24 @@ function getPriceValue(price: string) {
   return Number(match[0].replace(',', '.'));
 }
 
+function getVideoEmbedUrl(url: string) {
+  const driveFileId =
+    url.match(/drive\.google\.com\/file\/d\/([^/]+)/)?.[1] ||
+    url.match(/drive\.google\.com\/uc\?[^#]*id=([^&#]+)/)?.[1] ||
+    url.match(/drive\.google\.com\/open\?[^#]*id=([^&#]+)/)?.[1] ||
+    '';
+
+  if (driveFileId) return `https://drive.google.com/file/d/${driveFileId}/preview`;
+
+  const youtubeId =
+    url.match(/youtube\.com\/(?:watch\?[^#]*v=|embed\/)([^&#/]+)/)?.[1] ||
+    url.match(/youtu\.be\/([^?&#]+)/)?.[1] ||
+    '';
+
+  if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}`;
+  return '';
+}
+
 const postcodeAreaByDistrict: Record<string, string> = {
   HA2: 'Harrow',
   NW2: 'Neasden',
@@ -94,6 +112,9 @@ export function PropertyCard({
     [property.image, property.images]
   );
   const currentImage = images[currentImageIndex] || property.image;
+  const hasPhoto = Boolean(currentImage);
+  const hasVideo = !hasPhoto && Boolean(property.video);
+  const videoEmbedUrl = property.video ? getVideoEmbedUrl(property.video) : '';
   const isIllustrativeImage = isIllustrativePropertyImage(currentImage);
   const hasCarousel = images.length > 1;
   const weeklyPrice = formatWeeklyPrice(property.price);
@@ -163,16 +184,39 @@ export function PropertyCard({
           className="block h-full"
           onClick={() => trackPropertyOpen('card_image')}
         >
-          <ImageWithFallback
-            src={getOptimizedImageUrl(currentImage, 'card')}
-            alt={getPropertyImageAlt(property, currentImageIndex)}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            loading="lazy"
-            decoding="async"
-            width={720}
-            height={520}
-            sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
-          />
+          {hasVideo ? (
+            videoEmbedUrl ? (
+              <iframe
+                src={videoEmbedUrl}
+                title={`Vídeo de ${property.title}`}
+                className="h-full w-full border-0 object-cover"
+                allow="autoplay; fullscreen"
+                loading="lazy"
+              />
+            ) : (
+              <video
+                src={property.video}
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label={`Vídeo de ${property.title}`}
+              />
+            )
+          ) : (
+            <ImageWithFallback
+              src={getOptimizedImageUrl(currentImage, 'card')}
+              alt={getPropertyImageAlt(property, currentImageIndex)}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+              decoding="async"
+              width={720}
+              height={520}
+              sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
+            />
+          )}
         </Link>
 
         {/* Overlay Badges */}
