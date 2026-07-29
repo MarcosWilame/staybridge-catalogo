@@ -9,22 +9,15 @@ export const PROPERTY_STATUS_OPTIONS: Array<{
   value: PropertyStatus;
   label: string;
 }> = [
-  { value: 'available', label: 'Disponível' },
-  { value: 'reserved', label: 'Reservado' },
-  { value: 'rented', label: 'Alugado' },
+  { value: 'available', label: 'Visível' },
   { value: 'hidden', label: 'Oculto' },
-  { value: 'maintenance', label: 'Em manutenção' },
 ];
 
 export function getPropertyManagementStatus(
   property: Pick<Property, 'status' | 'listed' | 'available'>
 ): PropertyStatus {
-  if (property.status && PROPERTY_STATUS_OPTIONS.some((option) => option.value === property.status)) {
-    return property.status;
-  }
-  if (property.listed === false && !property.available) return 'rented';
+  // `listed` is the single source of truth for publication.
   if (property.listed === false) return 'hidden';
-  if (!property.available) return 'reserved';
   return 'available';
 }
 
@@ -32,15 +25,13 @@ export function applyPropertyStatus<T extends Pick<Property, 'available' | 'list
   property: T,
   status: PropertyStatus
 ): T {
-  const visibility = {
-    available: { available: true, listed: true },
-    reserved: { available: false, listed: true },
-    rented: { available: false, listed: false },
-    hidden: { available: false, listed: false },
-    maintenance: { available: false, listed: false },
-  }[status];
+  const visibility = { listed: status === 'available' };
 
   return { ...property, ...visibility, status };
+}
+
+export function isPropertyAvailableNow(property: Pick<Property, 'moveInDate'>, today = new Date()) {
+  return getAvailabilityInfo(property.moveInDate, true, today).isNow;
 }
 
 export function getPropertyStatusLabel(property: Property) {
@@ -99,11 +90,8 @@ export function findDuplicateProperty(
 
 export function getAdminDashboardMetrics(properties: Property[]) {
   const listedProperties = properties.filter((property) => property.listed !== false);
-  const rentedProperties = properties.filter(
-    (property) => getPropertyManagementStatus(property) === 'rented'
-  );
   const availableNow = listedProperties.filter(
-    (property) => property.available && getAvailabilityInfo(property.moveInDate, true).isNow
+    (property) => isPropertyAvailableNow(property)
   ).length;
   const regions = Array.from(
     listedProperties.reduce((counts, property) => {
@@ -117,7 +105,6 @@ export function getAdminDashboardMetrics(properties: Property[]) {
 
   return {
     visible: listedProperties.length,
-    rented: rentedProperties.length,
     availableNow,
     regions,
   };
@@ -169,8 +156,7 @@ export function getAvailabilityAgenda(
 
   return properties
     .filter((property) => {
-      const status = getPropertyManagementStatus(property);
-      return status !== 'rented' && status !== 'maintenance';
+      return property.listed !== false;
     })
     .map((property) => ({ property, date: parseAvailabilityDate(property.moveInDate, startToday) }))
     .filter(

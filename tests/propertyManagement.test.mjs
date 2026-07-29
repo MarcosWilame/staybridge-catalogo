@@ -78,7 +78,6 @@ test('getAdminDashboardMetrics calculates visibility and regions', () => {
   ]);
 
   assert.equal(metrics.visible, 3);
-  assert.equal(metrics.rented, 1);
   assert.equal(metrics.availableNow, 2);
   assert.deepEqual(metrics.regions, [
     { name: 'South London', count: 2 },
@@ -86,22 +85,20 @@ test('getAdminDashboardMetrics calculates visibility and regions', () => {
   ]);
 });
 
-test('property status keeps visibility and availability consistent', () => {
-  const reserved = applyPropertyStatus(property(), 'reserved');
-  const rented = applyPropertyStatus(property(), 'rented');
-  const available = applyPropertyStatus(rented, 'available');
+test('property status controls visibility only', () => {
+  const hidden = applyPropertyStatus(property(), 'hidden');
+  const visible = applyPropertyStatus(hidden, 'available');
 
   assert.deepEqual(
-    { status: reserved.status, listed: reserved.listed, available: reserved.available },
-    { status: 'reserved', listed: true, available: false }
+    { status: hidden.status, listed: hidden.listed, available: hidden.available },
+    { status: 'hidden', listed: false, available: true }
   );
   assert.deepEqual(
-    { status: rented.status, listed: rented.listed, available: rented.available },
-    { status: 'rented', listed: false, available: false }
+    { status: visible.status, listed: visible.listed, available: visible.available },
+    { status: 'available', listed: true, available: true }
   );
-  assert.equal(getPropertyManagementStatus(available), 'available');
-  assert.equal(available.listed, true);
-  assert.equal(available.available, true);
+  assert.equal(getPropertyManagementStatus(visible), 'available');
+  assert.equal(visible.listed, true);
 });
 
 test('availability agenda filters and orders the selected time window', () => {
@@ -115,14 +112,14 @@ test('availability agenda filters and orders the selected time window', () => {
 
   assert.deepEqual(
     getAvailabilityAgenda(properties, 7, today).map((item) => item.property.id),
-    [1]
+    [4, 1]
   );
   assert.deepEqual(
     getAvailabilityAgenda(properties, 15, today).map((item) => item.property.id),
-    [1, 2]
+    [4, 1, 2]
   );
   assert.deepEqual(
     getAvailabilityAgenda(properties, 30, today).map((item) => item.property.id),
-    [1, 2, 3]
+    [4, 1, 2, 3]
   );
 });

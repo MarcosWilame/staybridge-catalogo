@@ -7,7 +7,7 @@ export function AdminDashboard({ properties }: { properties: Property[] }) {
   const maxRegionCount = Math.max(1, ...metrics.regions.map((region) => region.count));
   const cards = [
     { label: 'Visíveis no site', value: metrics.visible, icon: Eye },
-    { label: 'Alugados', value: metrics.rented, icon: EyeOff },
+    { label: 'Ocultos', value: properties.length - metrics.visible, icon: EyeOff },
     { label: 'Disponíveis agora', value: metrics.availableNow, icon: CalendarDays },
   ];
 

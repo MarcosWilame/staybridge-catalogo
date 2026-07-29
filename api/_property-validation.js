@@ -57,10 +57,20 @@ function normalizeStatus(value, available, listed) {
   return 'available';
 }
 
-function visibilityFromStatus(status) {
-  if (status === 'available') return { available: true, listed: true };
-  if (status === 'reserved') return { available: false, listed: true };
-  return { available: false, listed: false };
+function visibilityFromStatus(status, listed) {
+  return {
+    available: listed && status === 'available',
+    listed,
+  };
+}
+
+function isAvailableFromMoveInDate(value) {
+  const raw = cleanString(value, 80).toLowerCase();
+  if (!raw || raw === 'now' || raw === 'imediata' || raw === 'disponível agora') return true;
+  const match = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return true;
+  const [, day, month, year] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day)).getTime() <= Date.now();
 }
 
 export function validateAdminProperty(input) {
@@ -86,7 +96,11 @@ export function validateAdminProperty(input) {
   }
 
   const status = normalizeStatus(input.status, input.available === true, input.listed === true);
-  Object.assign(data, visibilityFromStatus(status), { status });
+  const listed = input.listed === true;
+  Object.assign(data, visibilityFromStatus(status, listed), {
+    available: isAvailableFromMoveInDate(input.moveInDate),
+    status,
+  });
   data.billsIncluded = input.billsIncluded === true;
   data.bedrooms = cleanNumber(input.bedrooms, 0, 20);
   data.bathrooms = cleanNumber(input.bathrooms, 0, 20);

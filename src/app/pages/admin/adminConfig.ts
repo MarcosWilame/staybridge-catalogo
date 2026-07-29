@@ -36,10 +36,7 @@ export const COMPANY_OPTIONS = ['EasyShare', 'RuanRents'] as const;
 export type AdminStatusFilter =
   | 'all'
   | 'available'
-  | 'reserved'
-  | 'rented'
   | 'hidden'
-  | 'maintenance'
   | 'trash';
 export type AdminAvailabilityFilter = 'all' | 'available' | 'unavailable';
 export type FolderInputProps = InputHTMLAttributes<HTMLInputElement> & {

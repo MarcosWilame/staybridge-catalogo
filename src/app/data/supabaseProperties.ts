@@ -2,6 +2,7 @@ import type { Property } from './properties';
 import { formatEuroPrice } from '../utils/price.ts';
 import { StorageClient } from '@supabase/storage-js';
 import { invalidatePublicPropertiesCache } from './propertyCache.ts';
+import { getAvailabilityInfo } from '../utils/availability.ts';
 
 const env = import.meta.env || {};
 const SUPABASE_URL = env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
@@ -662,27 +663,14 @@ function normalizeStatus(
   available: boolean,
   listed: boolean
 ): Property['status'] {
-  const normalized = toStringValue(status).trim().toLowerCase();
-  if (
-    normalized === 'available' ||
-    normalized === 'reserved' ||
-    normalized === 'rented' ||
-    normalized === 'hidden' ||
-    normalized === 'maintenance'
-  ) {
-    return normalized;
-  }
-
-  if (!listed && !available) return 'rented';
-  if (!listed) return 'hidden';
-  if (!available) return 'reserved';
-  return 'available';
+  return listed ? 'available' : 'hidden';
 }
 
-function getVisibilityFromStatus(status: Property['status']) {
-  if (status === 'available') return { available: true, listed: true };
-  if (status === 'reserved') return { available: false, listed: true };
-  return { available: false, listed: false };
+function getVisibilityFromStatus(status: Property['status'], listed: boolean) {
+  return {
+    available: listed && status === 'available',
+    listed,
+  };
 }
 
 export function normalizeProperty(input: PropertyInput): Property | null {
@@ -697,7 +685,8 @@ export function normalizeProperty(input: PropertyInput): Property | null {
   const rawAvailable = toBooleanValue(input.available, true);
   const rawListed = toBooleanValue(input.listed, true);
   const status = normalizeStatus(input.status, rawAvailable, rawListed);
-  const { available, listed } = getVisibilityFromStatus(status);
+  const { listed } = getVisibilityFromStatus(status, rawListed);
+  const available = getAvailabilityInfo(toStringValue(input.moveInDate), true).isNow;
 
   return {
     id,

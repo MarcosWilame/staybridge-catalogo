@@ -1,4 +1,5 @@
-export type PropertyStatus = 'available' | 'reserved' | 'rented' | 'hidden' | 'maintenance';
+/** Publication state shown in Admin. Availability comes from moveInDate. */
+export type PropertyStatus = 'available' | 'hidden';
 
 export interface Property {
   id: number;

@@ -50,10 +50,10 @@ function mediaUrl(value) {
 }
 
 function normalizeStatus(value, available, listed) {
+  // An explicit listed=false must always remove the property from the public catalogue.
+  if (!listed) return 'hidden';
   const status = text(value, 30).toLowerCase();
   if (['available', 'reserved', 'rented', 'hidden', 'maintenance'].includes(status)) return status;
-  if (!listed && !available) return 'rented';
-  if (!listed) return 'hidden';
   if (!available) return 'reserved';
   return 'available';
 }
@@ -62,6 +62,15 @@ function visibilityFromStatus(status) {
   if (status === 'available') return { available: true, listed: true };
   if (status === 'reserved') return { available: false, listed: true };
   return { available: false, listed: false };
+}
+
+function isAvailableFromMoveInDate(value) {
+  const raw = text(value, 80).toLowerCase();
+  if (!raw || raw === 'now' || raw === 'imediata' || raw === 'disponível agora') return true;
+  const match = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return true;
+  const [, day, month, year] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day)).getTime() <= Date.now();
 }
 
 export function toPublicProperty(row) {
@@ -91,7 +100,7 @@ export function toPublicProperty(row) {
     price: text(data.price, 40),
     description: text(data.description, 500),
     longDescription: text(data.longDescription, 5_000),
-    available: visibility.available,
+    available: isAvailableFromMoveInDate(data.moveInDate),
     listed: true,
     billsIncluded: data.billsIncluded === true,
     bedrooms: number(data.bedrooms, 0, 20),

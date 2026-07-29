@@ -81,6 +81,7 @@ import {
   findDuplicateProperty,
   getPropertyManagementStatus,
   getPropertyStatusLabel,
+  isPropertyAvailableNow,
 } from './admin/propertyManagement';
 import {
   AMENITY_OPTIONS,
@@ -280,16 +281,16 @@ export function AdminPage() {
     (property) => !isInRecovery(property) && !isRecoveryExpired(property)
   );
   const recoveryProperties = properties.filter(isInRecovery);
-  const availableCount = activeProperties.filter((property) => property.available).length;
+  const availableCount = activeProperties.filter((property) => isPropertyAvailableNow(property)).length;
   const unavailableCount = activeProperties.length - availableCount;
-  const statusCounts = PROPERTY_STATUS_OPTIONS.reduce<Record<PropertyStatus, number>>(
+  const statusCounts = PROPERTY_STATUS_OPTIONS.reduce<Record<'available' | 'hidden', number>>(
     (counts, option) => {
       counts[option.value] = activeProperties.filter(
         (property) => getPropertyManagementStatus(property) === option.value
       ).length;
       return counts;
     },
-    { available: 0, reserved: 0, rented: 0, hidden: 0, maintenance: 0 }
+    { available: 0, hidden: 0 }
   );
   const duplicateProperty = findDuplicateProperty(
     activeProperties,
@@ -321,8 +322,8 @@ export function AdminPage() {
     if (adminTypeFilter && property.category !== adminTypeFilter) return false;
     if (adminCompanyFilter && property.company !== adminCompanyFilter) return false;
     if (adminRegionFilter && property.region !== adminRegionFilter) return false;
-    if (adminAvailabilityFilter === 'available' && !property.available) return false;
-    if (adminAvailabilityFilter === 'unavailable' && property.available) return false;
+    if (adminAvailabilityFilter === 'available' && !isPropertyAvailableNow(property)) return false;
+    if (adminAvailabilityFilter === 'unavailable' && isPropertyAvailableNow(property)) return false;
 
     if (!normalizedAdminSearch) return true;
 
