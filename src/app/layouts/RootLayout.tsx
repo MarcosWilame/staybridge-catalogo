@@ -7,11 +7,13 @@ import { ScrollToTop } from '../components/ScrollToTop';
 import { Analytics } from '../components/Analytics';
 import { MotionObserver } from '../components/MotionObserver';
 import { CookieConsent } from '../components/CookieConsent';
+import { GoogleAd } from '../components/GoogleAd';
 
 export function RootLayout() {
   return (
     <>
       <Analytics />
+      <GoogleAd />
       <MotionObserver />
 
       <div className="staybridge-shell min-h-screen bg-white">

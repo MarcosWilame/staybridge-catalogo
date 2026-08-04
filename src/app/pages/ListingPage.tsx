@@ -1370,18 +1370,18 @@ export function ListingPage() {
               ) : (
                 <div className="grid content-start gap-4 md:grid-cols-2 lg:max-h-[calc(100vh-17rem)] lg:overflow-y-auto lg:pr-1">
                   {visibleProperties.map((p) => (
-                    <div
-                      key={p.id}
-                      onMouseEnter={() => setSelectedProperty(p)}
-                      onFocus={() => setSelectedProperty(p)}
-                    >
-                      <PropertyCard
-                        property={p}
-                        isCompareSelected={compareIds.includes(p.id)}
-                        isCompareDisabled={compareIds.length >= MAX_COMPARE_ITEMS}
-                        onToggleCompare={toggleCompareProperty}
-                      />
-                    </div>
+                      <div
+                        key={p.id}
+                        onMouseEnter={() => setSelectedProperty(p)}
+                        onFocus={() => setSelectedProperty(p)}
+                      >
+                        <PropertyCard
+                          property={p}
+                          isCompareSelected={compareIds.includes(p.id)}
+                          isCompareDisabled={compareIds.length >= MAX_COMPARE_ITEMS}
+                          onToggleCompare={toggleCompareProperty}
+                        />
+                      </div>
                   ))}
 
                   {hasMoreProperties && (
