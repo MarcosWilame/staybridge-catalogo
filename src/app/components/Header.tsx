@@ -126,7 +126,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className={`flex items-center justify-between ${
-            isPropertyDetails ? 'h-[68px] md:h-20' : 'h-20 md:h-24'
+            isPropertyDetails ? 'h-16 md:h-20' : 'h-16 md:h-20'
           }`}
         >
 
@@ -135,8 +135,8 @@ export function Header() {
             <BrandLogo
               className={
                 isPropertyDetails
-                  ? 'h-14 w-24 md:h-16 md:w-28'
-                  : 'h-20 w-32 sm:w-36 md:h-24 md:w-44'
+                  ? 'h-12 w-20 md:h-14 md:w-24'
+                  : 'h-14 w-24 sm:w-28 md:h-16 md:w-32'
               }
               imageClassName={isPropertyDetails ? '!top-[55%] !h-[170%]' : ''}
               priority
