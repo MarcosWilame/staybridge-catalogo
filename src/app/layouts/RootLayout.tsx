@@ -8,11 +8,13 @@ import { Analytics } from '../components/Analytics';
 import { MotionObserver } from '../components/MotionObserver';
 import { CookieConsent } from '../components/CookieConsent';
 import { GoogleAd } from '../components/GoogleAd';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 
 export function RootLayout() {
   return (
     <>
       <Analytics />
+      <VercelAnalytics />
       <GoogleAd />
       <MotionObserver />
 
