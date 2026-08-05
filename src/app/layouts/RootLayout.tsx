@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import { WhatsAppButton } from '../components/WhatsAppButton';
 import { MobileBottomNav } from '../components/MobileBottomNav';
 import { ScrollToTop } from '../components/ScrollToTop';
 import { Analytics } from '../components/Analytics';
@@ -33,7 +32,6 @@ export function RootLayout() {
         </main>
 
         <Footer />
-        <WhatsAppButton />
         <CookieConsent />
         <MobileBottomNav />
       </div>
