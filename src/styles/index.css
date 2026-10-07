@@ -54,7 +54,6 @@ main:focus-visible {
 .reveal-section {
   opacity: 0;
   transform: translateY(22px);
-  will-change: opacity, transform;
 }
 
 .reveal-section.is-visible {
@@ -65,7 +64,6 @@ main:focus-visible {
 .scroll-card {
   opacity: 0;
   transform: translateY(18px);
-  will-change: opacity, transform;
 }
 
 .scroll-card.is-visible {

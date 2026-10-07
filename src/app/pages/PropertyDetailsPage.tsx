@@ -40,13 +40,7 @@ import {
   TrainFront,
   ImageOff,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { shareProperty } from '../utils/shareProperty';
-
-interface PropertyAttribute {
-  icon: LucideIcon;
-  label: string;
-}
 
 type MediaItem = GalleryMediaItem;
 

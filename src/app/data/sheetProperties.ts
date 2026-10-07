@@ -12,6 +12,8 @@ let cachedError: string | null = null;
 let cachedRevision = '';
 let pendingLoad: Promise<Property[]> | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
+const REVALIDATION_INTERVAL = 60 * 1000;
+let lastSuccessfulFetchAt = 0;
 
 function readSessionCache(allowStale = false) {
   try {
@@ -59,6 +61,14 @@ async function fetchPropertiesWithRetry() {
 async function loadPropertiesFromSource(forceRefresh = false) {
   const revision = getPublicPropertiesRevision();
   if (!forceRefresh && cachedProperties && cachedRevision === revision) return cachedProperties;
+  if (
+    forceRefresh &&
+    cachedProperties &&
+    cachedRevision === revision &&
+    Date.now() - lastSuccessfulFetchAt < REVALIDATION_INTERVAL
+  ) {
+    return cachedProperties;
+  }
   if (pendingLoad) return pendingLoad;
 
   pendingLoad = (async () => {
@@ -81,6 +91,7 @@ async function loadPropertiesFromSource(forceRefresh = false) {
       ? (data as Property[]).filter(isListedProperty)
       : [];
     cachedRevision = getPublicPropertiesRevision();
+    lastSuccessfulFetchAt = Date.now();
     cachedError = null;
     try {
       sessionStorage.setItem(

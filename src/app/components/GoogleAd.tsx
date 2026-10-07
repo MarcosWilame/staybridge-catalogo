@@ -9,11 +9,7 @@ declare global {
 
 let adsenseScriptRequested = false;
 
-type GoogleAdProps = {
-  className?: string;
-};
-
-export function GoogleAd({ className = '' }: GoogleAdProps) {
+export function GoogleAd() {
   const [consent, setConsent] = useState(() => getMarketingConsent() === true);
   const client = String(import.meta.env.VITE_GOOGLE_ADSENSE_CLIENT || '').trim();
 

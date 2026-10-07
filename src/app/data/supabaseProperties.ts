@@ -116,10 +116,6 @@ function sanitizeStoragePath(value: string) {
     .join('/');
 }
 
-function encodeStoragePath(value: string) {
-  return value.split('/').map(encodeURIComponent).join('/');
-}
-
 function getStoragePublicUrl(objectPath: string) {
   return `/api/property-media?path=${encodeURIComponent(objectPath)}`;
 }
@@ -666,11 +662,7 @@ function getPeopleLimit(category: string, people: unknown) {
     : 1;
 }
 
-function normalizeStatus(
-  status: unknown,
-  available: boolean,
-  listed: boolean
-): Property['status'] {
+function normalizeStatus(listed: boolean): Property['status'] {
   return listed ? 'available' : 'hidden';
 }
 
@@ -690,9 +682,8 @@ export function normalizeProperty(input: PropertyInput): Property | null {
 
   const image = normalizeImageUrl(toStringValue(input.image));
   const images = toImageArray(input.images).slice(0, 15);
-  const rawAvailable = toBooleanValue(input.available, true);
   const rawListed = toBooleanValue(input.listed, true);
-  const status = normalizeStatus(input.status, rawAvailable, rawListed);
+  const status = normalizeStatus(rawListed);
   const { listed } = getVisibilityFromStatus(status, rawListed);
   const available = getAvailabilityInfo(toStringValue(input.moveInDate), true).isNow;
   const category = normalizeCategory(input.category, input.type);
@@ -761,13 +752,6 @@ export function normalizeProperties(input: unknown) {
         : null
     )
     .filter((property): property is Property => Boolean(property));
-}
-
-function toRecord(property: Property) {
-  return {
-    id: property.id,
-    data: property,
-  };
 }
 
 function fromRow(row: SupabasePropertyRow) {

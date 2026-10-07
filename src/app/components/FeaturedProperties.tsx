@@ -116,7 +116,7 @@ export function FeaturedProperties() {
         </div>
 
         <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-5 scrollbar-hide md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0">
-          {displayedProperties.map((property, index) => (
+          {displayedProperties.map((property) => (
             <div
               key={property.id}
               className="h-full w-[86vw] max-w-[390px] shrink-0 snap-center transform transition-all duration-500 hover:-translate-y-1 md:w-auto md:max-w-none"

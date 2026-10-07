@@ -56,7 +56,6 @@ import {
   type StorageImageItem,
   type StorageVideoItem,
   uploadLibraryImageToStorage,
-  uploadPropertyImageToStorage,
 } from '../data/supabaseProperties';
 import { buildEuroPrice, formatEuroPrice, getPricePeriod, getPriceValue } from '../utils/price';
 import {
@@ -143,8 +142,6 @@ export function AdminPage() {
     useState<AdminAvailabilityFilter>('all');
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [imageInput, setImageInput] = useState('');
-  const [isUploadingImages, setIsUploadingImages] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState('');
   const [isUploadingLibrary, setIsUploadingLibrary] = useState(false);
   const [libraryUploadProgress, setLibraryUploadProgress] = useState('');
   const [storageImageSearch, setStorageImageSearch] = useState('');
@@ -382,76 +379,6 @@ export function AdminPage() {
       setAuthError(error instanceof Error ? error.message : 'Codigo invalido');
     } finally {
       setIsSigningIn(false);
-    }
-  };
-
-  const handleUploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    event.target.value = '';
-
-    if (!files.length) return;
-
-    const imageFiles = files
-      .filter((file) => file.type.startsWith('image/'))
-      .sort((a, b) => {
-        const pathA = a.webkitRelativePath || a.name;
-        const pathB = b.webkitRelativePath || b.name;
-        return pathA.localeCompare(pathB, undefined, {
-          numeric: true,
-          sensitivity: 'base',
-        });
-      });
-
-    if (!imageFiles.length) {
-      alert('Selecione uma ou mais imagens validas');
-      return;
-    }
-
-    if (!session || !hasSupabaseConfig()) {
-      alert('Entre no admin e confira a configuracao do Supabase antes de enviar imagens');
-      return;
-    }
-
-    const propertyId = editingId !== null ? editingId : nextId;
-    const batchId = Date.now().toString(36);
-    const imageUrls: string[] = [];
-
-    setIsUploadingImages(true);
-    setSyncError('');
-
-    try {
-      for (const [index, file] of imageFiles.entries()) {
-        setUploadProgress(`${index + 1}/${imageFiles.length}`);
-
-        const imageUrl = await uploadPropertyImageToStorage({
-          file,
-          propertyId,
-          accessToken: session.access_token,
-          batchId,
-          relativePath: file.webkitRelativePath || file.name,
-        });
-
-        imageUrls.push(imageUrl);
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...imageUrls],
-        image: prev.image || imageUrls[0] || '',
-      }));
-
-      if (files.length !== imageFiles.length) {
-        alert(`${imageFiles.length} imagens adicionadas. Arquivos que nao eram imagem foram ignorados.`);
-      }
-      setSyncMessage(`${imageUrls.length} imagens enviadas para o Supabase Storage`);
-      setTimeout(() => setSyncMessage(''), 3000);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel carregar a imagem';
-      setSyncError(message);
-      alert(message);
-    } finally {
-      setIsUploadingImages(false);
-      setUploadProgress('');
     }
   };
 
@@ -1015,8 +942,6 @@ export function AdminPage() {
   const resetForm = () => {
     setFormData(INITIAL_FORM);
     setImageInput('');
-    setIsUploadingImages(false);
-    setUploadProgress('');
     setIsUploadingLibrary(false);
     setLibraryUploadProgress('');
     setStorageImageSearch('');
