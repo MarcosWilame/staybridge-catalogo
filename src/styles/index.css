@@ -54,10 +54,21 @@ main:focus-visible {
 .reveal-section {
   opacity: 0;
   transform: translateY(22px);
-  transition: opacity 650ms cubic-bezier(.2,.8,.2,1), transform 650ms cubic-bezier(.2,.8,.2,1);
+  will-change: opacity, transform;
 }
 
 .reveal-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-card {
+  opacity: 0;
+  transform: translateY(18px);
+  will-change: opacity, transform;
+}
+
+.scroll-card.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -230,7 +241,7 @@ main:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
   .hero-reveal, .whatsapp-enter, .whatsapp-pulse, .modal-backdrop, .modal-card { animation: none !important; }
-  .reveal-section { opacity: 1 !important; transform: none !important; }
+  .reveal-section, .scroll-card { opacity: 1 !important; transform: none !important; }
   .premium-card, .premium-cta { transition: none !important; }
   .premium-card:hover { transform: none; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
