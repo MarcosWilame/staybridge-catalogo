@@ -10,6 +10,7 @@ target_fingerprint: "sha256:16b13664145508545ee55894ca6659f45bac082dd4ee66e72b33
 target_path: "C:\\Users\\Wilam\\OneDrive\\Documentos\\STAYBRIDGE CATALOGO.v2.1\\src\\app\\pages\\PropertyDetailsPage.tsx"
 timestamp: 2026-10-07T04-24-46Z
 slug: src-app-pages-propertydetailspage-tsx
+closed: true
 ---
 ⚠️ DEGRADED: single-context (spawn_agent unavailable in this session)
 

@@ -24,6 +24,8 @@ export function Header() {
 
     setIsScrolled(false);
 
+    let disconnectObserver: (() => void) | undefined;
+
     const tryObserve = () => {
       const hero = document.getElementById('hero');
       if (!hero) return false;
@@ -36,18 +38,21 @@ export function Header() {
       );
 
       observer.observe(hero);
-      return () => observer.disconnect();
+      disconnectObserver = () => observer.disconnect();
+      return true;
     };
 
     // Tenta imediatamente, se hero ainda não montou aguarda um frame
-    const cleanup = tryObserve();
-    if (cleanup) return cleanup;
+    if (tryObserve()) return () => disconnectObserver?.();
 
     const raf = requestAnimationFrame(() => {
       tryObserve();
     });
 
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      disconnectObserver?.();
+    };
   }, [isHome]);
 
   useEffect(() => {
@@ -84,13 +89,13 @@ export function Header() {
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `font-semibold transition-all duration-300 rounded-xl px-4 py-2 text-white hover:text-[var(--yellow)] ${
+    `rounded-xl px-4 py-2 font-semibold text-white transition-all duration-300 hover:text-[var(--yellow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--green-dark)] ${
       isActive
         ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
         : ''
     }`;
 
-  const buttonClass = `font-semibold transition-all duration-300 rounded-xl px-4 py-2 text-white hover:bg-white/10 hover:text-[var(--yellow)]`;
+  const buttonClass = `rounded-xl px-4 py-2 font-semibold text-white transition-all duration-300 hover:bg-white/10 hover:text-[var(--yellow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--green-dark)]`;
   const languageToggle = (
     <div
       className="flex w-fit items-center rounded-full border border-white/20 bg-white/10 p-1 text-xs font-black text-white"
@@ -103,7 +108,7 @@ export function Header() {
           type="button"
           onClick={() => setLanguage(option)}
           aria-pressed={language === option}
-          className={`min-h-8 rounded-full px-3 transition ${
+          className={`min-h-11 min-w-11 rounded-full px-3 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-1 ${
             language === option
               ? 'bg-[var(--yellow)] text-[#102c20] shadow-sm'
               : 'hover:bg-white/10'
@@ -120,13 +125,13 @@ export function Header() {
       className={`premium-header fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isTransparent
           ? 'bg-transparent'
-          : 'border-b border-white/10 bg-[#153d2b]/95 backdrop-blur-xl shadow-[0_10px_35px_rgba(7,30,20,.20)]'
+          : 'border-b border-white/10 bg-[var(--green-dark)]/95 backdrop-blur-xl shadow-[0_10px_35px_rgba(7,30,20,.20)]'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className={`flex items-center justify-between ${
-            isPropertyDetails ? 'h-16 md:h-20' : 'h-16 md:h-20'
+            'h-14 md:h-20'
           }`}
         >
 
@@ -135,8 +140,8 @@ export function Header() {
             <BrandLogo
               className={
                 isPropertyDetails
-                  ? 'h-12 w-20 md:h-14 md:w-24'
-                  : 'h-14 w-24 sm:w-28 md:h-16 md:w-32'
+                  ? 'h-10 w-16 md:h-14 md:w-24'
+                  : 'h-10 w-16 sm:h-12 sm:w-20 md:h-16 md:w-32'
               }
               imageClassName={isPropertyDetails ? '!top-[55%] !h-[170%]' : ''}
               priority
@@ -154,6 +159,7 @@ export function Header() {
             </NavLink>
 
             <button
+              type="button"
               onClick={() => { navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
               className={buttonClass}
             >
@@ -161,6 +167,7 @@ export function Header() {
             </button>
 
             <button
+              type="button"
               onClick={handleCatalogClick}
               className="premium-cta flex items-center gap-2 rounded-xl bg-[var(--yellow)] px-6 py-3 font-black text-[#102c20] shadow-[0_8px_24px_rgba(244,208,63,.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--yellow-dark)]"
             >
@@ -170,33 +177,32 @@ export function Header() {
             {languageToggle}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-navigation"
-            className="md:hidden p-2 rounded-lg transition-colors text-white"
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile controls: language stays visible; secondary links remain in the menu. */}
+          <div className="flex items-center gap-2 md:hidden">
+            {languageToggle}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
+              className="min-h-11 min-w-11 rounded-lg p-2 text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div id="mobile-navigation" className="md:hidden py-4 border-t border-green-700 bg-[#2d6a4f]">
-            <nav aria-label="Navegação mobile" className="flex flex-col gap-4">
-              <div className="px-4">
-                {languageToggle}
-              </div>
-
+          <div id="mobile-navigation" className="border-t border-white/10 bg-[var(--green-medium)] py-4 md:hidden">
+            <nav aria-label="Navegação mobile" className="flex flex-col gap-2">
               <NavLink
                 to="/"
                 end
                 onClick={handleLogoClick}
                 className={({ isActive }) =>
-                  `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
+                  `rounded-xl px-4 py-3 text-left font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--green-medium)] ${
                     isActive
                       ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
                       : 'text-white hover:bg-white/10 hover:text-[var(--yellow)]'
@@ -210,7 +216,7 @@ export function Header() {
                 to="/properties"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `text-left font-semibold transition-all duration-300 rounded-xl px-4 py-3 ${
+                  `rounded-xl px-4 py-3 text-left font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--green-medium)] ${
                     isActive
                       ? 'bg-white/15 text-[var(--yellow)] shadow-lg shadow-black/20 ring-1 ring-white/20'
                       : 'text-white hover:bg-white/10 hover:text-[var(--yellow)]'
@@ -221,15 +227,17 @@ export function Header() {
               </NavLink>
 
               <button
+                type="button"
                 onClick={() => { setIsMobileMenuOpen(false); navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
-                className="text-left font-semibold text-white hover:bg-white/10 hover:text-[var(--yellow)] transition-all duration-300 rounded-xl px-4 py-3"
+                className="rounded-xl px-4 py-3 text-left font-semibold text-white transition-all duration-300 hover:bg-white/10 hover:text-[var(--yellow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--green-medium)]"
               >
                 Benefícios
               </button>
 
               <button
+                type="button"
                 onClick={handleCatalogClick}
-                className="bg-[var(--yellow)] hover:bg-[var(--yellow-dark)] text-black px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 justify-center"
+                className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-6 py-3 font-semibold text-black transition-all duration-300 hover:bg-[var(--yellow-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--green-medium)]"
               >
                 <Search className="w-4 h-4" />
                 Buscar imóveis

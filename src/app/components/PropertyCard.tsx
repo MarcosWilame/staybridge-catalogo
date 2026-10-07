@@ -179,12 +179,12 @@ export function PropertyCard({
   };
 
   return (
-    <div className="premium-card scroll-card group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white shadow-[0_16px_50px_rgba(26,77,46,.10)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[var(--green-dark)]/30 hover:shadow-[0_24px_65px_rgba(26,77,46,.18)]">
+    <div className="premium-card scroll-card group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white shadow-[0_16px_50px_rgba(26,77,46,.10)] transition-all duration-300 hover:-translate-y-2 hover:border-[var(--yellow)]/60 hover:shadow-[0_24px_65px_rgba(26,77,46,.18)]">
       {/* Image Container */}
       <div className="relative h-52 shrink-0 overflow-hidden sm:h-56">
         <Link
           to={`/property/${property.id}`}
-          className="block h-full"
+          className="block h-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--yellow)]"
           onClick={() => trackPropertyOpen('card_image')}
         >
           {hasVideo ? (
@@ -223,7 +223,7 @@ export function PropertyCard({
         </Link>
 
         {/* Overlay Badges */}
-        <div className="absolute left-3 top-3 flex max-w-[calc(100%-7rem)] flex-col gap-2">
+        <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-7rem)] flex-col gap-2">
           <span
             className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
               isNow
@@ -241,7 +241,7 @@ export function PropertyCard({
             )}
           </span>
           {isIllustrativeImage && (
-            <span className="w-fit rounded-full bg-black/70 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+            <span className="w-fit rounded-full bg-black/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
               Imagem ilustrativa
             </span>
           )}
@@ -252,7 +252,7 @@ export function PropertyCard({
             <button
               type="button"
               onClick={showPreviousImage}
-              className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-100 transition-all hover:bg-black/70 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute left-3 top-1/2 z-10 min-h-11 min-w-11 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-100 transition-all hover:bg-black/70 md:opacity-0 md:group-hover:opacity-100"
               aria-label="Imagem anterior"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -261,26 +261,26 @@ export function PropertyCard({
             <button
               type="button"
               onClick={showNextImage}
-              className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-100 transition-all hover:bg-black/70 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute right-3 top-1/2 z-10 min-h-11 min-w-11 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white opacity-100 transition-all hover:bg-black/70 md:opacity-0 md:group-hover:opacity-100"
               aria-label="Próxima imagem"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
 
-            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
+            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full bg-[var(--green-dark)]/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg transition-colors group-hover:bg-[var(--yellow)] group-hover:text-black">
               <Images className="h-3.5 w-3.5" />
               {currentImageIndex + 1}/{images.length}
             </div>
           </>
         )}
 
-        <div className="absolute right-3 top-3 flex flex-col gap-2">
+        <div className="absolute right-3 top-3 z-10 flex flex-col gap-2">
           {onToggleCompare && (
             <button
               type="button"
               onClick={() => onToggleCompare(property)}
               disabled={isCompareDisabled && !isCompareSelected}
-              className={`rounded-full p-2 shadow-lg transition ${
+              className={`min-h-11 min-w-11 rounded-full p-2 shadow-lg transition ${
                 isCompareSelected
                   ? 'bg-[var(--green-dark)] text-white'
                   : 'bg-white/95 text-[var(--green-dark)] hover:bg-[var(--green-dark)] hover:text-white'
@@ -296,7 +296,7 @@ export function PropertyCard({
           <button
             type="button"
             onClick={handleShare}
-            className="rounded-full bg-white/95 p-2 text-[var(--green-dark)] shadow-lg transition hover:bg-[var(--green-dark)] hover:text-white"
+            className="min-h-11 min-w-11 rounded-full bg-white/95 p-2 text-[var(--green-dark)] shadow-lg transition hover:bg-[var(--green-dark)] hover:text-white"
             aria-label="Compartilhar imovel"
             title="Compartilhar"
           >
@@ -305,7 +305,7 @@ export function PropertyCard({
         </div>
 
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
       </div>
 
       {/* Content */}
@@ -329,7 +329,7 @@ export function PropertyCard({
           </h3>
         </Link>
 
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-[var(--green-dark)]/5 px-3 py-2.5">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-[var(--green-dark)]/5 px-3 py-2.5 transition-colors group-hover:bg-[var(--yellow)]/15">
           <div className="min-w-0">
             <div className="text-xs font-semibold text-gray-500">Por semana</div>
             <div className="truncate text-2xl font-extrabold leading-tight text-[var(--green-dark)]">
@@ -356,7 +356,7 @@ export function PropertyCard({
         </div>
 
         {shareStatus && (
-          <div className="mt-3 rounded-lg bg-[var(--green-dark)]/10 px-3 py-2 text-center text-xs font-bold text-[var(--green-dark)]">
+          <div className="mt-3 rounded-lg bg-[var(--green-dark)]/10 px-3 py-2 text-center text-xs font-bold text-[var(--green-dark)]" role="status" aria-live="polite">
             {shareStatus}
           </div>
         )}

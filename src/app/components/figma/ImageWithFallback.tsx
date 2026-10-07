@@ -10,8 +10,11 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     setDidError(true)
   }
 
-  const { src, alt, style, className, ...rest } = props
+  const { src, alt, style, className, fetchPriority, ...rest } = props
   const resolvedAlt = alt === '' ? '' : alt?.trim() || 'Imagem de acomodação em Londres'
+  const fetchPriorityAttribute = fetchPriority
+    ? ({ fetchpriority: fetchPriority } as Record<string, string>)
+    : {}
 
   useEffect(() => {
     setDidError(false)
@@ -23,10 +26,24 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       style={style}
     >
       <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt={resolvedAlt ? `${resolvedAlt} — imagem indisponível` : ''} {...rest} data-original-url={src} />
+        <img
+          src={ERROR_IMG_SRC}
+          alt={resolvedAlt ? `${resolvedAlt} — imagem indisponível` : ''}
+          {...rest}
+          {...fetchPriorityAttribute}
+          data-original-url={src}
+        />
       </div>
     </div>
   ) : (
-    <img src={src} alt={resolvedAlt} className={className} style={style} {...rest} onError={handleError} />
+    <img
+      src={src}
+      alt={resolvedAlt}
+      className={className}
+      style={style}
+      {...rest}
+      {...fetchPriorityAttribute}
+      onError={handleError}
+    />
   )
 }

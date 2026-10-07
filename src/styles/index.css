@@ -100,8 +100,14 @@ main:focus-visible {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes property-media-enter {
+  from { opacity: .72; transform: scale(1.025); filter: saturate(.88); }
+  to { opacity: 1; transform: scale(1); filter: saturate(1); }
+}
+
 .modal-backdrop { animation: modal-backdrop-in 180ms ease-out both; }
 .modal-card { animation: modal-card-in 300ms cubic-bezier(.2,.85,.2,1) both; }
+.property-media-enter { animation: property-media-enter 420ms cubic-bezier(.16,1,.3,1) both; }
 
 /* Premium glass language inspired by the reference, using Staybridge colors. */
 .staybridge-shell {
@@ -124,24 +130,14 @@ main:focus-visible {
 
 .premium-page::before,
 .premium-section::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  opacity: .42;
-  background-image:
-    linear-gradient(rgba(26, 77, 46, .025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 77, 46, .025) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: linear-gradient(to bottom, black, transparent 72%);
+  display: none;
 }
 
 .premium-header:not(.bg-transparent) {
   border-bottom-color: rgba(255, 255, 255, .16);
   background:
-    radial-gradient(circle at 78% -80%, rgba(244, 208, 63, .23), transparent 22rem),
-    rgba(15, 54, 37, .9);
+    radial-gradient(circle at 78% -80%, rgba(244, 208, 63, .16), transparent 22rem),
+    rgba(26, 77, 46, .96);
   box-shadow: 0 14px 45px rgba(7, 30, 20, .24);
   backdrop-filter: blur(20px) saturate(145%);
 }
@@ -203,10 +199,6 @@ main:focus-visible {
 
 .premium-heading-accent {
   color: var(--green-dark);
-  background-image: linear-gradient(100deg, var(--green-dark) 5%, var(--green-medium) 62%, #927718 115%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .premium-cta {
@@ -238,7 +230,7 @@ main:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
-  .hero-reveal, .whatsapp-enter, .whatsapp-pulse, .modal-backdrop, .modal-card { animation: none !important; }
+  .hero-reveal, .whatsapp-enter, .whatsapp-pulse, .modal-backdrop, .modal-card, .property-media-enter { animation: none !important; }
   .reveal-section, .scroll-card { opacity: 1 !important; transform: none !important; }
   .premium-card, .premium-cta { transition: none !important; }
   .premium-card:hover { transform: none; }

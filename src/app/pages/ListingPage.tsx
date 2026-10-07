@@ -133,6 +133,9 @@ function LondonPropertiesLoading() {
 export function ListingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { properties, isLoading, error } = useProperties();
+  const friendlyError = error?.toLowerCase().includes('fetch')
+    ? 'Não foi possível conectar ao catálogo agora.'
+    : error;
 
   const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get('search') || '',
@@ -1147,7 +1150,7 @@ export function ListingPage() {
                         {property.title}
                       </div>
                       {isBestPrice && compareProperties.length > 1 && (
-                        <div className="mt-2 inline-flex rounded-full bg-[var(--yellow)] px-2 py-1 text-[11px] font-black text-black">
+                        <div className="mt-2 inline-flex rounded-full bg-[var(--yellow)] px-2 py-1 text-xs font-black text-black">
                           Melhor valor
                         </div>
                       )}
@@ -1176,7 +1179,7 @@ export function ListingPage() {
   };
 
   return (
-    <div className="premium-page min-h-screen bg-gray-50 pb-40 pt-28 md:pb-10">
+    <div className="premium-page min-h-screen bg-[var(--paper-warm)] pb-40 pt-28 md:pb-10">
       <SEO
         title={listingTitle}
         description={listingDescription}
@@ -1184,22 +1187,41 @@ export function ListingPage() {
         canonicalPath="/properties"
         jsonLd={listingJsonLd}
       />
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-5">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{listingTitle}</h1>
-            <p>
-              {isLoading ? 'Sincronizando propriedades...' : `${filteredProperties.length} resultados`}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative mb-8 overflow-hidden rounded-[1.35rem] bg-[var(--green-dark)] px-5 py-7 text-white shadow-[0_22px_58px_rgba(26,77,46,.18)] sm:px-7 md:px-9 md:py-9">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full border-[28px] border-[var(--yellow)]/15" />
+          <div className="pointer-events-none absolute bottom-0 right-20 h-24 w-24 translate-y-1/2 rounded-full bg-[var(--yellow)]/10 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <h1 className="max-w-2xl text-3xl font-black leading-tight tracking-[-.03em] sm:text-4xl md:text-5xl">
+              {listingTitle}
+            </h1>
+            <p className="mt-3 text-base font-medium leading-relaxed text-white/75">
+              {isLoading ? 'Sincronizando propriedades...' : `${filteredProperties.length} resultados para explorar`}
             </p>
-            {error && (
-              <p className="mt-2 max-w-2xl rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-                {error}
-              </p>
+            {friendlyError && (
+              <div className="mt-4 flex max-w-2xl flex-wrap items-center gap-3 rounded-xl border border-red-200/30 bg-red-950/20 px-3 py-2 text-sm font-semibold text-red-100" role="alert">
+                <span className="min-w-0 flex-1">{friendlyError}</span>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="min-h-10 rounded-lg bg-white/15 px-3 py-2 text-xs font-black text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
+                >
+                  Tentar novamente
+                </button>
+              </div>
             )}
+          </div>
+          <div className="relative mt-6 flex items-center gap-3">
+            <span className="text-4xl font-black leading-none text-[var(--yellow)] sm:text-5xl">
+              {isLoading ? '—' : filteredProperties.length}
+            </span>
+            <span className="max-w-[12rem] text-sm font-bold leading-snug text-white/80">
+              acomodações encontradas em Londres
+            </span>
           </div>
         </div>
 
-        <div className="sticky top-20 z-30 -mx-4 mb-5 border-y border-gray-100 bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:hidden">
+        <div className="sticky top-14 z-30 -mx-4 mb-6 border-y border-white/10 bg-[var(--green-dark)] px-4 py-3 shadow-[0_12px_32px_rgba(26,77,46,.22)] backdrop-blur lg:hidden sm:-mx-6 sm:px-6">
           <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <button
               type="button"
@@ -1249,8 +1271,8 @@ export function ListingPage() {
                   onClick={() => updateFilter('type', isActive ? '' : filter.type)}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
                     isActive
-                      ? 'bg-[var(--green-dark)] text-white shadow'
-                      : 'bg-gray-100 text-gray-700'
+                      ? 'bg-[var(--yellow)] text-black shadow'
+                      : 'bg-white/10 text-white'
                   }`}
                 >
                   {filter.label}
@@ -1263,8 +1285,8 @@ export function ListingPage() {
               onClick={() => updateFilter('availableNow', !filters.availableNow)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
                 filters.availableNow
-                  ? 'bg-[var(--green-dark)] text-white shadow'
-                  : 'bg-gray-100 text-gray-700'
+                  ? 'bg-[var(--yellow)] text-black shadow'
+                  : 'bg-white/10 text-white'
               }`}
             >
               Disponível agora
@@ -1274,7 +1296,7 @@ export function ListingPage() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600"
+                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white"
               >
                 Limpar
               </button>
@@ -1282,23 +1304,23 @@ export function ListingPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)]">
           <div className="hidden lg:block">
             {renderFiltersPanel()}
           </div>
 
           <div
             ref={listRef}
-            className={`lg:col-span-3 grid gap-6 ${
+            className={`min-w-0 grid gap-6 ${
               isLoading ? '' : 'xl:grid-cols-[minmax(0,1fr)_360px]'
             }`}
           >
             <div className="min-w-0">
-              <div className="premium-panel mb-4 rounded-2xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:z-20">
+              <div className="premium-panel mb-5 rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white/95 p-5 shadow-[0_16px_42px_rgba(26,77,46,.12)] backdrop-blur lg:sticky lg:top-24 lg:z-20">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-gray-500">Resultados</div>
-                    <div className="text-lg font-bold text-gray-900" role="status" aria-live="polite">
+                    <div className="text-xs font-extrabold uppercase tracking-[.16em] text-[var(--green-medium)]">Resultados</div>
+                    <div className="mt-1 text-2xl font-black tracking-tight text-[var(--green-dark)]" role="status" aria-live="polite">
                       {isLoading
                         ? 'Buscando unidades...'
                         : `${sortedProperties.length} propriedade${sortedProperties.length !== 1 ? 's' : ''}`}
@@ -1368,7 +1390,7 @@ export function ListingPage() {
               {isLoading ? (
                 <LondonPropertiesLoading />
               ) : (
-                <div className="grid content-start gap-4 md:grid-cols-2 lg:max-h-[calc(100vh-17rem)] lg:overflow-y-auto lg:pr-1">
+                <div className="grid content-start gap-5 sm:grid-cols-2 xl:max-h-[calc(100vh-17rem)] xl:overflow-y-auto xl:pr-1">
                   {visibleProperties.map((p) => (
                       <div
                         key={p.id}
@@ -1414,18 +1436,20 @@ export function ListingPage() {
         {!isLoading && sortedProperties.length === 0 && (
           <div className="mt-10 rounded-2xl bg-white p-8 text-center shadow-sm">
             <h2 className="mb-2 text-xl font-bold text-gray-900">
-              Nenhuma propriedade encontrada
+              {error ? 'Não conseguimos carregar os imóveis' : 'Nenhuma propriedade encontrada'}
             </h2>
             <p className="mb-5 text-gray-600">
-              Ajuste os filtros ou fale conosco para encontrar uma opção ideal.
+              {error
+                ? 'Verifique sua conexão e tente novamente. Nossa equipe também pode ajudar pelo WhatsApp.'
+                : 'Ajuste os filtros ou fale conosco para encontrar uma opção ideal.'}
             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={() => (error ? window.location.reload() : clearFilters())}
                 className="rounded-xl bg-[var(--green-dark)] px-5 py-3 font-bold text-white"
               >
-                Limpar filtros
+                {error ? 'Tentar novamente' : 'Limpar filtros'}
               </button>
               <a
                 href={WHATSAPP_URL}

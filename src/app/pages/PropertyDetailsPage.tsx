@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -126,7 +126,6 @@ function getNearbyPresentation(label: string) {
 
 export function PropertyDetailsPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { properties, isLoading } = useProperties();
 
   const property = properties.find((p) => p.id === Number(id));
@@ -161,7 +160,7 @@ export function PropertyDetailsPage() {
   }, [id, property?.id]);
 
   const propertyNotFoundContent = !property ? (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center px-4 pt-20">
         {!isLoading && (
           <SEO
             noIndex
@@ -177,7 +176,7 @@ export function PropertyDetailsPage() {
           {!isLoading && (
             <Link
               to="/properties"
-              className="inline-flex items-center gap-2 bg-[var(--green-dark)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--green-medium)] transition-colors"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--green-dark)] px-6 py-3 font-semibold text-white transition-colors hover:bg-[var(--green-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2"
             >
               <ArrowLeft className="w-5 h-5" />
               Voltar para Propriedades
@@ -430,7 +429,7 @@ export function PropertyDetailsPage() {
   };
 
   return (
-    <div className="premium-page min-h-screen bg-[#f5f6f1] pb-28 pt-20 md:pb-8">
+    <div className="premium-page min-h-screen bg-[var(--paper-warm)] pb-36 pt-20 md:pb-8">
       <SEO
         title={`${property.title} em ${property.region}`}
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
@@ -441,43 +440,16 @@ export function PropertyDetailsPage() {
         jsonLd={[propertyJsonLd, breadcrumbJsonLd]}
       />
 
-      {/* BREADCRUMB + BACK */}
-      <div className="border-b border-black/5 bg-white/80 py-4 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-            <Link to="/" className="hover:text-[var(--green-dark)] transition-colors">
-              Início
-            </Link>
-
-            <span>/</span>
-
-            <Link to="/properties" className="hover:text-[var(--green-dark)] transition-colors">
-              Imóveis
-            </Link>
-
-            <span>/</span>
-
-            <span className="text-gray-900 truncate max-w-[220px]">
-              {property.title}
-            </span>
-          </nav>
-
-          {/* Botão voltar mobile */}
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-[var(--green-dark)] transition-colors md:hidden"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Voltar
-          </button>
-
-        </div>
-      </div>
-
       {/* PAGE CONTENT */}
-      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+        <Link
+          to="/properties"
+          className="mb-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-lg border border-[var(--green-dark)]/20 bg-white/85 px-3.5 py-2 text-sm font-bold text-[var(--green-dark)] shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--green-dark)]/40 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)] focus-visible:ring-offset-2 sm:mb-5"
+          aria-label="Voltar para a lista de imóveis"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Voltar para imóveis
+        </Link>
 
         {/* IMAGE GALLERY */}
         <div className="mb-8">
@@ -517,9 +489,10 @@ export function PropertyDetailsPage() {
                   )
                 ) : (
                   <ImageWithFallback
+                    key={`${currentImageIndex}-${currentMedia?.src || property.image}`}
                     src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')}
                     alt={getPropertyImageAlt(property, currentImageIndex)}
-                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                    className="property-media-enter h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
@@ -568,7 +541,7 @@ export function PropertyDetailsPage() {
               )}
             </div>
 
-            <div className="relative aspect-[4/3] min-h-[18rem] sm:min-h-[26rem] lg:hidden">
+            <div className="relative aspect-[4/3] min-h-0 sm:min-h-[26rem] lg:hidden">
               {currentMedia?.type === 'video' ? (
                 isDirectVideoUrl(currentMedia.src) ? (
                   <video
@@ -591,9 +564,10 @@ export function PropertyDetailsPage() {
                 )
               ) : (
                 <ImageWithFallback
+                  key={`${currentImageIndex}-${currentMedia?.src || property.image}`}
                   src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')}
                   alt={getPropertyImageAlt(property, currentImageIndex)}
-                  className="w-full h-full object-cover"
+                  className="property-media-enter h-full w-full object-cover"
                   loading="eager"
                   fetchPriority={currentImageIndex === 0 ? 'high' : 'auto'}
                   decoding="async"
@@ -607,7 +581,7 @@ export function PropertyDetailsPage() {
                     type="button"
                     onClick={prevImage}
                     aria-label="Ver imagem anterior do imóvel"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:left-4 md:p-3"
+                    className="absolute left-3 top-1/2 min-h-11 min-w-11 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:left-4 md:p-3"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
@@ -616,7 +590,7 @@ export function PropertyDetailsPage() {
                     type="button"
                     onClick={nextImage}
                     aria-label="Ver próxima imagem do imóvel"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:right-4 md:p-3"
+                    className="absolute right-3 top-1/2 min-h-11 min-w-11 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 md:right-4 md:p-3"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -698,7 +672,7 @@ export function PropertyDetailsPage() {
 
           {mediaItems.length > 0 && <div className="mt-3 flex items-center justify-between gap-3 lg:hidden">
             <span className="text-xs font-semibold text-gray-500">Deslize para ver todos os ambientes</span>
-            <button type="button" onClick={(event) => openLightboxAt(currentImageIndex, event.currentTarget)} className="inline-flex items-center gap-2 rounded-full border border-[var(--green-dark)]/20 bg-white px-3 py-2 text-xs font-bold text-[var(--green-dark)]">
+            <button type="button" onClick={(event) => openLightboxAt(currentImageIndex, event.currentTarget)} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--green-dark)]/20 bg-white px-3 py-2 text-xs font-bold text-[var(--green-dark)]">
               <Maximize2 className="h-3.5 w-3.5" />
               Ver todas
             </button>
@@ -736,8 +710,9 @@ export function PropertyDetailsPage() {
 
                 <div className="relative flex shrink-0 gap-2">
                   <button
+                    type="button"
                     onClick={handleShare}
-                    className="rounded-full border-2 border-gray-200 p-3 text-gray-600 transition hover:border-[var(--green-dark)] hover:text-[var(--green-dark)]"
+                    className="min-h-11 min-w-11 rounded-full border-2 border-gray-200 p-3 text-gray-600 transition hover:border-[var(--green-dark)] hover:text-[var(--green-dark)]"
                     aria-label="Compartilhar imovel"
                     title="Compartilhar"
                   >
@@ -745,7 +720,7 @@ export function PropertyDetailsPage() {
                   </button>
 
                   {shareStatus && (
-                    <div className="absolute right-0 top-full mt-2 whitespace-nowrap rounded-lg bg-[var(--green-dark)] px-3 py-2 text-xs font-bold text-white shadow-lg">
+                    <div className="absolute right-0 top-full mt-2 whitespace-nowrap rounded-lg bg-[var(--green-dark)] px-3 py-2 text-xs font-bold text-white shadow-lg" role="status" aria-live="polite">
                       {shareStatus}
                     </div>
                   )}
@@ -847,7 +822,7 @@ export function PropertyDetailsPage() {
                           <Icon className="h-5 w-5" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-[11px] font-extrabold uppercase tracking-[.12em] text-[var(--green-medium)]">
+                          <span className="block text-xs font-extrabold uppercase tracking-[.12em] text-[var(--green-medium)]">
                             {category}
                           </span>
                           <span className="mt-1 block break-words text-sm font-bold leading-5 text-gray-900">
@@ -866,7 +841,7 @@ export function PropertyDetailsPage() {
                 <p className="mb-2 text-xs font-extrabold uppercase tracking-[.16em] text-[var(--green-medium)]">
                   Sobre este espaço
                 </p>
-                <p className="max-w-3xl text-[1.05rem] leading-8 text-gray-700">
+                <p className="max-w-3xl text-base leading-8 text-gray-700">
                   {property.description || property.longDescription}
                 </p>
               </section>
@@ -887,7 +862,7 @@ export function PropertyDetailsPage() {
                   <button
                     type="button"
                     onClick={handleShare}
-                    className="rounded-full border border-gray-200 p-2.5 text-gray-600 hover:border-[var(--green-dark)] hover:text-[var(--green-dark)]"
+                    className="min-h-11 min-w-11 rounded-full border border-gray-200 p-2.5 text-gray-600 hover:border-[var(--green-dark)] hover:text-[var(--green-dark)]"
                     aria-label="Compartilhar imóvel"
                   >
                     <Share2 className="h-5 w-5" />
@@ -989,7 +964,7 @@ export function PropertyDetailsPage() {
 
       {isLightboxOpen && (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#061a12]/95 p-3 backdrop-blur-sm sm:p-6"
+          className="modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[#061a12]/95 p-3 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-label="Galeria de fotos do imóvel"
@@ -1007,7 +982,7 @@ export function PropertyDetailsPage() {
             <X className="h-6 w-6" />
           </button>
 
-          <div className="relative flex h-full w-full max-w-6xl flex-col items-center justify-center">
+          <div className="modal-card relative flex h-full w-full max-w-6xl flex-col items-center justify-center">
             <div className="relative flex min-h-0 flex-1 items-center justify-center self-stretch">
               {currentMedia?.type === 'video' ? (
                 isDirectVideoUrl(currentMedia.src) ? (
@@ -1040,7 +1015,7 @@ export function PropertyDetailsPage() {
       )}
 
       <div className="premium-floating-bar fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
+        <div className="mx-auto flex max-w-lg items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Por semana
@@ -1050,22 +1025,25 @@ export function PropertyDetailsPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => openLeadForm('visit', 'property_mobile_sticky')}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[var(--green-dark)] px-3 py-2.5 text-sm font-bold text-[var(--green-dark)]"
-          >
-            <Calendar className="h-4 w-4" />
-            Visita
-          </button>
+          <div className="grid shrink-0 grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => openLeadForm('visit', 'property_mobile_sticky')}
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--green-dark)] px-3 py-2.5 text-sm font-bold text-[var(--green-dark)]"
+            >
+              <Calendar className="h-4 w-4" />
+              Visita
+            </button>
 
-          <button
-            onClick={() => openLeadForm('whatsapp', 'property_mobile_primary')}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[var(--yellow)] px-3 py-2.5 text-sm font-bold text-black shadow-lg"
-          >
-            <MessageCircle className="h-5 w-5" />
-            WhatsApp
-          </button>
+            <button
+              type="button"
+              onClick={() => openLeadForm('whatsapp', 'property_mobile_primary')}
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-[var(--yellow)] px-3 py-2.5 text-sm font-bold text-black shadow-lg"
+            >
+              <MessageCircle className="h-5 w-5" />
+              WhatsApp
+            </button>
+          </div>
         </div>
       </div>
 
