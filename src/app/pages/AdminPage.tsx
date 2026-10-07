@@ -791,6 +791,9 @@ export function AdminPage() {
       ...prev,
       category,
       type: getCategoryLabel(category),
+      people: ['ensuite', 'studio', 'double'].includes(category.toLowerCase())
+        ? 2
+        : prev.people,
     }));
   };
 

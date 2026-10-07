@@ -658,6 +658,13 @@ function normalizeCategory(category: unknown, type: unknown) {
   return raw || 'studio';
 }
 
+function getPeopleLimit(category: string, people: unknown) {
+  if (['ensuite', 'studio', 'double'].includes(category)) return 2;
+  return typeof people === 'number' && Number.isFinite(people)
+    ? Math.min(20, Math.max(1, people))
+    : 1;
+}
+
 function normalizeStatus(
   status: unknown,
   available: boolean,
@@ -687,6 +694,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
   const status = normalizeStatus(input.status, rawAvailable, rawListed);
   const { listed } = getVisibilityFromStatus(status, rawListed);
   const available = getAvailabilityInfo(toStringValue(input.moveInDate), true).isNow;
+  const category = normalizeCategory(input.category, input.type);
 
   return {
     id,
@@ -704,6 +712,8 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     localArea:
       typeof input.localArea === 'string' ? toStringValue(input.localArea, '', 100) : undefined,
     price: formatEuroPrice(toStringValue(input.price, '', 40)),
+    monthlyPrice: toStringValue(input.monthlyPrice, '', 40) || undefined,
+    entryRent: toStringValue(input.entryRent, '', 80) || undefined,
     description: toStringValue(input.description, '', 500),
     longDescription: toStringValue(input.longDescription, '', 5_000),
     available,
@@ -719,7 +729,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
       typeof input.bathrooms === 'number' && Number.isFinite(input.bathrooms)
         ? Math.min(20, Math.max(0, input.bathrooms))
         : 0,
-    category: normalizeCategory(input.category, input.type),
+    category,
     amenities: toStringArray(input.amenities, 30, 120),
     deposit:
       typeof input.deposit === 'number' && Number.isFinite(input.deposit)
@@ -731,10 +741,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     moveInDate: toStringValue(input.moveInDate, 'Disponível agora', 80),
     postcode: toStringValue(input.postcode, '', 16),
     address: toStringValue(input.address, '', 240),
-    people:
-      typeof input.people === 'number' && Number.isFinite(input.people)
-        ? Math.min(20, Math.max(1, input.people))
-        : 1,
+    people: getPeopleLimit(category, input.people),
   };
 }
 

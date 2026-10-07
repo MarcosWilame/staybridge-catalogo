@@ -64,6 +64,11 @@ function visibilityFromStatus(status) {
   return { available: false, listed: false };
 }
 
+function getPeopleLimit(category, people) {
+  if (['ensuite', 'studio', 'double'].includes(String(category || '').toLowerCase())) return 2;
+  return number(people, 1, 20);
+}
+
 function isAvailableFromMoveInDate(value) {
   const raw = text(value, 80).toLowerCase();
   if (!raw || raw === 'now' || raw === 'imediata' || raw === 'disponível agora') return true;
@@ -87,6 +92,8 @@ export function toPublicProperty(row) {
     : [];
   const image = mediaUrl(data.image) || images[0] || '';
 
+  const category = text(data.category, 60);
+
   return {
     id,
     image,
@@ -105,13 +112,13 @@ export function toPublicProperty(row) {
     billsIncluded: data.billsIncluded === true,
     bedrooms: number(data.bedrooms, 0, 20),
     bathrooms: number(data.bathrooms, 0, 20),
-    category: text(data.category, 60),
+    category,
     amenities: stringList(data.amenities, 30),
     deposit: number(data.deposit, 0, 100_000),
     nearbyStations: stringList(data.nearbyStations, 30, 180),
     furnishing: text(data.furnishing, 80),
     moveInDate: text(data.moveInDate, 80),
     postcode: text(data.postcode, 16),
-    people: number(data.people, 1, 20),
+    people: getPeopleLimit(category, data.people),
   };
 }

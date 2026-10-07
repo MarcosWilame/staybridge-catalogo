@@ -13,6 +13,8 @@ export interface Property {
   region: string;
   localArea?: string;
   price: string;
+  monthlyPrice?: string;
+  entryRent?: string;
   description: string;
   longDescription: string;
   available: boolean;

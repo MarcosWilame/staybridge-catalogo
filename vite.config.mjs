@@ -104,7 +104,10 @@ function localPublicPropertiesApi() {
 }
 
 export default defineConfig({
-  plugins: [react(), localPublicPropertiesApi()],
+  plugins: [react({ fastRefresh: false }), localPublicPropertiesApi()],
+  server: {
+    hmr: false,
+  },
   base: '/',
   resolve: {
     alias: {

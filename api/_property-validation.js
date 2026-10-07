@@ -105,7 +105,9 @@ export function validateAdminProperty(input) {
   data.bedrooms = cleanNumber(input.bedrooms, 0, 20);
   data.bathrooms = cleanNumber(input.bathrooms, 0, 20);
   data.deposit = cleanNumber(input.deposit, 0, 100000);
-  data.people = cleanNumber(input.people, 1, 20, 1);
+  data.people = ['ensuite', 'studio', 'double'].includes(data.category.toLowerCase())
+    ? 2
+    : cleanNumber(input.people, 1, 20, 1);
   data.amenities = cleanStringList(input.amenities, 30, 120);
   data.nearbyStations = cleanStringList(input.nearbyStations, 30, 180);
   data.coordinates = {

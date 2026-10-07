@@ -40,7 +40,13 @@ function setTitle(html, title) {
 }
 
 async function loadTemplate() {
-  return readFile(path.join(process.cwd(), 'dist', 'index.html'), 'utf8');
+  // Vercel's local development server runs Vite from the source tree. Using
+  // the production template there points the browser at hashed files in
+  // dist/, while Vite serves source modules, resulting in a blank page.
+  const templatePath = process.env.NODE_ENV === 'development'
+    ? path.join(process.cwd(), 'index.html')
+    : path.join(process.cwd(), 'dist', 'index.html');
+  return readFile(templatePath, 'utf8');
 }
 
 async function loadProperty(id) {

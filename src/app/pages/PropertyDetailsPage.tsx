@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useLayoutEffect } from 'react';
+import { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
@@ -15,21 +15,25 @@ import { formatPropertyType } from '../utils/propertyType';
 import { getAbsoluteUrl } from '../config/site';
 import { trackEvent } from '../utils/analytics';
 import { isIllustrativePropertyImage } from '../utils/propertyMedia';
-import { parsePropertyDescription } from '../utils/propertyDescription';
+import {
+  getDesktopGalleryLayout,
+  type GalleryMediaItem,
+} from '../utils/propertyGallery';
 
 import {
   ArrowLeft,
   MapPin,
   Bed,
-  CheckCircle,
   MessageCircle,
   Share2,
   Calendar,
-  Home,
   ChevronLeft,
   ChevronRight,
   Play,
-  Clock,
+  CreditCard,
+  Users,
+  Maximize2,
+  X,
   Bus,
   ShoppingBasket,
   Pill,
@@ -43,9 +47,7 @@ interface PropertyAttribute {
   label: string;
 }
 
-type MediaItem =
-  | { type: 'image'; src: string }
-  | { type: 'video'; src: string; embedSrc: string };
+type MediaItem = GalleryMediaItem;
 
 function getVideoEmbedUrl(url: string) {
   const driveFileId =
@@ -68,6 +70,10 @@ function getVideoEmbedUrl(url: string) {
   }
 
   return url;
+}
+
+function isDirectVideoUrl(url: string) {
+  return /\.(?:mp4|webm|mov)(?:[?#].*)?$/i.test(url);
 }
 
 function getMediaItems(property: Property): MediaItem[] {
@@ -104,25 +110,23 @@ function getPriceValue(price: string) {
   return Number(match[0].replace(',', '.'));
 }
 
-function getNearbyIcon(label: string) {
+function getNearbyPresentation(label: string) {
   const normalized = label.toLowerCase();
 
-  if (normalized.includes('bus')) return Bus;
-  if (
-    normalized.includes('sainsbury') ||
-    normalized.includes('market') ||
-    normalized.includes('supermarket')
-  ) {
-    return ShoppingBasket;
+  if (normalized.includes('bus')) {
+    return { icon: Bus, category: 'Transporte' };
+  }
+  if (normalized.includes('station') || normalized.includes('junction') || normalized.includes('tube')) {
+    return { icon: TrainFront, category: 'Estação' };
+  }
+  if (normalized.includes('market') || normalized.includes('supermarket') || normalized.includes('sainsbury')) {
+    return { icon: ShoppingBasket, category: 'Mercado' };
   }
   if (normalized.includes('pharmacy') || normalized.includes('farmácia')) {
-    return Pill;
-  }
-  if (normalized.includes('station') || normalized.includes('junction')) {
-    return TrainFront;
+    return { icon: Pill, category: 'Serviço' };
   }
 
-  return MapPin;
+  return { icon: MapPin, category: 'Perto daqui' };
 }
 
 export function PropertyDetailsPage() {
@@ -136,6 +140,9 @@ export function PropertyDetailsPage() {
   const [shareStatus, setShareStatus] = useState('');
   const [leadIntent, setLeadIntent] = useState<LeadIntent>('whatsapp');
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const lightboxCloseRef = useRef<HTMLButtonElement | null>(null);
+  const lightboxTriggerRef = useRef<HTMLElement | null>(null);
   const mediaItems = useMemo(
     () => (property ? getMediaItems(property) : []),
     [property]
@@ -189,13 +196,10 @@ export function PropertyDetailsPage() {
     ? getAvailabilityInfo(property.moveInDate, property.available)
     : { label: '', isNow: false };
   const weeklyPrice = property ? formatWeeklyPrice(property.price) : '';
-  const nearbyHighlights = property
-    ? property.nearbyStations.filter((item) => item.trim().length > 0)
+  const availabilityDisplay = 'Consulte a disponibilidade';
+  const nearbyPoints = property
+    ? property.nearbyStations.filter((point) => point.trim().length > 0)
     : [];
-  const descriptionContent = parsePropertyDescription(
-    property?.longDescription || property?.description || ''
-  );
-
   const openLeadForm = (intent: LeadIntent, source: string) => {
     setLeadIntent(intent);
     setIsLeadFormOpen(true);
@@ -252,6 +256,30 @@ export function PropertyDetailsPage() {
     });
   }, [currentImageIndex, mediaItems, property]);
 
+  useEffect(() => {
+    if (!isLightboxOpen) {
+      lightboxTriggerRef.current?.focus();
+      lightboxTriggerRef.current = null;
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsLightboxOpen(false);
+      if (event.key === 'ArrowRight') nextImage();
+      if (event.key === 'ArrowLeft') prevImage();
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    const frame = window.requestAnimationFrame(() => lightboxCloseRef.current?.focus());
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLightboxOpen, mediaItems.length]);
+
   if (!property) return propertyNotFoundContent;
 
   const propertyDescription =
@@ -266,6 +294,9 @@ export function PropertyDetailsPage() {
   const propertyImages = Array.from(
     new Set([property.image, ...(property.images || [])].filter(Boolean))
   );
+  const desktopGalleryLayout = getDesktopGalleryLayout(mediaItems);
+  const desktopMediaItems = desktopGalleryLayout.secondaryItems;
+  const desktopMediaCount = desktopMediaItems.length;
   const hasValidCoordinates =
     Number.isFinite(property.coordinates?.lat) &&
     Number.isFinite(property.coordinates?.lng) &&
@@ -393,8 +424,18 @@ export function PropertyDetailsPage() {
     );
   };
 
+  const openLightboxAt = (index: number, trigger?: HTMLElement) => {
+    if (!mediaItems.length) return;
+    const activeElement = document.activeElement;
+    lightboxTriggerRef.current = trigger ?? (
+      activeElement instanceof HTMLElement ? activeElement : null
+    );
+    setCurrentImageIndex(index);
+    setIsLightboxOpen(true);
+  };
+
   return (
-    <div className="premium-page min-h-screen bg-[#f7f4df] pb-44 pt-20 md:pb-8">
+    <div className="premium-page min-h-screen bg-[#f5f6f1] pb-44 pt-20 md:pb-8">
       <SEO
         title={`${property.title} em ${property.region}`}
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
@@ -406,7 +447,7 @@ export function PropertyDetailsPage() {
       />
 
       {/* BREADCRUMB + BACK */}
-      <div className="bg-[var(--gray-light)] py-4">
+      <div className="border-b border-black/5 bg-white/80 py-4 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Breadcrumb */}
@@ -441,22 +482,99 @@ export function PropertyDetailsPage() {
       </div>
 
       {/* PAGE CONTENT */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-3 lg:gap-8 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
 
         {/* IMAGE GALLERY */}
-        <div className="mb-6 md:mb-8 lg:order-1 lg:col-span-2 lg:mb-0">
-          <div className="premium-media relative mb-4 overflow-hidden rounded-xl shadow-xl md:rounded-2xl md:shadow-2xl">
+        <div className="mb-8">
+          <div className="premium-media relative overflow-hidden rounded-[28px] border border-black/5 bg-[#e8ebe5] shadow-[0_20px_60px_rgba(20,55,35,.14)]">
 
-            <div className="relative h-72 sm:h-96 lg:h-[520px]">
+            <div className={`relative hidden min-h-0 gap-2 lg:grid lg:h-[clamp(28rem,40vw,36rem)] ${desktopGalleryLayout.rootClassName}`}>
+              <button
+                type="button"
+                onClick={(event) => openLightboxAt(currentImageIndex, event.currentTarget)}
+                className="group relative h-full min-h-0 overflow-hidden bg-[#dfe6df] text-left"
+                aria-label="Abrir galeria de fotos"
+              >
+                {currentMedia?.type === 'video' ? (
+                  isDirectVideoUrl(currentMedia.src) ? (
+                    <video src={currentMedia.src} className="h-full w-full object-cover" muted playsInline preload="metadata" />
+                  ) : (
+                    <ImageWithFallback src={getOptimizedImageUrl(videoThumbnail, 'detail')} alt="Vídeo do imóvel" className="h-full w-full object-cover" />
+                  )
+                ) : (
+                  <ImageWithFallback
+                    src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')}
+                    alt={getPropertyImageAlt(property, currentImageIndex)}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                  />
+                )}
+                <span className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2.5 text-sm font-bold text-gray-900 shadow-lg">
+                  <Maximize2 className="h-4 w-4" />
+                  Ver galeria
+                </span>
+                <span className="absolute bottom-5 right-5 rounded-full bg-black/65 px-3 py-2 text-xs font-bold text-white backdrop-blur-sm">
+                  {currentImageIndex + 1} / {mediaItems.length}
+                </span>
+              </button>
+
+              {desktopMediaItems.length > 0 && (
+                <div className={`grid h-full min-h-0 auto-rows-fr gap-2 ${desktopGalleryLayout.secondaryClassName}`}>
+                {desktopMediaItems.map((item, index) => {
+                  const mediaIndex = index + 1;
+                  return (
+                    <button
+                      key={`${mediaIndex}-${item.src}`}
+                      type="button"
+                      onClick={(event) => openLightboxAt(mediaIndex, event.currentTarget)}
+                      className={`group relative min-h-0 overflow-hidden bg-[#dfe6df] text-left ${
+                        desktopMediaCount === 3 && index === 2 ? 'col-span-2' : ''
+                      }`}
+                      aria-label={`Ver imagem ${mediaIndex + 1}`}
+                    >
+                      {item.type === 'video' ? (
+                        <div className="relative h-full w-full bg-black">
+                          <ImageWithFallback src={getOptimizedImageUrl(videoThumbnail, 'detail')} alt="Vídeo do imóvel" className="h-full w-full object-cover opacity-75" />
+                          <Play className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 fill-white text-white" />
+                        </div>
+                      ) : (
+                        <ImageWithFallback src={getOptimizedImageUrl(item.src, 'detail')} alt={getPropertyImageAlt(property, mediaIndex)} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]" loading="lazy" />
+                      )}
+                      {mediaIndex === 4 && mediaItems.length > 5 && (
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-bold text-white">
+                          +{mediaItems.length - 5} fotos
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+                </div>
+              )}
+            </div>
+
+            <div className="relative aspect-[4/3] min-h-[18rem] sm:min-h-[26rem] lg:hidden">
               {currentMedia?.type === 'video' ? (
-                <iframe
-                  src={currentMedia.embedSrc}
-                  title={`${property.title} - Video`}
-                  className="h-full w-full border-0 bg-black"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                />
+                isDirectVideoUrl(currentMedia.src) ? (
+                  <video
+                    src={currentMedia.src}
+                    title={`${property.title} - Video`}
+                    className="h-full w-full bg-black object-contain"
+                    controls
+                    playsInline
+                    preload="metadata"
+                  />
+                ) : (
+                  <iframe
+                    src={currentMedia.embedSrc}
+                    title={`${property.title} - Video`}
+                    className="h-full w-full border-0 bg-black"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                )
               ) : (
                 <ImageWithFallback
                   src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')}
@@ -505,14 +623,10 @@ export function PropertyDetailsPage() {
                       : 'bg-white/95 text-[var(--green-dark)] flex items-center gap-1.5'
                   }`}
                 >
-                  {isNow ? (
-                    availabilityLabel
-                  ) : (
-                    <>
-                      <Clock className="w-3.5 h-3.5 shrink-0" />
-                      {availabilityLabel}
-                    </>
-                  )}
+                  <>
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    {availabilityDisplay}
+                  </>
                 </span>
 
                 {currentMedia?.type === 'image' && isIllustrativePropertyImage(currentMedia.src) && (
@@ -521,25 +635,23 @@ export function PropertyDetailsPage() {
                   </span>
                 )}
 
-                {property.billsIncluded && (
-                  <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
-                    Bills inclusas
-                  </span>
-                )}
+                <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
+                  Bills a confirmar
+                </span>
               </div>
             </div>
           </div>
 
-          {/* THUMBNAILS */}
-          <div className="grid grid-cols-4 gap-2 md:gap-3">
+          {/* MOBILE THUMBNAILS */}
+          <div className="mt-3 grid grid-cols-5 gap-2 lg:hidden">
             {mediaItems.slice(0, 8).map((item, index) => (
               <button
                 key={index}
                 type="button"
-                onClick={() => setCurrentImageIndex(index)}
+                onClick={(event) => openLightboxAt(index, event.currentTarget)}
                 aria-label={item.type === 'video' ? `Reproduzir vídeo de ${property.title}` : `Ver ${getPropertyImageAlt(property, index)}`}
                 aria-current={currentImageIndex === index ? 'true' : undefined}
-                className={`aspect-square overflow-hidden rounded-lg border-2 transition-all md:h-24 md:aspect-auto ${
+                className={`aspect-square overflow-hidden rounded-lg border-2 transition-all ${
                   currentImageIndex === index
                     ? 'border-[var(--green-dark)] scale-105'
                     : 'border-gray-200'
@@ -570,13 +682,22 @@ export function PropertyDetailsPage() {
               </button>
             ))}
           </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3 lg:hidden">
+            <span className="text-xs font-semibold text-gray-500">Deslize para ver todos os ambientes</span>
+            <button type="button" onClick={(event) => openLightboxAt(currentImageIndex, event.currentTarget)} className="inline-flex items-center gap-2 rounded-full border border-[var(--green-dark)]/20 bg-white px-3 py-2 text-xs font-bold text-[var(--green-dark)]">
+              <Maximize2 className="h-3.5 w-3.5" />
+              Ver todas
+            </button>
+          </div>
+
         </div>
 
         {/* CONTENT GRID */}
-        <div className="grid grid-cols-1 gap-8 lg:contents">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
 
           {/* MAIN */}
-          <div className="space-y-8 lg:order-3 lg:col-span-2 lg:mt-8">
+          <div className="space-y-8 lg:col-span-2">
 
             {/* TITLE */}
             <div className="lg:hidden">
@@ -601,8 +722,8 @@ export function PropertyDetailsPage() {
                           : 'bg-gray-100 text-gray-700'
                       }`}
                     >
-                      {!isNow && <Clock className="h-3.5 w-3.5 shrink-0" />}
-                      {availabilityLabel}
+                      <Calendar className="h-3.5 w-3.5 shrink-0" />
+                      {availabilityDisplay}
                     </span>
                   </div>
 
@@ -642,80 +763,121 @@ export function PropertyDetailsPage() {
                   );
                 })}
               </div>
+
             </div>
 
-            {/* DESCRIPTION */}
-            <div className="premium-panel rounded-2xl border border-[var(--green-dark)]/10 bg-[var(--gray-light)] p-5 md:p-6">
-              <h2 className="mb-4 text-2xl font-bold text-[var(--green-dark)]">
-                Descrição
-              </h2>
-
-              <div className="space-y-5 text-gray-700">
-                {descriptionContent.title && (
-                  <div className="flex items-start gap-3">
-                    <Home className="mt-0.5 h-5 w-5 shrink-0 text-[var(--green-medium)]" />
-                    <h3 className="text-base font-bold leading-7 text-gray-900 md:text-lg">
-                      {descriptionContent.title}
-                    </h3>
+            {/* QUICK FACTS */}
+            <div className="border-y border-[var(--green-dark)]/15 bg-[#fafbf7] px-2 py-5 md:px-0 md:py-6">
+              <div className="grid grid-cols-2 md:grid-cols-4">
+                {[
+                  {
+                    icon: Bed,
+                    value: property.bedrooms ? String(property.bedrooms) : '—',
+                    label: 'quarto(s)',
+                  },
+                  {
+                    icon: Users,
+                    value: property.people ? `Até ${property.people}` : 'Consulte',
+                    label: 'moradores',
+                  },
+                  { icon: CreditCard, value: 'A confirmar', label: 'bills' },
+                  {
+                    icon: Calendar,
+                    value: 'Consulte a disponibilidade',
+                    label: 'com um de nossos agentes',
+                  },
+                ].map(({ icon: Icon, value, label }, index) => (
+                  <div
+                    key={label}
+                    className={`flex min-h-[76px] items-center gap-3 px-4 py-3 ${
+                      index > 0 ? 'border-t border-[var(--green-dark)]/15 md:border-l md:border-t-0' : ''
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 shrink-0 text-[var(--green-medium)]" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold leading-5 text-gray-900">{value}</p>
+                      <p className="text-xs leading-5 text-gray-500">{label}</p>
+                    </div>
                   </div>
-                )}
-
-                {descriptionContent.paragraphs.map((paragraph, index) => (
-                  <p key={`${paragraph}-${index}`} className="max-w-3xl text-base leading-7">
-                    {paragraph}
-                  </p>
                 ))}
-
-                {descriptionContent.highlights.length > 0 && (
-                  <ul className="grid gap-x-6 gap-y-3 border-t border-[var(--green-dark)]/10 pt-5 sm:grid-cols-2">
-                    {descriptionContent.highlights.map((highlight) => (
-                      <li key={highlight} className="flex items-start gap-2.5 text-sm leading-6 md:text-base">
-                        <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-medium)] md:h-5 md:w-5" />
-                        <span>{highlight}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
             </div>
 
-            {nearbyHighlights.length > 0 && (
-              <div className="premium-panel rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
-                <div className="mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-[var(--green-dark)]" />
-                  <h2 className="text-2xl font-bold text-[var(--green-dark)]">
-                    Pontos próximos
-                  </h2>
+            {property.amenities.length > 0 && (
+              <div className="rounded-2xl border border-black/5 bg-white px-5 py-4 shadow-sm">
+                <div className="mb-3 text-xs font-extrabold uppercase tracking-[.16em] text-[var(--green-medium)]">
+                  O que você encontra
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {property.amenities.slice(0, 8).map((amenity) => (
+                    <span key={amenity} className="rounded-full bg-[#eef4ed] px-3 py-1.5 text-sm font-semibold text-[var(--green-dark)]">
+                      {amenity}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {nearbyPoints.length > 0 && (
+              <section className="border-t border-[var(--green-dark)]/15 pt-7">
+                <div className="mb-4 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="mb-1 text-xs font-extrabold uppercase tracking-[.16em] text-[var(--green-medium)]">
+                      A região ao redor
+                    </p>
+                    <h2 className="text-2xl font-bold tracking-tight text-[var(--green-dark)]">
+                      Pontos próximos
+                    </h2>
+                  </div>
+                  <MapPin className="h-6 w-6 shrink-0 text-[var(--green-medium)]" />
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {nearbyHighlights.map((item) => {
-                    const Icon = getNearbyIcon(item);
+                  {nearbyPoints.map((point) => {
+                    const { icon: Icon, category } = getNearbyPresentation(point);
 
                     return (
                       <div
-                        key={item}
-                        className="flex items-center gap-3 rounded-xl bg-[var(--gray-light)] px-4 py-3 text-sm font-semibold text-gray-800"
+                        key={point}
+                        className="group flex min-h-[84px] items-center gap-3 rounded-2xl border border-[#dfe8df] bg-[#f8faf6] px-4 py-3 transition hover:-translate-y-0.5 hover:border-[var(--green-medium)]/45 hover:bg-white hover:shadow-sm"
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--green-dark)]/10 text-[var(--green-dark)]">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e4f0e5] text-[var(--green-dark)] transition group-hover:bg-[var(--green-dark)] group-hover:text-white">
                           <Icon className="h-5 w-5" />
                         </span>
-                        <span className="break-words">{item}</span>
+                        <span className="min-w-0">
+                          <span className="block text-[11px] font-extrabold uppercase tracking-[.12em] text-[var(--green-medium)]">
+                            {category}
+                          </span>
+                          <span className="mt-1 block break-words text-sm font-bold leading-5 text-gray-900">
+                            {point}
+                          </span>
+                        </span>
                       </div>
                     );
                   })}
                 </div>
-              </div>
+              </section>
+            )}
+
+            {(property.description || property.longDescription) && (
+              <section className="border-t border-[var(--green-dark)]/15 pt-7">
+                <p className="mb-2 text-xs font-extrabold uppercase tracking-[.16em] text-[var(--green-medium)]">
+                  Sobre este espaço
+                </p>
+                <p className="max-w-3xl text-[1.05rem] leading-8 text-gray-700">
+                  {property.description || property.longDescription}
+                </p>
+              </section>
             )}
 
             <PropertyMap property={property} />
           </div>
 
           {/* SIDEBAR */}
-          <div className="lg:order-2 lg:col-span-1">
+          <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
 
-              <div className="premium-panel hidden rounded-2xl border border-[var(--green-dark)]/15 bg-[#eef3ec] p-5 shadow-sm lg:block">
+              <div className="premium-panel hidden rounded-3xl border border-black/5 bg-white p-6 shadow-[0_15px_45px_rgba(20,55,35,.08)] lg:block">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <span className="rounded-full bg-[var(--green-dark)]/10 px-3 py-1.5 text-sm font-bold text-[var(--green-dark)]">
                     {formatPropertyType(property)}
@@ -749,7 +911,7 @@ export function PropertyDetailsPage() {
                 </div>
               </div>
 
-              <div className="premium-price-card rounded-2xl bg-gradient-to-br from-[var(--green-dark)] to-[var(--green-medium)] p-5 text-white md:p-6">
+              <div className="premium-price-card rounded-3xl bg-gradient-to-br from-[#123d27] via-[var(--green-dark)] to-[var(--green-medium)] p-6 text-white shadow-[0_18px_45px_rgba(18,61,39,.25)] md:p-7">
 
                 <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/80">
                   Por semana
@@ -757,6 +919,31 @@ export function PropertyDetailsPage() {
 
                 <div className="mb-4 text-4xl font-bold md:text-5xl">
                   {weeklyPrice}
+                </div>
+
+                {property.monthlyPrice && (
+                  <div className="mb-4 text-sm font-semibold text-white/80">
+                    {property.monthlyPrice}
+                  </div>
+                )}
+
+                <div className="mb-5 grid grid-cols-2 gap-3 border-y border-white/15 py-4 text-sm">
+                  <div>
+                    <div className="text-white/65">Depósito</div>
+                    <div className="mt-1 font-bold">{property.deposit ? `£${property.deposit}` : 'A confirmar'}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/65">Bills</div>
+                    <div className="mt-1 font-bold">A confirmar</div>
+                  </div>
+                </div>
+
+                <div className="mb-5 flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 text-sm">
+                  <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-white/80" />
+                  <div>
+                    <div className="font-bold">Para entrar</div>
+                    <div className="mt-1 text-white/75">{property.entryRent || 'Confirme o aluguel inicial com a equipe.'}</div>
+                  </div>
                 </div>
 
                 {/* Availability in sidebar */}
@@ -767,8 +954,8 @@ export function PropertyDetailsPage() {
                       : 'bg-white/20 text-white'
                   }`}
                 >
-                  {!isNow && <Clock className="h-3.5 w-3.5 shrink-0" />}
-                  {availabilityLabel}
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  {availabilityDisplay}
                 </div>
 
                 <button
@@ -797,6 +984,58 @@ export function PropertyDetailsPage() {
 
         </div>
       </div>
+
+      {isLightboxOpen && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#061a12]/95 p-3 backdrop-blur-sm sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Galeria de fotos do imóvel"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsLightboxOpen(false);
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(false)}
+            ref={lightboxCloseRef}
+            className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20"
+            aria-label="Fechar galeria"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          <div className="relative flex h-full w-full max-w-6xl flex-col items-center justify-center">
+            <div className="relative flex min-h-0 flex-1 items-center justify-center self-stretch">
+              {currentMedia?.type === 'video' ? (
+                isDirectVideoUrl(currentMedia.src) ? (
+                  <video src={currentMedia.src} title={`${property.title} - Video`} className="max-h-[78vh] max-w-full rounded-2xl bg-black object-contain" controls playsInline />
+                ) : (
+                  <iframe src={currentMedia.embedSrc} title={`${property.title} - Video`} className="h-[70vh] w-full max-w-4xl rounded-2xl border-0 bg-black" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+                )
+              ) : (
+                <ImageWithFallback src={getOptimizedImageUrl(currentMedia?.src || property.image, 'detail')} alt={getPropertyImageAlt(property, currentImageIndex)} className="max-h-[78vh] max-w-full rounded-2xl object-contain" />
+              )}
+
+              {mediaItems.length > 1 && (
+                <>
+                  <button type="button" onClick={prevImage} className="absolute left-2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 sm:left-4" aria-label="Imagem anterior">
+                    <ChevronLeft className="h-7 w-7" />
+                  </button>
+                  <button type="button" onClick={nextImage} className="absolute right-2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 sm:right-4" aria-label="Próxima imagem">
+                    <ChevronRight className="h-7 w-7" />
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-3 py-4 text-sm font-bold text-white/80">
+              <span>{currentImageIndex + 1} / {mediaItems.length}</span>
+              <span className="text-white/35">•</span>
+              <span className="truncate">{property.title}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="premium-floating-bar fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
