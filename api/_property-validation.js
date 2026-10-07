@@ -17,6 +17,7 @@ const STRING_LIMITS = {
   deletedAt: 40,
   status: 30,
   coverMedia: 20,
+  sourceText: 2000,
 };
 
 function cleanString(value, max) {
@@ -64,6 +65,55 @@ function visibilityFromStatus(status, listed) {
   };
 }
 
+function normalizeCategory(value, type) {
+  const raw = `${value || ''} ${type || ''}`.toLowerCase();
+  if (raw.includes('ensuite')) return 'ensuite';
+  if (raw.includes('studio')) return 'studio';
+  if (raw.includes('double')) return 'double';
+  if (raw.includes('single')) return 'single';
+  if (raw.includes('flat') || raw.includes('bedroom')) return 'flat';
+  return 'studio';
+}
+
+function hasTwoPersonCategory(value, type) {
+  const raw = `${value || ''} ${type || ''}`.toLowerCase();
+  return raw.includes('ensuite') || raw.includes('studio') || raw.includes('double');
+}
+
+function normalizePriceOptions(value, fallback) {
+  const source = Array.isArray(value) ? value : [];
+  const options = source.map((item) => {
+    if (!item || typeof item !== 'object') return null;
+    const amount = cleanNumber(item.amount, 0, 100000);
+    if (!amount) return null;
+    const occupancy = cleanNumber(item.occupancy, 1, 20, 0);
+    return {
+      amount,
+      period: item.period === 'month' ? 'month' : 'week',
+      ...(occupancy ? { occupancy } : {}),
+      ...(typeof item.label === 'string' && item.label.trim() ? { label: cleanString(item.label, 120) } : {}),
+    };
+  }).filter(Boolean).slice(0, 10);
+  if (options.length) return options;
+  const match = String(fallback || '').replace(/,/g, '').match(/\d+(?:\.\d+)?/);
+  const amount = match ? cleanNumber(match[0], 0, 100000) : 0;
+  return amount ? [{ amount, period: 'week' }] : [];
+}
+
+function normalizeEntryConditions(value, fallback) {
+  const source = value && typeof value === 'object' ? value : {};
+  const result = {};
+  const depositWeeks = cleanNumber(source.depositWeeks, 0, 52, -1);
+  const rentWeeks = cleanNumber(source.rentWeeks, 0, 52, -1);
+  const rentMonths = cleanNumber(source.rentMonths, 0, 12, -1);
+  if (depositWeeks >= 0) result.depositWeeks = depositWeeks;
+  if (rentWeeks >= 0) result.rentWeeks = rentWeeks;
+  if (rentMonths >= 0) result.rentMonths = rentMonths;
+  const note = cleanString(source.note || fallback, 240);
+  if (note) result.note = note;
+  return result;
+}
+
 function isAvailableFromMoveInDate(value) {
   const raw = cleanString(value, 80).toLowerCase();
   if (!raw || raw === 'now' || raw === 'imediata' || raw === 'disponível agora') return true;
@@ -83,6 +133,7 @@ export function validateAdminProperty(input) {
     data[field] = cleanString(input[field], max);
   }
   data.company = data.company || 'EasyShare';
+  data.category = normalizeCategory(input.category, input.type);
   data.image = cleanUrl(input.image);
   data.video = cleanUrl(input.video);
   data.images = Array.isArray(input.images)
@@ -105,9 +156,18 @@ export function validateAdminProperty(input) {
   data.bedrooms = cleanNumber(input.bedrooms, 0, 20);
   data.bathrooms = cleanNumber(input.bathrooms, 0, 20);
   data.deposit = cleanNumber(input.deposit, 0, 100000);
-  data.people = ['ensuite', 'studio', 'double'].includes(data.category.toLowerCase())
+  data.people = hasTwoPersonCategory(input.category, input.type)
     ? 2
     : cleanNumber(input.people, 1, 20, 1);
+  data.availabilityStatus = ['future', 'to_confirm'].includes(input.availabilityStatus)
+    ? input.availabilityStatus
+    : /confirm|combinar/i.test(data.moveInDate)
+      ? 'to_confirm'
+      : /^\d{2}\/\d{2}\/\d{4}$/.test(data.moveInDate)
+        ? 'future'
+        : 'available_now';
+  data.priceOptions = normalizePriceOptions(input.priceOptions, data.price);
+  data.entryConditions = normalizeEntryConditions(input.entryConditions, data.entryRent);
   data.amenities = cleanStringList(input.amenities, 30, 120);
   data.nearbyStations = cleanStringList(input.nearbyStations, 30, 180);
   data.coordinates = {

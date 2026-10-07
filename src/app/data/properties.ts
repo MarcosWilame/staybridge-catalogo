@@ -34,4 +34,8 @@ export interface Property {
   postcode: string;
   address: string;
   people: number;
+  availabilityStatus?: import('./propertySchema').PropertyAvailability;
+  priceOptions?: import('./propertySchema').PropertyPriceOption[];
+  entryConditions?: import('./propertySchema').PropertyEntryConditions;
+  sourceText?: string;
 }

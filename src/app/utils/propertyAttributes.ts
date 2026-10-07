@@ -13,7 +13,9 @@ export function getPropertyAttributes(property: Property): PropertyAttribute[] {
   const type = property.type.toLowerCase();
   const { label: availabilityLabel } = getAvailabilityInfo(
     property.moveInDate,
-    property.available
+    property.available,
+    new Date(),
+    property.availabilityStatus
   );
   const isRoom = ['single', 'double', 'ensuite', 'studio'].some(
     (roomType) => category.includes(roomType) || type.includes(roomType)

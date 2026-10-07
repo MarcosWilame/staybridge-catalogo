@@ -50,7 +50,7 @@ export function AccommodationMatch() {
       const price = getPriceValue(property.price);
       const matchesBudget = price >= selectedBudget.min && price <= selectedBudget.max;
       const matchesRegion = !region || property.region.toLowerCase().includes(region);
-      const matchesDate = getMoveInTimestamp(property.moveInDate, property.available) <= cutoff;
+      const matchesDate = getMoveInTimestamp(property.moveInDate, property.available, new Date(), property.availabilityStatus) <= cutoff;
       return matchesBudget && matchesRegion && matchesDate;
     }).length;
   }, [isComplete, moveInBy, properties, region, selectedBudget.max, selectedBudget.min]);

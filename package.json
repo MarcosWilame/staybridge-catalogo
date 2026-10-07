@@ -10,6 +10,8 @@
     "dev": "vite",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "import:properties": "node scripts/import-rooms-available.cjs",
+    "report:property-normalization": "node scripts/report-property-normalization.mjs",
+    "apply:property-normalization": "node scripts/apply-property-normalization.mjs --apply",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.mjs",

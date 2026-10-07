@@ -393,7 +393,7 @@ export function ListingPage() {
 
   if (filters.availableNow) {
     filteredProperties = filteredProperties.filter((p) => {
-      return getAvailabilityInfo(p.moveInDate, p.available).isNow;
+      return getAvailabilityInfo(p.moveInDate, p.available, new Date(), p.availabilityStatus).isNow;
     });
   }
 
@@ -413,7 +413,7 @@ export function ListingPage() {
     const [year, month, day] = filters.moveInBy.split('-').map(Number);
     const cutoff = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
     filteredProperties = filteredProperties.filter(
-      (property) => property.available && getMoveInTimestamp(property.moveInDate, property.available) <= cutoff
+      (property) => property.available && getMoveInTimestamp(property.moveInDate, property.available, new Date(), property.availabilityStatus) <= cutoff
     );
   }
 
@@ -427,8 +427,8 @@ export function ListingPage() {
     }
 
     if (sortBy === 'available') {
-      const aNow = getAvailabilityInfo(a.moveInDate, a.available).isNow;
-      const bNow = getAvailabilityInfo(b.moveInDate, b.available).isNow;
+      const aNow = getAvailabilityInfo(a.moveInDate, a.available, new Date(), a.availabilityStatus).isNow;
+      const bNow = getAvailabilityInfo(b.moveInDate, b.available, new Date(), b.availabilityStatus).isNow;
       return Number(bNow) - Number(aNow);
     }
 
@@ -1059,7 +1059,7 @@ export function ListingPage() {
       {
         label: 'Entrada',
         getValue: (property: Property) =>
-          getAvailabilityInfo(property.moveInDate, property.available).label,
+          getAvailabilityInfo(property.moveInDate, property.available, new Date(), property.availabilityStatus).label,
       },
     ];
 

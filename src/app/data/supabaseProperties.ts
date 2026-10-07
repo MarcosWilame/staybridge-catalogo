@@ -3,6 +3,7 @@ import { formatEuroPrice } from '../utils/price.ts';
 import { StorageClient } from '@supabase/storage-js';
 import { invalidatePublicPropertiesCache } from './propertyCache.ts';
 import { getAvailabilityInfo } from '../utils/availability.ts';
+import { normalizePropertyStructuredFields } from './propertySchema.ts';
 
 const env = import.meta.env || {};
 const SUPABASE_URL = env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
@@ -695,6 +696,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
   const { listed } = getVisibilityFromStatus(status, rawListed);
   const available = getAvailabilityInfo(toStringValue(input.moveInDate), true).isNow;
   const category = normalizeCategory(input.category, input.type);
+  const structured = normalizePropertyStructuredFields(input as Record<string, unknown>);
 
   return {
     id,
@@ -742,6 +744,10 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     postcode: toStringValue(input.postcode, '', 16),
     address: toStringValue(input.address, '', 240),
     people: getPeopleLimit(category, input.people),
+    availabilityStatus: structured.availabilityStatus,
+    priceOptions: structured.priceOptions,
+    entryConditions: structured.entryConditions,
+    sourceText: structured.sourceText,
   };
 }
 

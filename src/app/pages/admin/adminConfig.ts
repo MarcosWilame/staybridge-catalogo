@@ -29,6 +29,9 @@ export const INITIAL_FORM: Omit<Property, 'id'> = {
   postcode: '',
   address: '',
   people: 1,
+  availabilityStatus: 'available_now',
+  priceOptions: [],
+  entryConditions: {},
 };
 
 export const COMPANY_OPTIONS = ['EasyShare', 'RuanRents'] as const;

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T00:00:00.000Z",
+  "title": "Design System: Staybridge London",
+  "extensions": {
+    "colorMeta": {
+      "evergreen": {
+        "role": "primary",
+        "displayName": "London Evergreen",
+        "canonical": "#1a4d2e",
+        "tonalRamp": ["#07130c", "#0d2617", "#123d24", "#1a4d2e", "#2d5a3d", "#4a7c59", "#8eb29a", "#d5e3d9"]
+      },
+      "evergreen-medium": {
+        "role": "primary",
+        "displayName": "Evergreen Medium",
+        "canonical": "#2d5a3d",
+        "tonalRamp": ["#0b1b12", "#123322", "#1f472f", "#2d5a3d", "#4a7c59", "#7ea68b", "#bfd4c5", "#e7f0e9"]
+      },
+      "signal-yellow": {
+        "role": "secondary",
+        "displayName": "Warm Signal Yellow",
+        "canonical": "#f4d03f",
+        "tonalRamp": ["#332a02", "#655305", "#9a7e0a", "#c5a51d", "#f4d03f", "#f7df70", "#faeaa8", "#fdf7dc"]
+      },
+      "paper-warm": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#f7f4df",
+        "tonalRamp": ["#292817", "#56532f", "#85804d", "#b4ad6f", "#d5d0a2", "#e8e5c4", "#f2f0d9", "#f7f4df"]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#202020", "#414141", "#636363", "#858585", "#a7a7a7", "#c9c9c9", "#e4e4e4", "#ffffff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "System Display", "purpose": "Hero headlines and primary messages." },
+      "body": { "displayName": "System Body", "purpose": "Clear, compact reading across the property catalog." }
+    },
+    "shadows": [
+      { "name": "ambient", "value": "0 16px 42px rgba(26, 77, 46, 0.12)", "purpose": "Cards and panels at rest." },
+      { "name": "elevated", "value": "0 22px 58px rgba(26, 77, 46, 0.18)", "purpose": "Priority panels and active elevation." }
+    ],
+    "motion": [
+      { "name": "standard", "value": "cubic-bezier(.2,.8,.2,1)", "purpose": "Default hover and reveal transitions." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Disable non-essential animation." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "High-visibility action for searching or contacting an agent.",
+      "html": "<button class=\"ds-btn-primary\">Buscar imóveis</button>",
+      "css": ".ds-btn-primary { background: #f4d03f; color: #0a0a0a; padding: 12px 24px; border: 0; border-radius: 12px; font: 700 16px/1.5 system-ui, sans-serif; cursor: pointer; transition: background .2s, transform .2s, box-shadow .2s; } .ds-btn-primary:hover { background: #d4b034; transform: translateY(-2px); box-shadow: 0 12px 36px rgba(244,208,63,.28); } .ds-btn-primary:focus-visible { outline: 3px solid #f4d03f; outline-offset: 3px; box-shadow: 0 0 0 5px #1a4d2e; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Trust-building action for secondary flows and contact surfaces.",
+      "html": "<button class=\"ds-btn-secondary\">Falar com um agente</button>",
+      "css": ".ds-btn-secondary { background: #1a4d2e; color: #fff; padding: 12px 24px; border: 0; border-radius: 12px; font: 700 16px/1.5 system-ui, sans-serif; cursor: pointer; transition: background .2s, transform .2s; } .ds-btn-secondary:hover { background: #2d5a3d; transform: translateY(-2px); } .ds-btn-secondary:focus-visible { outline: 3px solid #f4d03f; outline-offset: 3px; box-shadow: 0 0 0 5px #1a4d2e; }"
+    },
+    {
+      "name": "Property Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Premium translucent container for a property preview.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-media\"></div><div class=\"ds-card-content\"><span class=\"ds-card-label\">Disponível agora</span><h3>Studio em Londres</h3><p>Localização e informações principais</p></div></article>",
+      "css": ".ds-card { overflow: hidden; border: 1px solid rgba(26,77,46,.16); border-radius: 22px; background: rgba(255,255,255,.78); color: #0a0a0a; box-shadow: 0 16px 42px rgba(26,77,46,.12); backdrop-filter: blur(18px) saturate(125%); transition: transform .32s cubic-bezier(.2,.8,.2,1), box-shadow .32s ease; } .ds-card:hover { transform: translateY(-6px); box-shadow: 0 22px 58px rgba(26,77,46,.18); } .ds-card-media { height: 160px; background: linear-gradient(135deg,#d5e3d9,#f7f4df); } .ds-card-content { padding: 24px; } .ds-card-label { color: #1a4d2e; font: 700 12px/1.3 system-ui, sans-serif; letter-spacing: .04em; } .ds-card h3 { margin: 8px 0 4px; font: 700 20px/1.35 system-ui, sans-serif; } .ds-card p { margin: 0; color: #666; font: 400 16px/1.5 system-ui, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Atendimento premium sem complicação",
+    "overview": "Staybridge London deve transmitir segurança e cuidado sem parecer burocrático. A experiência combina a confiança de uma imobiliária local com a velocidade de um catálogo digital: informações essenciais aparecem primeiro, os caminhos são diretos e cada ação importante tem um próximo passo claro.\n\nO sistema atual usa uma base verde profunda, sinais amarelos e superfícies claras para criar contraste e reconhecimento. A evolução da identidade deve reforçar uma linguagem londrina, profissional e inclusiva para qualquer pessoa procurando imóvel em Londres.",
+    "keyCharacteristics": ["Premium, mas acessível.", "Objetivo e fácil de escanear.", "Confiável sem excesso de formalidade.", "Superfícies claras com acentos de marca controlados.", "Mobile-first e orientado à conversão."],
+    "rules": [
+      { "name": "The Signal Yellow Rule", "body": "O amarelo é reservado para indicar ação, seleção ou oportunidade; não deve virar a cor estrutural de grandes áreas.", "section": "colors" },
+      { "name": "The Calm Depth Rule", "body": "Sombras devem criar separação e foco, nunca fazer cada card parecer flutuar de forma exagerada.", "section": "elevation" }
+    ],
+    "dos": ["Do priorizar preço, localização, disponibilidade e tipo de imóvel no primeiro escaneamento.", "Do usar o verde para confiança e o amarelo para ação.", "Do manter textos curtos, específicos e orientados ao próximo passo.", "Do usar fotografias grandes e com boa proporção."],
+    "donts": ["Don't criar telas com aparência de template imobiliário genérico.", "Don't usar amarelo em grandes áreas sem função de ação.", "Don't esconder preço, disponibilidade ou condições de entrada em textos longos.", "Don't empilhar sombras e efeitos glass a ponto de reduzir contraste."]
+  }
+}

@@ -72,7 +72,7 @@ test('findDuplicateProperty allows another unit and ignores the edited property'
 test('getAdminDashboardMetrics calculates visibility and regions', () => {
   const metrics = getAdminDashboardMetrics([
     property(),
-    property({ id: 2, title: 'Studio 7', price: '£434.50/month', moveInDate: '20/08/2026' }),
+    property({ id: 2, title: 'Studio 7', price: '£434.50/month', moveInDate: '20/12/2026' }),
     property({ id: 3, title: 'Studio 8', listed: false, available: false, region: 'North London' }),
     property({ id: 4, title: 'Studio 9', price: '£50/day', region: 'North London' }),
   ]);

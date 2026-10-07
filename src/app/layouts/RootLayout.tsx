@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { WhatsAppButton } from '../components/WhatsAppButton';
@@ -11,6 +11,9 @@ import { GoogleAd } from '../components/GoogleAd';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 
 export function RootLayout() {
+  const location = useLocation();
+  const isPropertyDetails = location.pathname.startsWith('/property/');
+
   return (
     <>
       <Analytics />
@@ -35,7 +38,7 @@ export function RootLayout() {
         <Footer />
         <WhatsAppButton />
         <CookieConsent />
-        <MobileBottomNav />
+        {!isPropertyDetails && <MobileBottomNav />}
       </div>
     </>
   );

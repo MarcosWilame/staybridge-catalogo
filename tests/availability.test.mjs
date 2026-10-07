@@ -11,8 +11,8 @@ test('availability labels immediate properties as available now', () => {
 });
 
 test('availability keeps dates visible for unavailable properties', () => {
-  assert.deepEqual(getAvailabilityInfo('2026-09-14', false), {
-    label: 'Disponível em 14/09/2026',
+  assert.deepEqual(getAvailabilityInfo('2026-12-14', false), {
+    label: 'Disponível em 14/12/2026',
     isNow: false,
   });
 });

@@ -7,11 +7,15 @@
 export function getAvailabilityInfo(
   moveInDate: string,
   available = true,
-  today = new Date()
+  today = new Date(),
+  availabilityStatus?: 'available_now' | 'future' | 'to_confirm'
 ): {
   label: string;
   isNow: boolean;
 } {
+  if (availabilityStatus === 'to_confirm') {
+    return { label: 'Consulte a disponibilidade', isNow: false };
+  }
   const rawValue = (moveInDate ?? '').trim();
   const normalized = rawValue.toLowerCase();
 
@@ -63,8 +67,10 @@ export function getAvailabilityInfo(
 export function getMoveInTimestamp(
   moveInDate: string,
   available = true,
-  today = new Date()
+  today = new Date(),
+  availabilityStatus?: 'available_now' | 'future' | 'to_confirm'
 ) {
+  if (availabilityStatus === 'to_confirm') return Number.POSITIVE_INFINITY;
   const info = getAvailabilityInfo(moveInDate, available, today);
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   if (info.isNow) return startOfToday;

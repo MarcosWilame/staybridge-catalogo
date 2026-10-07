@@ -38,6 +38,7 @@ import {
   ShoppingBasket,
   Pill,
   TrainFront,
+  ImageOff,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { shareProperty } from '../utils/shareProperty';
@@ -94,8 +95,8 @@ function getMediaItems(property: Property): MediaItem[] {
     : [...imageItems, videoItem];
 }
 
-function formatWeeklyPrice(price: string) {
-  const cleanedPrice = price.trim();
+function formatWeeklyPrice(price: string | number) {
+  const cleanedPrice = String(price ?? '').trim();
   const amountMatch = cleanedPrice.match(/£?\s*\d+(?:[.,]\d+)?/);
   const amount = amountMatch
     ? amountMatch[0].replace(/^£?\s*/, '')
@@ -193,9 +194,9 @@ export function PropertyDetailsPage() {
     ) : null;
 
   const { label: availabilityLabel, isNow } = property
-    ? getAvailabilityInfo(property.moveInDate, property.available)
+    ? getAvailabilityInfo(property.moveInDate, property.available, new Date(), property.availabilityStatus)
     : { label: '', isNow: false };
-  const weeklyPrice = property ? formatWeeklyPrice(property.price) : '';
+  const weeklyPrice = property ? formatWeeklyPrice(property.priceOptions?.find((option) => option.period === 'week')?.amount ?? property.price) : '';
   const availabilityDisplay = 'Consulte a disponibilidade';
   const nearbyPoints = property
     ? property.nearbyStations.filter((point) => point.trim().length > 0)
@@ -435,7 +436,7 @@ export function PropertyDetailsPage() {
   };
 
   return (
-    <div className="premium-page min-h-screen bg-[#f5f6f1] pb-44 pt-20 md:pb-8">
+    <div className="premium-page min-h-screen bg-[#f5f6f1] pb-28 pt-20 md:pb-8">
       <SEO
         title={`${property.title} em ${property.region}`}
         description={`${propertyDescription} Valor ${weeklyPrice}. ${availabilityLabel}.`}
@@ -487,7 +488,26 @@ export function PropertyDetailsPage() {
         {/* IMAGE GALLERY */}
         <div className="mb-8">
           <div className="premium-media relative overflow-hidden rounded-[28px] border border-black/5 bg-[#e8ebe5] shadow-[0_20px_60px_rgba(20,55,35,.14)]">
-
+            {mediaItems.length === 0 ? (
+              <div
+                className="flex min-h-[18rem] items-center justify-center px-6 py-16 text-center sm:min-h-[26rem]"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="max-w-sm">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-[var(--green-dark)] shadow-sm">
+                    <ImageOff className="h-7 w-7" aria-hidden="true" />
+                  </span>
+                  <h2 className="mt-4 text-lg font-bold text-[var(--green-dark)]">
+                    Fotos indisponíveis no momento
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">
+                    Ainda não temos imagens desta acomodação. Fale com um agente para receber mais detalhes e confirmar a visita.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
             <div className={`relative hidden min-h-0 gap-2 lg:grid lg:h-[clamp(28rem,40vw,36rem)] ${desktopGalleryLayout.rootClassName}`}>
               <button
                 type="button"
@@ -635,15 +655,14 @@ export function PropertyDetailsPage() {
                   </span>
                 )}
 
-                <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--green-dark)] md:px-4 md:py-2 md:text-sm">
-                  Bills a confirmar
-                </span>
               </div>
             </div>
+            </>
+            )}
           </div>
 
           {/* MOBILE THUMBNAILS */}
-          <div className="mt-3 grid grid-cols-5 gap-2 lg:hidden">
+          {mediaItems.length > 0 && <div className="mt-3 grid grid-cols-5 gap-2 lg:hidden">
             {mediaItems.slice(0, 8).map((item, index) => (
               <button
                 key={index}
@@ -681,15 +700,15 @@ export function PropertyDetailsPage() {
                 )}
               </button>
             ))}
-          </div>
+          </div>}
 
-          <div className="mt-3 flex items-center justify-between gap-3 lg:hidden">
+          {mediaItems.length > 0 && <div className="mt-3 flex items-center justify-between gap-3 lg:hidden">
             <span className="text-xs font-semibold text-gray-500">Deslize para ver todos os ambientes</span>
             <button type="button" onClick={(event) => openLightboxAt(currentImageIndex, event.currentTarget)} className="inline-flex items-center gap-2 rounded-full border border-[var(--green-dark)]/20 bg-white px-3 py-2 text-xs font-bold text-[var(--green-dark)]">
               <Maximize2 className="h-3.5 w-3.5" />
               Ver todas
             </button>
-          </div>
+          </div>}
 
         </div>
 
@@ -714,17 +733,6 @@ export function PropertyDetailsPage() {
                       <span className="break-words">{property.region}</span>
                     </span>
 
-                    {/* Availability inline badge */}
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                        isNow
-                          ? 'bg-[var(--green-dark)] text-white'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      {availabilityDisplay}
-                    </span>
                   </div>
 
                   <h1 className="break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl md:text-4xl">
@@ -767,7 +775,7 @@ export function PropertyDetailsPage() {
             </div>
 
             {/* QUICK FACTS */}
-            <div className="border-y border-[var(--green-dark)]/15 bg-[#fafbf7] px-2 py-5 md:px-0 md:py-6">
+            <div className="border-y border-[var(--green-dark)]/15 bg-[#fafbf7] px-2 py-4 md:px-0 md:py-5">
               <div className="grid grid-cols-2 md:grid-cols-4">
                 {[
                   {
@@ -789,14 +797,14 @@ export function PropertyDetailsPage() {
                 ].map(({ icon: Icon, value, label }, index) => (
                   <div
                     key={label}
-                    className={`flex min-h-[76px] items-center gap-3 px-4 py-3 ${
+                    className={`flex min-h-[68px] items-center gap-3 px-4 py-3 ${
                       index > 0 ? 'border-t border-[var(--green-dark)]/15 md:border-l md:border-t-0' : ''
                     }`}
                   >
                     <Icon className="h-5 w-5 shrink-0 text-[var(--green-medium)]" />
                     <div className="min-w-0">
                       <p className="text-sm font-bold leading-5 text-gray-900">{value}</p>
-                      <p className="text-xs leading-5 text-gray-500">{label}</p>
+                      <p className="text-xs leading-4 text-gray-500">{label}</p>
                     </div>
                   </div>
                 ))}
@@ -1037,7 +1045,7 @@ export function PropertyDetailsPage() {
         </div>
       )}
 
-      <div className="premium-floating-bar fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
+      <div className="premium-floating-bar fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">

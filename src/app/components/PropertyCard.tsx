@@ -28,8 +28,8 @@ interface PropertyCardProps {
   onToggleCompare?: (property: Property) => void;
 }
 
-function formatWeeklyPrice(price: string) {
-  const cleanedPrice = price.trim();
+function formatWeeklyPrice(price: string | number) {
+  const cleanedPrice = String(price ?? '').trim();
   const amountMatch = cleanedPrice.match(/£?\s*\d+(?:[.,]\d+)?/);
   const amount = amountMatch
     ? amountMatch[0].replace(/^£?\s*/, '')
@@ -118,12 +118,14 @@ export function PropertyCard({
   const videoEmbedUrl = property.video ? getVideoEmbedUrl(property.video) : '';
   const isIllustrativeImage = isIllustrativePropertyImage(currentImage);
   const hasCarousel = !coverIsVideo && images.length > 1;
-  const weeklyPrice = formatWeeklyPrice(property.price);
+  const weeklyPrice = formatWeeklyPrice(property.priceOptions?.find((option) => option.period === 'week')?.amount ?? property.price);
   const areaPreview = getAreaPreview(property);
 
   const { label: availabilityLabel, isNow } = getAvailabilityInfo(
     property.moveInDate,
-    property.available
+    property.available,
+    new Date(),
+    property.availabilityStatus
   );
 
   const getPropertyTrackingParams = () => ({
