@@ -21,16 +21,11 @@ import {
 } from '../utils/compare';
 import {
   Banknote,
-  Building2,
   CheckCircle2,
-  Home,
-  KeyRound,
-  MapPin,
   MessageCircle,
   Scale,
   Search,
   SlidersHorizontal,
-  TrainFront,
   Users,
   X,
 } from 'lucide-react';
@@ -65,63 +60,30 @@ const filterLabels: Record<keyof FilterState, string> = {
 
 function LondonPropertiesLoading() {
   const loadingCards = [
-    { label: 'Studio', width: 'w-3/4' },
-    { label: 'Ensuite', width: 'w-2/3' },
-    { label: 'Flat', width: 'w-4/5' },
-    { label: 'Quarto', width: 'w-3/5' },
+    { width: 'w-3/4' },
+    { width: 'w-2/3' },
+    { width: 'w-4/5' },
+    { width: 'w-3/5' },
   ];
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
-      <div className="mb-6 overflow-hidden rounded-2xl bg-[var(--green-dark)] p-5 text-white">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide">
-              <MapPin className="h-3.5 w-3.5" />
-              Londres
-            </div>
-            <h2 className="text-xl font-bold md:text-2xl">
-              Preparando as chaves das unidades
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-white/80">
-              Estamos buscando os imoveis disponiveis e montando a vitrine.
-            </p>
-          </div>
-
-          <div className="hidden shrink-0 items-end gap-1 md:flex">
-            <div className="h-12 w-8 rounded-t-lg bg-white/20" />
-            <div className="h-20 w-10 rounded-t-xl bg-[var(--yellow)]" />
-            <div className="h-16 w-8 rounded-t-lg bg-white/25" />
-          </div>
+    <div className="rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white/80 p-4 shadow-[0_16px_42px_rgba(26,77,46,.08)] md:p-5" role="status" aria-live="polite" aria-label="Carregando imóveis">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="h-3 w-24 animate-pulse rounded-full bg-[var(--green-dark)]/15" />
+          <div className="h-7 w-40 animate-pulse rounded-lg bg-[var(--green-dark)]/15" />
         </div>
-
-        <div className="relative mt-6 h-10 overflow-hidden rounded-full bg-black/20">
-          <div className="absolute left-4 right-4 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/30" />
-          <div className="absolute left-8 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-4 border-[var(--yellow)] bg-white" />
-          <div className="absolute right-8 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-4 border-white/80 bg-[var(--green-dark)]" />
-          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 animate-pulse items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-[var(--green-dark)] shadow-lg">
-            <TrainFront className="h-4 w-4" />
-            Northern Line
-          </div>
-        </div>
+        <div className="h-10 w-28 animate-pulse rounded-xl bg-gray-100" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {loadingCards.map((card) => (
-          <div key={card.label} className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-            <div className="flex h-40 animate-pulse items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <Building2 className="h-12 w-12 text-gray-300" />
-            </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {loadingCards.map((card, index) => (
+          <div key={index} className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+            <div className="h-44 animate-pulse bg-gradient-to-br from-gray-100 to-gray-200" />
             <div className="space-y-3 p-4">
-              <div className={`h-4 ${card.width} rounded-full bg-gray-200`} />
-              <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
-                <Home className="h-4 w-4" />
-                {card.label}
-              </div>
-              <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
-                <KeyRound className="h-4 w-4" />
-                Confirmando disponibilidade
-              </div>
+              <div className={`h-4 ${card.width} animate-pulse rounded-full bg-gray-200`} />
+              <div className="h-3 w-1/2 animate-pulse rounded-full bg-gray-200" />
+              <div className="h-3 w-2/3 animate-pulse rounded-full bg-gray-200" />
             </div>
           </div>
         ))}
@@ -503,14 +465,6 @@ export function ListingPage() {
     },
   ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
 
-  const quickMobileFilters = [
-    { key: 'studio', label: 'Studio', type: 'studio' },
-    { key: 'ensuite', label: 'Ensuite', type: 'ensuite' },
-    { key: 'single', label: 'Single', type: 'single' },
-    { key: 'double', label: 'Double', type: 'double' },
-    { key: 'flat', label: 'Flat', type: 'flat' },
-  ];
-
   const regionOptions = [
     { value: '', label: 'Todas' },
     { value: 'north', label: 'North' },
@@ -871,10 +825,10 @@ export function ListingPage() {
 
   const renderFiltersPanel = (isMobile = false) => (
     <div
-        className={`overflow-y-auto overscroll-contain bg-white ${
+      className={`overflow-y-auto overscroll-contain bg-white ${
         isMobile
           ? 'min-h-0 flex-1 px-5 pb-8 pt-5'
-          : 'max-h-[calc(100dvh-8rem)] self-start rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
+          : 'max-h-[calc(100dvh-8rem)] self-start rounded-2xl border border-[var(--green-dark)]/10 bg-white/95 p-6 shadow-[0_16px_42px_rgba(26,77,46,.10)] lg:sticky lg:top-24'
       }`}
     >
       <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilters || !isMobile ? 'mb-6' : ''}`}>
@@ -926,7 +880,7 @@ export function ListingPage() {
         ) : (
           <>
             {regionOptions.map((region) => (
-              <label key={region.value || 'all'} className="flex gap-2 items-center cursor-pointer">
+              <label key={region.value || 'all'} className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm font-semibold transition hover:bg-[var(--paper-warm)]">
                 <input
                   type="radio"
                   name={`region-${isMobile ? 'mobile' : 'desktop'}`}
@@ -960,7 +914,7 @@ export function ListingPage() {
         ) : (
           <>
             {typeOptions.map((type) => (
-              <label key={type.value || 'all'} className="flex gap-2 items-center cursor-pointer">
+              <label key={type.value || 'all'} className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm font-semibold transition hover:bg-[var(--paper-warm)]">
                 <input
                   type="radio"
                   name={`type-${isMobile ? 'mobile' : 'desktop'}`}
@@ -1041,7 +995,7 @@ export function ListingPage() {
           </>
         ) : (
           <>
-            <label className="flex gap-2 items-center cursor-pointer">
+            <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm font-semibold transition hover:bg-[var(--paper-warm)]">
               <input
                 type="checkbox"
                 checked={filters.availableNow}
@@ -1050,7 +1004,7 @@ export function ListingPage() {
               Disponível agora
             </label>
 
-            <label className="flex gap-2 items-center cursor-pointer">
+            <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm font-semibold transition hover:bg-[var(--paper-warm)]">
               <input
                 type="checkbox"
                 checked={filters.billsIncluded}
@@ -1251,11 +1205,16 @@ export function ListingPage() {
           </div>
         </div>
 
-        <div className="sticky top-14 z-30 -mx-4 mb-6 border-y border-white/10 bg-[var(--green-dark)] px-4 py-3 shadow-[0_12px_32px_rgba(26,77,46,.22)] backdrop-blur lg:hidden sm:-mx-6 sm:px-6">
-          <div className="mb-3">
-            {renderSearchField('search-mobile', '[&>input]:border-white/20 [&>input]:bg-white [&>input]:text-gray-900 [&>input]:placeholder:text-gray-500')}
+        <div className="mb-4 lg:hidden">
+          <div className="rounded-2xl border border-[var(--green-dark)]/10 bg-white p-3 shadow-[0_10px_28px_rgba(26,77,46,.08)]">
+            <label htmlFor="search-mobile" className="mb-2 block px-1 text-xs font-black uppercase tracking-[.12em] text-[var(--green-medium)]">
+              Buscar por localização
+            </label>
+            {renderSearchField('search-mobile')}
           </div>
+        </div>
 
+        <div className="sticky top-14 z-30 -mx-4 mb-6 border-y border-white/10 bg-[var(--green-dark)] px-4 py-3 shadow-[0_12px_32px_rgba(26,77,46,.22)] backdrop-blur lg:hidden sm:-mx-6 sm:px-6">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <button
               type="button"
@@ -1293,49 +1252,6 @@ export function ListingPage() {
               <option value="type">Tipo</option>
             </select>
           </div>
-
-          <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
-            {quickMobileFilters.map((filter) => {
-              const isActive = filters.type === filter.type;
-
-              return (
-                <button
-                  key={filter.key}
-                  type="button"
-                  onClick={() => updateFilter('type', isActive ? '' : filter.type)}
-                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
-                    isActive
-                      ? 'bg-[var(--yellow)] text-black shadow'
-                      : 'bg-white/10 text-white'
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              );
-            })}
-
-            <button
-              type="button"
-              onClick={() => updateFilter('availableNow', !filters.availableNow)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
-                filters.availableNow
-                  ? 'bg-[var(--yellow)] text-black shadow'
-                  : 'bg-white/10 text-white'
-              }`}
-            >
-              Disponível agora
-            </button>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white"
-              >
-                Limpar
-              </button>
-            )}
-          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)]">
@@ -1352,7 +1268,7 @@ export function ListingPage() {
             <div className="min-w-0">
               <div className="premium-panel mb-5 rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white/95 p-5 shadow-[0_16px_42px_rgba(26,77,46,.12)] backdrop-blur lg:sticky lg:top-24 lg:z-20">
                 {filters.search.trim() && (
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--green-dark)]/10 bg-[var(--paper-warm)] px-3 py-2.5">
+                  <div className="mb-4 hidden flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--green-dark)]/10 bg-[var(--paper-warm)] px-3 py-2.5 lg:flex">
                     <div className="flex min-w-0 items-center gap-2 text-sm text-gray-600">
                       <Search className="h-4 w-4 shrink-0 text-[var(--green-dark)]" />
                       <span className="shrink-0 font-semibold">Busca atual:</span>
