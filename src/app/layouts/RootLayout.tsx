@@ -8,11 +8,13 @@ import { Analytics } from '../components/Analytics';
 import { MotionObserver } from '../components/MotionObserver';
 import { CookieConsent } from '../components/CookieConsent';
 import { GoogleAd } from '../components/GoogleAd';
+import { PropertySearchChat } from '../components/PropertySearchChat';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 
 export function RootLayout() {
   const location = useLocation();
   const isPropertyDetails = location.pathname.startsWith('/property/');
+  const isAdmin = location.pathname.startsWith('/admin');
 
   return (
     <>
@@ -37,6 +39,7 @@ export function RootLayout() {
 
         <Footer />
         <WhatsAppButton />
+        {!isAdmin && <PropertySearchChat />}
         <CookieConsent />
         {!isPropertyDetails && <MobileBottomNav />}
       </div>
