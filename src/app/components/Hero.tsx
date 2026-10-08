@@ -9,9 +9,12 @@ export function Hero() {
   const navigate = useNavigate();
   const { properties } = useProperties();
   const [searchTerm, setSearchTerm] = useState('');
-  const available = useMemo(() => properties.filter((property) => property.available).length, [properties]);
+  // Keep the headline count aligned with the public catalogue and the
+  // results page. “Available now” remains a search filter, not a second
+  // catalogue count that can drift from the list users are browsing.
+  const catalogCount = properties.length;
   const categories = useMemo(
-    () => new Set(properties.filter((property) => property.available).map((property) => property.category)).size,
+    () => new Set(properties.map((property) => property.category)).size,
     [properties]
   );
 
@@ -97,7 +100,7 @@ export function Hero() {
           <div className="relative ml-auto max-w-sm rounded-[2rem] border border-white/20 bg-white/12 p-6 shadow-[0_30px_90px_rgba(0,0,0,.28)] backdrop-blur-xl">
             <div className="absolute -right-5 -top-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--yellow)] text-[#102c20] shadow-2xl"><Sparkles className="h-7 w-7" /></div>
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.14em] text-white/70"><span className="relative flex h-2.5 w-2.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#66e69a] opacity-70" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#66e69a]" /></span> Catálogo ativo agora</div>
-            <div className="mt-6 flex items-end gap-3"><strong className="text-6xl font-black tracking-[-.06em] text-white">{available || '—'}</strong><span className="pb-2 text-sm leading-tight text-white/65">opções<br />disponíveis</span></div>
+            <div className="mt-6 flex items-end gap-3"><strong className="text-6xl font-black tracking-[-.06em] text-white">{catalogCount || '—'}</strong><span className="pb-2 text-sm leading-tight text-white/65">imóveis<br />no catálogo</span></div>
             <div className="my-6 h-px bg-white/15" />
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-black/15 p-4"><KeyRound className="h-5 w-5 text-[var(--yellow)]" /><strong className="mt-3 block text-xl">{categories || '—'}</strong><span className="text-xs text-white/60">tipos de acomodação</span></div>

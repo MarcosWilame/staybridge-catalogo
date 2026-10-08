@@ -36,28 +36,33 @@ function localPublicPropertiesApi() {
         }
 
         try {
-          let response = await fetch(
-            `${supabaseUrl}/rest/v1/rpc/get_public_properties`,
-            {
-              method: 'POST',
-              headers: {
-                apikey: anonKey,
-                Authorization: `Bearer ${anonKey}`,
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-              body: '{}',
-            }
-          );
-
-          if (!response.ok && legacyServiceKey) {
-            response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=id,data&order=id.asc`, {
+          // The service-role query is the source of truth for the local app. The
+          // public RPC can be stale while a Supabase migration is pending and
+          // would otherwise silently return an incomplete catalogue.
+          let response = legacyServiceKey
+            ? await fetch(`${supabaseUrl}/rest/v1/${table}?select=id,data&order=id.asc`, {
               headers: {
                 apikey: legacyServiceKey,
                 Authorization: `Bearer ${legacyServiceKey}`,
                 Accept: 'application/json',
               },
-            });
+            })
+            : null;
+
+          if (!response?.ok) {
+            response = await fetch(
+              `${supabaseUrl}/rest/v1/rpc/get_public_properties`,
+              {
+                method: 'POST',
+                headers: {
+                  apikey: anonKey,
+                  Authorization: `Bearer ${anonKey}`,
+                  Accept: 'application/json',
+                  'Content-Type': 'application/json',
+                },
+                body: '{}',
+              }
+            );
           }
 
           if (!response.ok) {
