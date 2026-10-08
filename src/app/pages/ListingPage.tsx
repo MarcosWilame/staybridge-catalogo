@@ -1390,7 +1390,7 @@ export function ListingPage() {
               {isLoading ? (
                 <LondonPropertiesLoading />
               ) : (
-                <div className="grid content-start gap-5 sm:grid-cols-2 xl:max-h-[calc(100vh-17rem)] xl:overflow-y-auto xl:pr-1">
+                <div className="grid content-start gap-5 sm:grid-cols-2">
                   {visibleProperties.map((p) => (
                       <div
                         key={p.id}
