@@ -147,23 +147,6 @@ async function parsePropertiesResponse(response: Response) {
     : [];
 }
 
-function firstSuccessful<T>(requests: Array<Promise<T>>): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    let pending = requests.length;
-    let lastError: unknown;
-
-    requests.forEach((request) => {
-      request.then(resolve).catch((error: unknown) => {
-        lastError = error;
-        pending -= 1;
-        if (pending === 0) {
-          reject(lastError instanceof Error ? lastError : new Error('Falha ao carregar propriedades'));
-        }
-      });
-    });
-  });
-}
-
 async function loadPropertiesFromSource(forceRefresh = false) {
   const revision = getPublicPropertiesRevision();
   if (!forceRefresh && cachedProperties && cachedRevision === revision) return cachedProperties;
@@ -178,10 +161,21 @@ async function loadPropertiesFromSource(forceRefresh = false) {
   if (pendingLoad) return pendingLoad;
 
   pendingLoad = (async () => {
-    const loadedProperties = await firstSuccessful([
-      fetchPropertiesWithRetry().then(parsePropertiesResponse),
-      fetchPropertiesDirectly(),
-    ]);
+    // Use one canonical public source for every surface. Racing the API route
+    // against the RPC made the winner timing-dependent, so Home and /properties
+    // could render different catalogue counts during the same session.
+    let loadedProperties: Property[];
+    try {
+      loadedProperties = await fetchPropertiesWithRetry().then(parsePropertiesResponse);
+    } catch (routeError) {
+      // Keep the direct RPC as a resilience fallback when the public route is
+      // unavailable, but never race it against the canonical request.
+      try {
+        loadedProperties = await fetchPropertiesDirectly();
+      } catch {
+        throw routeError;
+      }
+    }
 
     cachedProperties = loadedProperties;
     cachedRevision = getPublicPropertiesRevision();
