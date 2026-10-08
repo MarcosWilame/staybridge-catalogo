@@ -117,7 +117,7 @@ function PropertyResult({ property }: { property: Property }) {
       to={`/property/${property.id}`}
       className="group flex gap-3 rounded-2xl border border-[var(--green-dark)]/10 bg-white p-2.5 transition hover:border-[var(--yellow-dark)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
     >
-      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[var(--paper)]">
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#f7f4df]">
         {image ? (
           <img src={getOptimizedImageUrl(image, 'thumb')} alt="" className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
         ) : <div className="flex h-full items-center justify-center"><MapPin className="h-5 w-5 text-[var(--green-medium)]/50" /></div>}
@@ -182,9 +182,9 @@ export function PropertySearchChat() {
   };
 
   return (
-    <div className="fixed bottom-24 right-20 z-[60] md:bottom-6 md:right-24">
+    <div className="fixed bottom-24 right-4 z-[60] md:bottom-6 md:right-6">
       {isOpen && (
-        <section aria-label="Busca de imóveis" className="absolute bottom-16 right-0 flex h-[min(680px,calc(100vh-8rem))] w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/15 bg-[var(--paper)] shadow-[0_24px_70px_rgba(26,77,46,.25)]">
+        <section aria-label="Busca de imóveis" className="absolute bottom-16 right-0 flex h-[min(680px,calc(100vh-8rem))] w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/15 bg-[#f7f4df] shadow-[0_24px_70px_rgba(26,77,46,.25)]">
           <header className="flex items-center justify-between bg-[var(--green-dark)] px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--yellow)] text-[var(--green-dark)]"><Bot className="h-5 w-5" /></span>
@@ -204,7 +204,7 @@ export function PropertySearchChat() {
             ))}
           </div>
 
-          <div className="border-t border-[var(--green-dark)]/10 bg-white/70 px-3 pb-3 pt-2">
+          <div className="border-t border-[var(--green-dark)]/10 bg-white px-3 pb-3 pt-2">
             <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => sendMessage(prompt)} className="shrink-0 rounded-full border border-[var(--green-dark)]/15 bg-white px-2.5 py-1.5 text-[11px] font-bold text-[var(--green-dark)] transition hover:border-[var(--yellow-dark)] hover:bg-[var(--yellow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]">{prompt}</button>)}
             </div>
