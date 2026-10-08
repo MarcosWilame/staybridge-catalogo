@@ -1171,8 +1171,8 @@ export function ListingPage() {
         canonicalPath="/properties"
         jsonLd={listingJsonLd}
       />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative mb-8 overflow-hidden rounded-[1.35rem] bg-[var(--green-dark)] px-5 py-7 text-white shadow-[0_22px_58px_rgba(26,77,46,.18)] sm:px-7 md:px-9 md:py-9">
+      <div className="mx-auto flex max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
+        <div className="order-2 relative mb-8 overflow-hidden rounded-[1.35rem] bg-[var(--green-dark)] px-5 py-7 text-white shadow-[0_22px_58px_rgba(26,77,46,.18)] sm:px-7 md:px-9 md:py-9 lg:order-1">
           <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full border-[28px] border-[var(--yellow)]/15" />
           <div className="pointer-events-none absolute bottom-0 right-20 h-24 w-24 translate-y-1/2 rounded-full bg-[var(--yellow)]/10 blur-2xl" />
           <div className="relative max-w-3xl">
@@ -1205,7 +1205,7 @@ export function ListingPage() {
           </div>
         </div>
 
-        <div className="mb-4 lg:hidden">
+        <div className="order-1 mb-4 lg:hidden">
           <div className="rounded-2xl border border-[var(--green-dark)]/10 bg-white p-3 shadow-[0_10px_28px_rgba(26,77,46,.08)]">
             <label htmlFor="search-mobile" className="mb-2 block px-1 text-xs font-black uppercase tracking-[.12em] text-[var(--green-medium)]">
               Buscar por localização
@@ -1214,7 +1214,7 @@ export function ListingPage() {
           </div>
         </div>
 
-        <div className="sticky top-14 z-30 -mx-4 mb-6 border-y border-white/10 bg-[var(--green-dark)] px-4 py-3 shadow-[0_12px_32px_rgba(26,77,46,.22)] backdrop-blur lg:hidden sm:-mx-6 sm:px-6">
+        <div className="order-1 sticky top-14 z-30 -mx-4 mb-6 border-y border-white/10 bg-[var(--green-dark)] px-4 py-3 shadow-[0_12px_32px_rgba(26,77,46,.22)] backdrop-blur lg:hidden sm:-mx-6 sm:px-6">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <button
               type="button"
@@ -1254,7 +1254,7 @@ export function ListingPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)]">
+        <div className="order-3 grid grid-cols-1 gap-8 lg:order-2 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)]">
           <div className="hidden self-start lg:block">
             {renderFiltersPanel()}
           </div>
