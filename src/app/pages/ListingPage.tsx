@@ -43,7 +43,7 @@ interface FilterState {
 
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
 
-const INITIAL_VISIBLE_COUNT = 12;
+const INITIAL_VISIBLE_COUNT = 6;
 const PRICE_STEP = 25;
 const DEFAULT_MAX_PRICE = 700;
 

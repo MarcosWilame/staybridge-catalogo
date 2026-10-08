@@ -1,4 +1,5 @@
-import { ExternalLink, MapPin } from 'lucide-react';
+import { ExternalLink, MapPin, MapPinned } from 'lucide-react';
+import { useState } from 'react';
 import { Property } from '../data/properties';
 
 interface PropertyMapProps {
@@ -32,6 +33,7 @@ export function PropertyMap({
   properties = [],
   onSelectProperty,
 }: PropertyMapProps) {
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const selectedProperty = property || properties[0];
   const areaLabel = getAreaLabel(selectedProperty);
   const mapQuery = getMapQuery(selectedProperty);
@@ -69,15 +71,34 @@ export function PropertyMap({
       </div>
 
       <div className="relative h-64 md:h-80">
-        <iframe
-          title={`Mapa - ${selectedProperty?.title || 'Staybridge'}`}
-          src={mapUrl}
-          className="h-full w-full border-0"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
+        {isMapLoaded ? (
+          <iframe
+            title={`Mapa - ${selectedProperty?.title || 'Staybridge'}`}
+            src={mapUrl}
+            className="h-full w-full border-0"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_center,rgba(244,208,63,.18),transparent_42%),linear-gradient(135deg,#edf3ea,#dfe9de)] px-6 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 text-[var(--green-dark)] shadow-sm">
+              <MapPinned className="h-7 w-7" />
+            </div>
+            <p className="max-w-xs text-sm font-semibold text-[var(--green-dark)]">
+              O mapa externo carrega somente quando você solicitar.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsMapLoaded(true)}
+              className="rounded-xl bg-[var(--green-dark)] px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-[var(--green-medium)]"
+            >
+              Carregar mapa
+            </button>
+          </div>
+        )}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-32 w-32 rounded-full border-4 border-[var(--yellow)] bg-[var(--yellow)]/20 shadow-[0_0_0_999px_rgba(0,0,0,0.08)] md:h-40 md:w-40" />
+          {isMapLoaded && (
+            <div className="h-32 w-32 rounded-full border-4 border-[var(--yellow)] bg-[var(--yellow)]/20 shadow-[0_0_0_999px_rgba(0,0,0,0.08)] md:h-40 md:w-40" />
+          )}
         </div>
         <div className="pointer-events-none absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[var(--green-dark)] shadow">
           Raio aproximado da área

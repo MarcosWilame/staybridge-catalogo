@@ -11,6 +11,7 @@ import {
   Clock,
   Scale,
   Share2,
+  Video,
 } from 'lucide-react';
 import { Property } from '../data/properties';
 import { getAvailabilityInfo } from '../utils/availability';
@@ -42,24 +43,6 @@ function getPriceValue(price: string) {
   const match = price.match(/\d+(?:[.,]\d+)?/);
   if (!match) return 0;
   return Number(match[0].replace(',', '.'));
-}
-
-function getVideoEmbedUrl(url: string) {
-  const driveFileId =
-    url.match(/drive\.google\.com\/file\/d\/([^/]+)/)?.[1] ||
-    url.match(/drive\.google\.com\/uc\?[^#]*id=([^&#]+)/)?.[1] ||
-    url.match(/drive\.google\.com\/open\?[^#]*id=([^&#]+)/)?.[1] ||
-    '';
-
-  if (driveFileId) return `https://drive.google.com/file/d/${driveFileId}/preview`;
-
-  const youtubeId =
-    url.match(/youtube\.com\/(?:watch\?[^#]*v=|embed\/)([^&#/]+)/)?.[1] ||
-    url.match(/youtu\.be\/([^?&#]+)/)?.[1] ||
-    '';
-
-  if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}`;
-  return '';
 }
 
 const postcodeAreaByDistrict: Record<string, string> = {
@@ -112,12 +95,10 @@ export function PropertyCard({
     [property.image, property.images]
   );
   const currentImage = images[currentImageIndex] || property.image;
-  const coverIsVideo = property.coverMedia === 'video' && Boolean(property.video);
-  const hasPhoto = !coverIsVideo && Boolean(currentImage);
-  const hasVideo = coverIsVideo || (!hasPhoto && Boolean(property.video));
-  const videoEmbedUrl = property.video ? getVideoEmbedUrl(property.video) : '';
+  const hasPhoto = Boolean(currentImage);
+  const hasVideo = !hasPhoto && Boolean(property.video);
   const isIllustrativeImage = isIllustrativePropertyImage(currentImage);
-  const hasCarousel = !coverIsVideo && images.length > 1;
+  const hasCarousel = hasPhoto && images.length > 1;
   const weeklyPrice = formatWeeklyPrice(property.priceOptions?.find((option) => option.period === 'week')?.amount ?? property.price);
   const areaPreview = getAreaPreview(property);
 
@@ -187,28 +168,7 @@ export function PropertyCard({
           className="block h-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--yellow)]"
           onClick={() => trackPropertyOpen('card_image')}
         >
-          {hasVideo ? (
-            videoEmbedUrl ? (
-              <iframe
-                src={videoEmbedUrl}
-                title={`Vídeo de ${property.title}`}
-                className="h-full w-full border-0 object-cover"
-                allow="autoplay; fullscreen"
-                loading="lazy"
-              />
-            ) : (
-              <video
-                src={property.video}
-                className="h-full w-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                aria-label={`Vídeo de ${property.title}`}
-              />
-            )
-          ) : (
+          {hasPhoto ? (
             <ImageWithFallback
               src={getOptimizedImageUrl(currentImage, 'card')}
               alt={getPropertyImageAlt(property, currentImageIndex)}
@@ -219,6 +179,16 @@ export function PropertyCard({
               height={520}
               sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
             />
+          ) : hasVideo ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 bg-[linear-gradient(135deg,var(--green-dark),var(--green-medium))] px-5 text-center text-white">
+              <Video className="h-9 w-9 text-[var(--yellow)]" />
+              <span className="text-sm font-black">Vídeo disponível</span>
+              <span className="text-xs font-semibold text-white/75">Abra os detalhes para assistir</span>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gray-100 text-sm font-bold text-gray-500">
+              Imagem indisponível
+            </div>
           )}
         </Link>
 
