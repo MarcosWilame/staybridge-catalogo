@@ -506,6 +506,8 @@ export function ListingPage() {
   const quickMobileFilters = [
     { key: 'studio', label: 'Studio', type: 'studio' },
     { key: 'ensuite', label: 'Ensuite', type: 'ensuite' },
+    { key: 'single', label: 'Single', type: 'single' },
+    { key: 'double', label: 'Double', type: 'double' },
     { key: 'flat', label: 'Flat', type: 'flat' },
   ];
 
@@ -530,7 +532,9 @@ export function ListingPage() {
     .map((chip) => chip.label)
     .join(', ');
 
-  const listingTitle = filters.type
+  const listingTitle = filters.search.trim()
+    ? `Resultados para “${filters.search.trim()}”`
+    : filters.type
     ? `${typeOptions.find((type) => type.value === filters.type)?.label || filters.type} em Londres`
     : filters.region
       ? `Acomodacoes em ${filters.region.charAt(0).toUpperCase() + filters.region.slice(1)} London`
@@ -608,7 +612,7 @@ export function ListingPage() {
   ];
 
   const mobileFilterButtonClass = (isActive: boolean) =>
-    `rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
+    `min-h-11 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
       isActive
         ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
       : 'border-gray-200 bg-gray-50 text-gray-700'
@@ -825,12 +829,52 @@ export function ListingPage() {
     );
   };
 
+  const renderSearchField = (id: string, className = '') => (
+    <div className={`relative ${className}`}>
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <input
+        id={id}
+        type="search"
+        inputMode="search"
+        autoComplete="off"
+        value={filters.search}
+        onChange={(event) =>
+          updateFilter('search', event.target.value, { syncUrl: false })
+        }
+        placeholder="Bairro, postcode ou estação"
+        aria-label="Buscar por bairro, postcode ou estação"
+        className="search-field min-h-11 w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-10 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
+      />
+      {filters.search && (
+        <button
+          type="button"
+          onClick={() => updateFilter('search', '')}
+          className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-200 hover:text-[var(--green-dark)]"
+          aria-label="Limpar busca"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+
+  const focusSearch = () => {
+    const searchInput = document.getElementById('search-mobile') || document.getElementById('search-desktop');
+    if (searchInput instanceof HTMLInputElement) {
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      searchInput.focus();
+      return;
+    }
+
+    setShowMobileFilters(true);
+  };
+
   const renderFiltersPanel = (isMobile = false) => (
     <div
-      className={`overflow-y-auto overscroll-contain bg-white ${
+        className={`overflow-y-auto overscroll-contain bg-white ${
         isMobile
-          ? 'h-full px-5 pb-8 pt-5'
-          : 'max-h-[calc(100vh-7rem)] rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
+          ? 'min-h-0 flex-1 px-5 pb-8 pt-5'
+          : 'max-h-[calc(100dvh-8rem)] self-start rounded-2xl p-6 shadow-lg lg:sticky lg:top-24'
       }`}
     >
       <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilters || !isMobile ? 'mb-6' : ''}`}>
@@ -851,27 +895,13 @@ export function ListingPage() {
 
       <div className="mb-6">
         <label
-          htmlFor={`search-${isMobile ? 'mobile' : 'desktop'}`}
+          htmlFor={`search-${isMobile ? 'mobile-panel' : 'desktop'}`}
           className="mb-2 flex items-center gap-2 font-bold text-sm"
         >
           <Search className="h-4 w-4" />
           Buscar
         </label>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            id={`search-${isMobile ? 'mobile' : 'desktop'}`}
-            type="search"
-            inputMode="search"
-            autoComplete="off"
-            value={filters.search}
-            onChange={(event) =>
-              updateFilter('search', event.target.value, { syncUrl: false })
-            }
-            placeholder="Bairro, postcode ou estacao"
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-3 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
-          />
-        </div>
+        {renderSearchField(`search-${isMobile ? 'mobile-panel' : 'desktop'}`)}
       </div>
 
       <PriceSliderFilter isMobile={isMobile} />
@@ -1222,11 +1252,15 @@ export function ListingPage() {
         </div>
 
         <div className="sticky top-14 z-30 -mx-4 mb-6 border-y border-white/10 bg-[var(--green-dark)] px-4 py-3 shadow-[0_12px_32px_rgba(26,77,46,.22)] backdrop-blur lg:hidden sm:-mx-6 sm:px-6">
-          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <div className="mb-3">
+            {renderSearchField('search-mobile', '[&>input]:border-white/20 [&>input]:bg-white [&>input]:text-gray-900 [&>input]:placeholder:text-gray-500')}
+          </div>
+
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <button
               type="button"
               onClick={() => setShowMobileFilters(true)}
-              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl bg-[var(--green-dark)] px-4 py-3 text-sm font-bold text-white shadow-sm"
+              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white shadow-sm"
               aria-label="Abrir filtros"
             >
               <SlidersHorizontal className="h-5 w-5" />
@@ -1305,7 +1339,7 @@ export function ListingPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)]">
-          <div className="hidden lg:block">
+          <div className="hidden self-start lg:block">
             {renderFiltersPanel()}
           </div>
 
@@ -1317,6 +1351,22 @@ export function ListingPage() {
           >
             <div className="min-w-0">
               <div className="premium-panel mb-5 rounded-[1.35rem] border border-[var(--green-dark)]/10 bg-white/95 p-5 shadow-[0_16px_42px_rgba(26,77,46,.12)] backdrop-blur lg:sticky lg:top-24 lg:z-20">
+                {filters.search.trim() && (
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--green-dark)]/10 bg-[var(--paper-warm)] px-3 py-2.5">
+                    <div className="flex min-w-0 items-center gap-2 text-sm text-gray-600">
+                      <Search className="h-4 w-4 shrink-0 text-[var(--green-dark)]" />
+                      <span className="shrink-0 font-semibold">Busca atual:</span>
+                      <span className="truncate font-black text-[var(--green-dark)]">“{filters.search.trim()}”</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={focusSearch}
+                      className="min-h-9 rounded-lg px-2.5 text-xs font-black text-[var(--green-dark)] underline decoration-[var(--yellow)] decoration-2 underline-offset-4 transition hover:bg-white"
+                    >
+                      Alterar busca
+                    </button>
+                  </div>
+                )}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-xs font-extrabold uppercase tracking-[.16em] text-[var(--green-medium)]">Resultados</div>
@@ -1475,8 +1525,8 @@ export function ListingPage() {
             if (e.target === e.currentTarget) setShowMobileFilters(false);
           }}
         >
-          <div className="flex h-full w-full max-w-sm flex-col bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+          <div className="flex h-full min-h-0 w-full max-w-sm flex-col bg-white shadow-2xl">
+            <div className="z-10 flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
               <span className="text-lg font-bold text-[var(--green-dark)]">
                 Filtros
               </span>
@@ -1493,7 +1543,7 @@ export function ListingPage() {
             {renderFiltersPanel(true)}
 
             {/* Botão aplicar no mobile */}
-            <div className="sticky bottom-0 border-t border-gray-100 bg-white p-4">
+            <div className="shrink-0 border-t border-gray-100 bg-white p-4">
               <button
                 type="button"
                 onClick={() => setShowMobileFilters(false)}
