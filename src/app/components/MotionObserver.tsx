@@ -25,9 +25,12 @@ export function MotionObserver() {
       }
 
       const isCard = element.classList.contains('scroll-card');
-      gsap.set(element, { autoAlpha: 0, y: isCard ? 18 : 22 });
+      // Cards must remain available even if ScrollTrigger is delayed or fails
+      // to refresh on a mobile viewport. The motion is decorative; it must not
+      // turn rendered card content into an invisible blank region.
+      gsap.set(element, isCard ? { y: 18 } : { autoAlpha: 0, y: 22 });
       const tween = gsap.to(element, {
-        autoAlpha: 1,
+        ...(isCard ? {} : { autoAlpha: 1 }),
         y: 0,
         duration: isCard ? 0.55 : 0.65,
         ease: 'power3.out',

@@ -18,6 +18,7 @@ import {
 import { getAbsoluteUrl, SITE_NAME } from '../config/site';
 import { getPropertyImageAlt } from '../utils/imageAlt';
 import { formatPropertyType } from '../utils/propertyType';
+import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 import {
   MAX_COMPARE_ITEMS,
   getCompareProperties,
@@ -382,6 +383,15 @@ export function ListingPage() {
 
   const visibleProperties = sortedProperties.slice(0, visibleCount);
   const hasMoreProperties = visibleCount < sortedProperties.length;
+
+  useEffect(() => {
+    // Warm the first viewport plus one nearby card. This keeps the next card
+    // ready while scrolling without eagerly downloading the whole catalogue.
+    sortedProperties.slice(0, Math.min(visibleCount, 3)).forEach((property) => {
+      void preloadImage(getOptimizedImageUrl(property.image, 'card'));
+    });
+  }, [sortedProperties, visibleCount]);
+
   const compareProperties = getCompareProperties(properties, compareIds);
 
   const visibleSelectedProperty = sortedProperties.find(

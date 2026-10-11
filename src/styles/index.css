@@ -62,7 +62,8 @@ main:focus-visible {
 }
 
 .scroll-card {
-  opacity: 0;
+  /* Card content must never be hidden while scroll motion is initializing. */
+  opacity: 1;
   transform: translateY(18px);
 }
 
