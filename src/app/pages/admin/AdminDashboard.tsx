@@ -1,4 +1,4 @@
-import { Eye, EyeOff, CalendarDays, MapPin } from 'lucide-react';
+import { Eye, EyeOff, CalendarDays, MapPin, ShieldAlert } from 'lucide-react';
 import type { Property } from '../../data/properties';
 import { getAdminDashboardMetrics } from './propertyManagement';
 
@@ -9,11 +9,12 @@ export function AdminDashboard({ properties }: { properties: Property[] }) {
     { label: 'Visíveis no site', value: metrics.visible, icon: Eye },
     { label: 'Ocultos', value: properties.length - metrics.visible, icon: EyeOff },
     { label: 'Disponíveis agora', value: metrics.availableNow, icon: CalendarDays },
+    { label: 'Com bloqueios', value: metrics.quality.blockers, icon: ShieldAlert },
   ];
 
   return (
     <section className="mb-6 border-y border-[var(--surface-border)] bg-white py-5 shadow-[var(--surface-shadow)]">
-      <div className="grid gap-px bg-[var(--surface-border)] sm:grid-cols-3">
+      <div className="grid gap-px bg-[var(--surface-border)] sm:grid-cols-2 lg:grid-cols-4">
         {cards.map(({ label, value, icon: Icon }) => (
           <div key={label} className="flex min-h-28 items-center gap-4 bg-white px-5 py-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--green-light)] text-[var(--green-dark)]">

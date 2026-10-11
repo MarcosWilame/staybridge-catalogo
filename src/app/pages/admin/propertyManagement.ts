@@ -1,4 +1,4 @@
-import type { Property, PropertyStatus } from '../../data/properties.ts';
+import type { Property, PropertyQualitySummary, PropertyStatus } from '../../data/properties.ts';
 import { getAvailabilityInfo } from '../../utils/availability.ts';
 
 type PropertyIdentity = Pick<Property, 'address' | 'postcode' | 'title'> & {
@@ -107,7 +107,35 @@ export function getAdminDashboardMetrics(properties: Property[]) {
     visible: listedProperties.length,
     availableNow,
     regions,
+    quality: getPropertyQualityMetrics(properties),
   };
+}
+
+export function getPropertyQualityMetrics(properties: Property[]) {
+  return properties.reduce(
+    (metrics, property) => {
+      const quality = property.quality;
+      if (!quality) return metrics;
+      if (quality.blockerCount > 0) metrics.blockers += 1;
+      else if (quality.warningCount > 0) metrics.warnings += 1;
+      else metrics.clean += 1;
+      return metrics;
+    },
+    { blockers: 0, warnings: 0, clean: 0 }
+  );
+}
+
+export function matchesPropertyQuality(
+  quality: PropertyQualitySummary | undefined,
+  filter: 'all' | 'blockers' | 'warnings' | 'clean',
+  category = ''
+) {
+  if (!quality) return false;
+  if (category && !quality.categories.includes(category)) return false;
+  if (filter === 'all') return true;
+  if (filter === 'blockers') return quality.blockerCount > 0;
+  if (filter === 'warnings') return quality.blockerCount === 0 && quality.warningCount > 0;
+  return quality.blockerCount === 0 && quality.warningCount === 0;
 }
 
 function parseAvailabilityDate(value: string, today: Date) {

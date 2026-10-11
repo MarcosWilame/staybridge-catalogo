@@ -229,10 +229,9 @@ export function PropertyDetailsPage() {
       (item): item is Extract<MediaItem, { type: 'image' }> => item.type === 'image'
     );
 
-    imageItems.slice(0, 4).forEach((item) => {
-      preloadImage(getOptimizedImageUrl(item.src, 'detail'));
-    });
-  }, [mediaItems, property]);
+    const activeItem = imageItems[currentImageIndex] || imageItems[0];
+    if (activeItem) preloadImage(getOptimizedImageUrl(activeItem.src, 'detail'));
+  }, [currentImageIndex, mediaItems, property]);
 
   useEffect(() => {
     if (!property) return;
@@ -496,6 +495,7 @@ export function PropertyDetailsPage() {
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
+                    data-image-variant="detail"
                   />
                 )}
                 <span className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2.5 text-sm font-bold text-gray-900 shadow-lg">
@@ -527,7 +527,7 @@ export function PropertyDetailsPage() {
                           <Play className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 fill-white text-white" />
                         </div>
                       ) : (
-                        <ImageWithFallback src={getOptimizedImageUrl(item.src, 'detail')} alt={getPropertyImageAlt(property, mediaIndex)} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]" loading="lazy" />
+                        <ImageWithFallback src={getOptimizedImageUrl(item.src, 'detail')} alt={getPropertyImageAlt(property, mediaIndex)} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]" loading="lazy" data-image-variant="detail" />
                       )}
                       {mediaIndex === 4 && mediaItems.length > 5 && (
                         <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-bold text-white">
@@ -571,6 +571,7 @@ export function PropertyDetailsPage() {
                   loading="eager"
                   fetchPriority={currentImageIndex === 0 ? 'high' : 'auto'}
                   decoding="async"
+                  data-image-variant="detail"
                 />
               )}
 
@@ -652,6 +653,7 @@ export function PropertyDetailsPage() {
                       className="h-full w-full object-cover opacity-60"
                       loading="lazy"
                       decoding="async"
+                      data-image-variant="thumb"
                     />
                     <div className="absolute inset-0 flex items-center justify-center text-white">
                       <Play className="h-7 w-7 fill-current" />
@@ -664,6 +666,7 @@ export function PropertyDetailsPage() {
                     className="w-full h-full object-cover"
                     loading="eager"
                     decoding="async"
+                    data-image-variant="thumb"
                   />
                 )}
               </button>

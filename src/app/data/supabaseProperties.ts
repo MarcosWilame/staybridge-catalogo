@@ -1,4 +1,4 @@
-import type { Property } from './properties';
+import type { Property, PropertyQualitySummary } from './properties';
 import { formatEuroPrice } from '../utils/price.ts';
 import { StorageClient } from '@supabase/storage-js';
 import { invalidatePublicPropertiesCache } from './propertyCache.ts';
@@ -21,6 +21,7 @@ const storageClient = SUPABASE_URL && SUPABASE_ANON_KEY
 type SupabasePropertyRow = {
   id: number;
   data: unknown;
+  quality?: PropertyQualitySummary;
 };
 
 type SupabaseStorageObject = {
@@ -88,7 +89,11 @@ async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
-    throw new Error(detail?.error || `Falha administrativa (${response.status})`);
+    const error = Object.assign(
+      new Error(detail?.error || `Falha administrativa (${response.status})`),
+      { statusCode: response.status, quality: detail?.quality }
+    );
+    throw error;
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
@@ -764,13 +769,15 @@ function fromRow(row: SupabasePropertyRow) {
       ? (row.data as PropertyInput)
       : { id: row.id };
 
-  return normalizeProperty({
+  const property = normalizeProperty({
     ...rawData,
     id:
       typeof rawData.id === 'number' && Number.isFinite(rawData.id)
         ? rawData.id
         : row.id,
   });
+  if (property && row.quality) property.quality = row.quality;
+  return property;
 }
 
 export async function loadPropertiesFromSupabase(accessToken?: string) {
@@ -782,7 +789,8 @@ export async function loadPropertiesFromSupabase(accessToken?: string) {
 
 export async function savePropertyToSupabase(
   property: Property,
-  accessToken?: string
+  accessToken?: string,
+  confirmQualityWarnings = false
 ) {
   const normalizedProperty = normalizeProperty(property);
 
@@ -793,7 +801,7 @@ export async function savePropertyToSupabase(
   void accessToken;
   const rows = await adminRequest<SupabasePropertyRow[]>('/api/admin-properties', {
     method: 'POST',
-    body: JSON.stringify({ property: normalizedProperty }),
+    body: JSON.stringify({ property: normalizedProperty, confirmQualityWarnings }),
   });
   invalidatePublicPropertiesCache();
 

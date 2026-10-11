@@ -6,6 +6,12 @@ import { useProperties } from '../data/sheetProperties';
 import { getAvailabilityInfo } from '../utils/availability';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
 import { trackEvent } from '../utils/analytics';
+import {
+  buildPropertySearchAnswer,
+  filterAndSortProperties,
+  getPropertyPriceValue,
+  parsePropertySearchQuery,
+} from '../utils/propertySearch';
 
 type ChatMessage = {
   id: number;
@@ -16,91 +22,13 @@ type ChatMessage = {
 
 const QUICK_PROMPTS = ['Studios disponíveis', 'Até £250 por semana', 'Com bills inclusas'];
 
-function normalize(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
-
 function getPrice(property: Property) {
-  const amount = property.priceOptions?.find((option) => option.period === 'week')?.amount;
-  if (typeof amount === 'number') return amount;
-  const match = String(property.price || '').match(/\d+(?:[.,]\d+)?/);
-  return match ? Number(match[0].replace(',', '.')) : 0;
-}
-
-function getPropertyText(property: Property) {
-  return normalize([
-    property.title,
-    property.type,
-    property.category,
-    property.region,
-    property.localArea,
-    property.postcode,
-    property.address,
-    ...property.nearbyStations,
-  ].filter(Boolean).join(' '));
-}
-
-function getRequestedPrice(query: string) {
-  const match = normalize(query).match(/(?:ate|menos de|no maximo|maximo)\s*£?\s*(\d+)/);
-  return match ? Number(match[1]) : null;
-}
-
-function getCategory(query: string) {
-  const normalizedQuery = normalize(query);
-  if (/studio/.test(normalizedQuery)) return 'studio';
-  if (/ensuite|en suite/.test(normalizedQuery)) return 'ensuite';
-  if (/flat|apartamento|imovel completo/.test(normalizedQuery)) return 'flat';
-  if (/double|duplo/.test(normalizedQuery)) return 'double';
-  if (/single|individual|quarto/.test(normalizedQuery)) return 'single';
-  return '';
-}
-
-function findProperties(properties: Property[], query: string) {
-  const normalizedQuery = normalize(query);
-  const requestedPrice = getRequestedPrice(query);
-  const requestedCategory = getCategory(query);
-  const wantsBills = /bills|contas|faturas/.test(normalizedQuery);
-  const wantsAvailableNow = /disponivel agora|entrada imediata|agora|imediata/.test(normalizedQuery);
-  const locationTerms = Array.from(new Set(
-    properties.flatMap((property) => [property.region, property.localArea, ...property.nearbyStations])
-      .filter((value): value is string => Boolean(value && value.trim().length >= 3))
-  )).sort((a, b) => b.length - a.length);
-  const requestedLocation = locationTerms.find((term) => normalizedQuery.includes(normalize(term)));
-
-  return properties
-    .filter((property) => {
-      const searchable = getPropertyText(property);
-      if (requestedCategory && normalize(property.category) !== requestedCategory) return false;
-      if (requestedPrice !== null && getPrice(property) > requestedPrice) return false;
-      if (wantsBills && !property.billsIncluded) return false;
-      if (wantsAvailableNow && !getAvailabilityInfo(property.moveInDate, property.available, new Date(), property.availabilityStatus).isNow) return false;
-      if (requestedLocation && !searchable.includes(normalize(requestedLocation))) return false;
-
-      const hasLocationTerm = normalizedQuery.match(/\b(?:em|no|na|perto de|regiao|zona)\s+([a-z0-9 -]{3,})/);
-      if (hasLocationTerm && !requestedLocation) {
-        const location = hasLocationTerm[1].split(/\s+(?:com|ate|por|e)\s+/)[0].trim();
-        if (location && !searchable.includes(location)) return false;
-      }
-      return true;
-    })
-    .sort((a, b) => getPrice(a) - getPrice(b));
+  return getPropertyPriceValue(property);
 }
 
 function formatPrice(property: Property) {
   const price = getPrice(property);
   return price ? `£${price}/sem.` : property.price || 'Consultar valor';
-}
-
-function buildAnswer(results: Property[], total: number) {
-  if (!total) {
-    return 'Não encontrei um imóvel com esses critérios. Tente buscar por região, tipo, preço máximo ou bills inclusas.';
-  }
-
-  const shown = Math.min(results.length, 3);
-  return `Encontrei ${total} ${total === 1 ? 'opção' : 'opções'} no catálogo. Mostrando ${shown} ${shown === 1 ? 'resultado' : 'resultados'} mais próximos:`;
 }
 
 function PropertyResult({ property }: { property: Property }) {
@@ -163,17 +91,22 @@ export function PropertySearchChat() {
     const query = value.trim();
     if (!query || isLoading) return;
 
-    const matches = findProperties(properties, query);
+    const { filters, sortBy } = parsePropertySearchQuery(properties, query);
+    const matches = filterAndSortProperties(properties, filters, sortBy);
     const visibleResults = matches.slice(0, 3);
     const nextId = messageId + 1;
     setMessageId(nextId + 1);
     setMessages((current) => [
       ...current,
       { id: nextId, role: 'user', text: query },
-      { id: nextId + 1, role: 'assistant', text: buildAnswer(visibleResults, matches.length), properties: visibleResults },
+      { id: nextId + 1, role: 'assistant', text: buildPropertySearchAnswer(matches.length, visibleResults.length), properties: visibleResults },
     ]);
     setInput('');
-    trackEvent('property_chat_search', { query, results_count: matches.length });
+    trackEvent('property_chat_search', {
+      query,
+      results_count: matches.length,
+      source: 'chat',
+    });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {

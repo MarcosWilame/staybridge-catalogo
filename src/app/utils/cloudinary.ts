@@ -2,7 +2,7 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '';
 const CLOUDINARY_FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER || 'staybridge/properties';
 
-type ImageVariant = 'card' | 'detail' | 'thumb' | 'admin';
+export type ImageVariant = 'card' | 'detail' | 'thumb' | 'admin';
 
 const IMAGE_TRANSFORMS: Record<ImageVariant, string> = {
   card: 'f_auto,q_auto,c_fill,w_720,h_520',
@@ -10,6 +10,8 @@ const IMAGE_TRANSFORMS: Record<ImageVariant, string> = {
   thumb: 'f_auto,q_auto,c_fill,w_240,h_180',
   admin: 'f_auto,q_auto,c_fill,w_360,h_240',
 };
+
+const preloadedImages = new Map<string, Promise<void>>();
 
 type CloudinaryUploadResponse = {
   secure_url?: string;
@@ -37,11 +39,20 @@ export function getOptimizedImageUrl(
 }
 
 export function preloadImage(src: string | undefined) {
-  if (!src) return;
+  if (!src || typeof window === 'undefined') return Promise.resolve();
 
-  const image = new Image();
-  image.decoding = 'async';
-  image.src = src;
+  const existing = preloadedImages.get(src);
+  if (existing) return existing;
+
+  const request = new Promise<void>((resolve) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = src;
+  });
+  preloadedImages.set(src, request);
+  return request;
 }
 
 export async function uploadImageToCloudinary(file: File) {

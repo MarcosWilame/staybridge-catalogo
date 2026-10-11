@@ -1,7 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { toPublicProperty } from '../api/public-property-fields.js';
+import { PUBLIC_PAYLOAD_LIMITS, toPublicProperty } from '../api/public-property-fields.js';
+
+const PUBLIC_PROPERTY_KEYS = [
+  'id', 'image', 'images', 'video', 'coverMedia', 'type', 'title', 'region',
+  'localArea', 'price', 'monthlyPrice', 'entryRent', 'description',
+  'longDescription', 'available', 'listed', 'billsIncluded', 'bedrooms',
+  'bathrooms', 'category', 'amenities', 'deposit', 'nearbyStations',
+  'furnishing', 'moveInDate', 'postcode', 'people', 'availabilityStatus',
+  'priceOptions',
+];
 
 test('public property API only returns explicitly allowed fields', () => {
   const property = toPublicProperty({
@@ -26,6 +35,62 @@ test('public property API only returns explicitly allowed fields', () => {
   assert.equal('internalNotes' in property, false);
   assert.equal('address' in property, false);
   assert.equal('coordinates' in property, false);
+  assert.deepEqual(Object.keys(property), PUBLIC_PROPERTY_KEYS);
+  assert.equal('sourceText' in property, false);
+  assert.equal('entryConditions' in property, false);
+});
+
+test('public property payload applies documented collection and text limits', () => {
+  const property = toPublicProperty({
+    id: 14,
+    data: {
+      id: 14,
+      listed: true,
+      title: 'Studio with bounded public data',
+      description: 'd'.repeat(900),
+      longDescription: 'l'.repeat(5000),
+      images: [
+        'javascript:alert(1)',
+        ...Array.from({ length: 12 }, (_, index) => `https://images.unsplash.com/property-${index}.jpg`),
+      ],
+      nearbyStations: Array.from({ length: 14 }, (_, index) => `Station ${index}`),
+      priceOptions: Array.from({ length: 9 }, (_, index) => ({ amount: 100 + index, period: 'week' })),
+      price: '£100/week',
+      category: 'studio',
+      available: true,
+      moveInDate: 'Available now',
+      sourceText: 'internal source',
+      entryConditions: { note: 'internal conditions' },
+    },
+  });
+
+  assert.equal(property.description.length, PUBLIC_PAYLOAD_LIMITS.description);
+  assert.equal(property.longDescription.length, PUBLIC_PAYLOAD_LIMITS.longDescription);
+  assert.equal(property.images.length, PUBLIC_PAYLOAD_LIMITS.images);
+  assert.equal(property.nearbyStations.length, PUBLIC_PAYLOAD_LIMITS.nearbyStations);
+  assert.equal(property.priceOptions.length, PUBLIC_PAYLOAD_LIMITS.priceOptions);
+  assert.equal(property.images.some((url) => url.includes('javascript:')), false);
+});
+
+test('public property media keeps the cover once and removes duplicate image URLs', () => {
+  const property = toPublicProperty({
+    id: 15,
+    data: {
+      id: 15,
+      listed: true,
+      image: 'https://images.unsplash.com/cover.jpg',
+      images: [
+        'https://images.unsplash.com/cover.jpg',
+        'https://images.unsplash.com/room.jpg',
+        'https://images.unsplash.com/room.jpg',
+      ],
+    },
+  });
+
+  assert.deepEqual(property.images, [
+    'https://images.unsplash.com/cover.jpg',
+    'https://images.unsplash.com/room.jpg',
+  ]);
 });
 
 test('public property API excludes hidden properties', () => {
@@ -45,4 +110,28 @@ test('public property API respects listed even when status is stale', () => {
 
   assert.equal(available, null);
   assert.equal(hidden, null);
+});
+
+test('public payload excludes administrative quality metadata', () => {
+  const property = toPublicProperty({
+    id: 14,
+    data: {
+      id: 14,
+      listed: true,
+      title: 'Studio with quality metadata',
+      image: 'https://images.unsplash.com/studio.jpg',
+      price: '£200/week',
+      quality: {
+        score: 10,
+        blockerCount: 2,
+        warningCount: 1,
+        categories: ['pricing'],
+        issues: [{ id: 'pricing.missing', message: 'private', fix: 'private' }],
+      },
+    },
+  });
+
+  assert.equal('quality' in property, false);
+  assert.equal('score' in property, false);
+  assert.equal('issues' in property, false);
 });

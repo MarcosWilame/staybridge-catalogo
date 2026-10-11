@@ -8,6 +8,14 @@ const MEDIA_HOSTS = [
   'youtu.be',
 ];
 
+export const PUBLIC_PAYLOAD_LIMITS = Object.freeze({
+  description: 500,
+  longDescription: 3_000,
+  images: 10,
+  nearbyStations: 10,
+  priceOptions: 6,
+});
+
 function text(value, maxLength = 300) {
   return typeof value === 'string'
     ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, maxLength)
@@ -85,22 +93,11 @@ function getPriceOptions(value, fallback) {
       period: item?.period === 'month' ? 'month' : 'week',
       ...(Number.isFinite(Number(item?.occupancy)) ? { occupancy: number(item.occupancy, 1, 20) } : {}),
       ...(text(item?.label, 120) ? { label: text(item.label, 120) } : {}),
-    })).filter((item) => item.amount > 0).slice(0, 10)
+    })).filter((item) => item.amount > 0).slice(0, PUBLIC_PAYLOAD_LIMITS.priceOptions)
     : [];
   if (options.length) return options;
   const amount = number(String(fallback || '').replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0], 0, 100_000);
   return amount ? [{ amount, period: 'week' }] : [];
-}
-
-function getEntryConditions(value, fallback) {
-  const source = value && typeof value === 'object' ? value : {};
-  const result = {};
-  if (Number.isFinite(Number(source.depositWeeks))) result.depositWeeks = number(source.depositWeeks, 0, 52);
-  if (Number.isFinite(Number(source.rentWeeks))) result.rentWeeks = number(source.rentWeeks, 0, 52);
-  if (Number.isFinite(Number(source.rentMonths))) result.rentMonths = number(source.rentMonths, 0, 12);
-  const note = text(source.note || fallback, 240);
-  if (note) result.note = note;
-  return result;
 }
 
 function isAvailableFromMoveInDate(value) {
@@ -122,16 +119,19 @@ export function toPublicProperty(row) {
   if (!Number.isSafeInteger(id) || id <= 0) return null;
 
   const images = Array.isArray(data.images)
-    ? data.images.map(mediaUrl).filter(Boolean).slice(0, 15)
+    ? [...new Set(data.images.map(mediaUrl).filter(Boolean))].slice(0, PUBLIC_PAYLOAD_LIMITS.images)
     : [];
   const image = mediaUrl(data.image) || images[0] || '';
+  const publicImages = image && !images.includes(image)
+    ? [image, ...images].slice(0, PUBLIC_PAYLOAD_LIMITS.images)
+    : images.length ? images : image ? [image] : [];
 
   const category = text(data.category, 60);
 
   return {
     id,
     image,
-    images: images.length ? images : image ? [image] : [],
+    images: publicImages,
     video: mediaUrl(data.video),
     coverMedia: data.coverMedia === 'video' && mediaUrl(data.video) ? 'video' : 'image',
     type: text(data.type, 80),
@@ -141,8 +141,8 @@ export function toPublicProperty(row) {
     price: text(data.price, 40),
     monthlyPrice: text(data.monthlyPrice, 40),
     entryRent: text(data.entryRent, 80),
-    description: text(data.description, 500),
-    longDescription: text(data.longDescription, 5_000),
+    description: text(data.description, PUBLIC_PAYLOAD_LIMITS.description),
+    longDescription: text(data.longDescription, PUBLIC_PAYLOAD_LIMITS.longDescription),
     available: isAvailableFromMoveInDate(data.moveInDate),
     listed: true,
     billsIncluded: data.billsIncluded === true,
@@ -151,14 +151,12 @@ export function toPublicProperty(row) {
     category,
     amenities: stringList(data.amenities, 30),
     deposit: number(data.deposit, 0, 100_000),
-    nearbyStations: stringList(data.nearbyStations, 30, 180),
+    nearbyStations: stringList(data.nearbyStations, PUBLIC_PAYLOAD_LIMITS.nearbyStations, 180),
     furnishing: text(data.furnishing, 80),
     moveInDate: text(data.moveInDate, 80),
     postcode: text(data.postcode, 16),
     people: getPeopleLimit(category, data.people),
     availabilityStatus: getAvailabilityStatus(data.availabilityStatus, data.moveInDate),
     priceOptions: getPriceOptions(data.priceOptions, data.price),
-    entryConditions: getEntryConditions(data.entryConditions, data.entryRent),
-    sourceText: text(data.sourceText, 2_000),
   };
 }

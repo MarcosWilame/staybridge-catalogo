@@ -7,6 +7,7 @@ import {
   getAdminDashboardMetrics,
   getAvailabilityAgenda,
   getPropertyManagementStatus,
+  matchesPropertyQuality,
 } from '../src/app/pages/admin/propertyManagement.ts';
 
 function property(overrides = {}) {
@@ -99,6 +100,21 @@ test('property status controls visibility only', () => {
   );
   assert.equal(getPropertyManagementStatus(visible), 'available');
   assert.equal(visible.listed, true);
+});
+
+test('quality filters match severity and category independently', () => {
+  const quality = {
+    score: 70,
+    isPublishable: false,
+    blockerCount: 1,
+    warningCount: 1,
+    categories: ['pricing', 'editorial'],
+  };
+
+  assert.equal(matchesPropertyQuality(quality, 'blockers'), true);
+  assert.equal(matchesPropertyQuality(quality, 'warnings'), false);
+  assert.equal(matchesPropertyQuality(quality, 'blockers', 'pricing'), true);
+  assert.equal(matchesPropertyQuality(quality, 'blockers', 'location'), false);
 });
 
 test('availability agenda filters and orders the selected time window', () => {

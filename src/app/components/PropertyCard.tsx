@@ -178,6 +178,7 @@ export function PropertyCard({
               loading={isPriority ? 'eager' : 'lazy'}
               decoding="async"
               fetchPriority={isPriority ? 'high' : 'auto'}
+              data-image-variant="card"
               width={720}
               height={520}
               sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"

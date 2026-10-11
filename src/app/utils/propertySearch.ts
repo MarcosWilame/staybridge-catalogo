@@ -14,6 +14,20 @@ export type PropertySearchFilters = {
 
 export type PropertySearchSort = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
 
+export type ParsedPropertySearch = {
+  filters: PropertySearchFilters;
+  sortBy: PropertySearchSort;
+};
+
+export function buildPropertySearchAnswer(total: number, visibleCount: number) {
+  if (!total) {
+    return 'Não encontrei um imóvel com esses critérios. Tente buscar por região, tipo, preço máximo ou bills inclusas.';
+  }
+
+  const shown = Math.min(visibleCount, total);
+  return `Encontrei ${total} ${total === 1 ? 'opção' : 'opções'} no catálogo. Mostrando ${shown} ${shown === 1 ? 'resultado' : 'resultados'} mais próximos:`;
+}
+
 type IndexedProperty = {
   property: Property;
   searchableText: string;
@@ -25,10 +39,23 @@ type IndexedProperty = {
 
 const indexCache = new WeakMap<readonly Property[], IndexedProperty[]>();
 
+export function normalizeSearchText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 export function getPriceValue(price: string | number) {
   const match = String(price ?? '').match(/\d+(?:[.,]\d+)?/);
   if (!match) return 0;
   return Number(match[0].replace(',', '.'));
+}
+
+export function getPropertyPriceValue(property: Pick<Property, 'price' | 'priceOptions'>) {
+  const weeklyPrice = property.priceOptions?.find((option) => option.period === 'week')?.amount;
+  return typeof weeklyPrice === 'number' ? weeklyPrice : getPriceValue(property.price);
 }
 
 function parsePriceRange(range: string) {
@@ -46,7 +73,7 @@ function buildIndex(properties: readonly Property[]) {
   const now = new Date();
   const indexed = properties.map((property) => ({
     property,
-    searchableText: [
+    searchableText: normalizeSearchText([
       property.title,
       property.region,
       property.localArea,
@@ -55,9 +82,9 @@ function buildIndex(properties: readonly Property[]) {
       property.type,
       property.description,
       ...property.nearbyStations,
-    ].filter(Boolean).join(' ').toLowerCase(),
-    region: property.region.toLowerCase(),
-    price: getPriceValue(property.price),
+    ].filter(Boolean).join(' ')),
+    region: normalizeSearchText(property.region),
+    price: getPropertyPriceValue(property),
     availableNow: getAvailabilityInfo(
       property.moveInDate,
       property.available,
@@ -115,4 +142,59 @@ export function filterAndSortProperties(
       return 0;
     })
     .map(({ property }) => property);
+}
+
+function getCategoryFromQuery(query: string) {
+  if (/\bstudios?\b/.test(query)) return 'studio';
+  if (/\b(?:ensuite|en suite)\b/.test(query)) return 'ensuite';
+  if (/\b(?:flat|apartamento|imovel completo)\b/.test(query)) return 'flat';
+  if (/\b(?:double|duplo)\b/.test(query)) return 'double';
+  if (/\b(?:single|individual|quarto)\b/.test(query)) return 'single';
+  return '';
+}
+
+function getLocationFromQuery(properties: readonly Property[], query: string) {
+  const locationTerms = Array.from(new Set(
+    properties.flatMap((property) => [property.region, property.localArea, ...property.nearbyStations])
+      .filter((value): value is string => Boolean(value && value.trim().length >= 3))
+  )).sort((a, b) => b.length - a.length);
+
+  return locationTerms.find((term) => query.includes(normalizeSearchText(term))) || '';
+}
+
+export function parsePropertySearchQuery(
+  properties: readonly Property[],
+  query: string
+): ParsedPropertySearch {
+  const normalizedQuery = normalizeSearchText(query);
+  const requestedCategory = getCategoryFromQuery(normalizedQuery);
+  const priceMatch = normalizedQuery.match(/(?:ate|menos de|no maximo|maximo)\s*£?\s*(\d+(?:[.,]\d+)?)/);
+  const requestedLocation = getLocationFromQuery(properties, normalizedQuery);
+  const peopleMatch = normalizedQuery.match(/(?:para|p\/|pessoas?|people)\s*(\d+\+?)/);
+  const wantsBills = /\b(?:bills?|contas?|faturas?)\b/.test(normalizedQuery);
+  const wantsAvailableNow = /\b(?:disponivel agora|entrada imediata|agora|imediata)\b/.test(normalizedQuery);
+  const search = normalizedQuery
+    .replace(/\b(?:studios?|ensuite|en suite|flat|apartamento|imovel completo|double|duplo|single|individual|quarto)\b/g, ' ')
+    .replace(/(?:ate|menos de|no maximo|maximo)\s*£?\s*\d+(?:[.,]\d+)?/g, ' ')
+    .replace(/\b(?:com|incluindo|inclusas?|incluidas?|bills?|contas?|faturas?)\b/g, ' ')
+    .replace(/\b(?:disponivel agora|entrada imediata|agora|imediata)\b/g, ' ')
+    .replace(/\b(?:para|p\/|pessoas?|people)\s*\d+\+?\b/g, ' ')
+    .replace(/\b(?:em|no|na|perto de|regiao|zona)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return {
+    filters: {
+      search: requestedLocation ? normalizeSearchText(requestedLocation) : search,
+      region: '',
+      type: '',
+      priceRange: priceMatch ? `0-${Math.round(Number(priceMatch[1].replace(',', '.')))}` : '',
+      availableNow: wantsAvailableNow,
+      billsIncluded: wantsBills,
+      people: peopleMatch ? peopleMatch[1] : '',
+      moveInBy: '',
+      ...(requestedCategory ? { type: requestedCategory } : {}),
+    },
+    sortBy: 'price-asc',
+  };
 }

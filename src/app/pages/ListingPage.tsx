@@ -25,6 +25,13 @@ import {
   toggleCompareId,
 } from '../utils/compare';
 import {
+  areMobileFiltersEqual,
+  cloneMobileFilters,
+  EMPTY_MOBILE_FILTERS,
+  hasActiveFilterValues,
+  type MobileFilterState,
+} from '../utils/mobileFilters';
+import {
   Banknote,
   CheckCircle2,
   MessageCircle,
@@ -35,24 +42,13 @@ import {
   X,
 } from 'lucide-react';
 
-interface FilterState {
-  search: string;
-  region: string;
-  type: string;
-  priceRange: string;
-  availableNow: boolean;
-  billsIncluded: boolean;
-  people: string;
-  moveInBy: string;
-}
-
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'available' | 'type';
 
 const INITIAL_VISIBLE_COUNT = 6;
 const PRICE_STEP = 25;
 const DEFAULT_MAX_PRICE = 700;
 
-const filterLabels: Record<keyof FilterState, string> = {
+const filterLabels: Record<keyof MobileFilterState, string> = {
   search: 'busca',
   region: 'regiao',
   type: 'tipo',
@@ -104,7 +100,7 @@ export function ListingPage() {
     ? 'Não foi possível conectar ao catálogo agora.'
     : error;
 
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<MobileFilterState>({
     search: searchParams.get('search') || '',
     region: searchParams.get('region') || '',
     type: searchParams.get('type') || '',
@@ -116,6 +112,7 @@ export function ListingPage() {
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [mobileDraftFilters, setMobileDraftFilters] = useState<MobileFilterState | null>(null);
   const requestedSort = searchParams.get('sort');
   const [sortBy, setSortBy] = useState<SortOption>(
     requestedSort === 'price-asc' || requestedSort === 'price-desc' || requestedSort === 'available' || requestedSort === 'type'
@@ -129,6 +126,7 @@ export function ListingPage() {
   const [leadIntent, setLeadIntent] = useState<LeadIntent>('whatsapp');
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const mobileFilterCloseRef = useRef<HTMLButtonElement>(null);
+  const mobileFilterTriggerRef = useRef<HTMLButtonElement>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(
     properties[0]
   );
@@ -140,12 +138,35 @@ export function ListingPage() {
     filtersRef.current = filters;
   }, [filters]);
 
+  const closeMobileFilters = () => {
+    setMobileDraftFilters(null);
+    setShowMobileFilters(false);
+  };
+
   useEffect(() => {
     if (!showMobileFilters) return;
 
     const previousFocus = document.activeElement as HTMLElement | null;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowMobileFilters(false);
+      if (event.key === 'Escape') cancelMobileFilters();
+      if (event.key !== 'Tab') return;
+
+      const dialog = document.querySelector<HTMLElement>('[aria-labelledby="mobile-filters-title"]');
+      const focusable = dialog
+        ? Array.from(dialog.querySelectorAll<HTMLElement>('button, input, select, [tabindex]:not([tabindex="-1"])'))
+          .filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true')
+        : [];
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
@@ -176,7 +197,7 @@ export function ListingPage() {
     setSelectedProperty((current) => current || properties[0]);
   }, [properties]);
 
-  const syncSearchParams = (nextFilters: FilterState) => {
+  const syncSearchParams = (nextFilters: MobileFilterState) => {
     const nextParams = new URLSearchParams();
 
     if (nextFilters.search.trim()) nextParams.set('search', nextFilters.search.trim());
@@ -215,9 +236,62 @@ export function ListingPage() {
     move_in_by: nextFilters.moveInBy || undefined,
   });
 
-  const updateFilter = <K extends keyof FilterState>(
+  const openMobileFilters = () => {
+    setMobileDraftFilters(cloneMobileFilters(filters));
+    setShowMobileFilters(true);
+  };
+
+  const updateMobileDraftFilter = <K extends keyof MobileFilterState>(
     key: K,
-    value: FilterState[K],
+    value: MobileFilterState[K]
+  ) => {
+    setMobileDraftFilters((current) => ({
+      ...(current || filters),
+      [key]: value,
+    }));
+  };
+
+  const clearMobileDraftFilters = () => {
+    setMobileDraftFilters(cloneMobileFilters(EMPTY_MOBILE_FILTERS));
+  };
+
+  const applyMobileFilters = () => {
+    if (!mobileDraftFilters) return;
+
+    const nextFilters = mobileDraftFilters;
+    const draftResultCount = filterAndSortProperties(
+      properties,
+      nextFilters as PropertySearchFilters,
+      sortBy
+    ).length;
+
+    setFilters(nextFilters);
+    syncSearchParams(nextFilters);
+    trackEvent('property_filters_apply', {
+      source: 'mobile_filters',
+      results_count: draftResultCount,
+      ...getTrackingFilters(nextFilters),
+    });
+    if (hasActiveFilterValues(filters) && !hasActiveFilterValues(nextFilters)) {
+      trackEvent('property_filters_clear', { source: 'mobile_filters' });
+    }
+    setMobileDraftFilters(null);
+    setShowMobileFilters(false);
+  };
+
+  const cancelMobileFilters = () => {
+    if (mobileDraftFilters && !areMobileFiltersEqual(filters, mobileDraftFilters)) {
+      trackEvent('property_filters_cancel', {
+        source: 'mobile_filters',
+        ...getTrackingFilters(filters),
+      });
+    }
+    closeMobileFilters();
+  };
+
+  const updateFilter = <K extends keyof MobileFilterState>(
+    key: K,
+    value: MobileFilterState[K],
     options: { syncUrl?: boolean } = {}
   ) => {
     setFilters((prev) => {
@@ -238,16 +312,7 @@ export function ListingPage() {
   };
 
   const clearFilters = () => {
-    const emptyFilters = {
-      search: '',
-      region: '',
-      type: '',
-      priceRange: '',
-      availableNow: false,
-      billsIncluded: false,
-      people: '',
-      moveInBy: '',
-    };
+    const emptyFilters = cloneMobileFilters(EMPTY_MOBILE_FILTERS);
 
     setFilters(emptyFilters);
     syncSearchParams(emptyFilters);
@@ -263,10 +328,6 @@ export function ListingPage() {
     Math.ceil(Math.max(0, ...properties.map((p) => getPriceValue(p.price))) / PRICE_STEP) *
       PRICE_STEP
   );
-
-  const selectedMaxPrice = /^\d+$/.test(filters.priceRange)
-    ? Math.min(Number(filters.priceRange), availableMaxPrice)
-    : availableMaxPrice;
 
   const getPriceRangeValue = (value: number | string) => {
     const nextValue = Number(value);
@@ -301,6 +362,12 @@ export function ListingPage() {
   const filteredProperties = useMemo(
     () => filterAndSortProperties(properties, filters as PropertySearchFilters, sortBy),
     [properties, filters, sortBy]
+  );
+  const mobileDraftResults = useMemo(
+    () => mobileDraftFilters
+      ? filterAndSortProperties(properties, mobileDraftFilters as PropertySearchFilters, sortBy)
+      : filteredProperties,
+    [filteredProperties, mobileDraftFilters, properties, sortBy]
   );
   const sortedProperties = filteredProperties;
 
@@ -372,7 +439,7 @@ export function ListingPage() {
       label: `Mudança até ${filters.moveInBy.split('-').reverse().join('/')}`,
       clear: () => updateFilter('moveInBy', ''),
     },
-  ].filter(Boolean) as Array<{ key: keyof FilterState; label: string; clear: () => void }>;
+  ].filter(Boolean) as Array<{ key: keyof MobileFilterState; label: string; clear: () => void }>;
 
   const regionOptions = [
     { value: '', label: 'Todas' },
@@ -573,16 +640,20 @@ export function ListingPage() {
   ]);
 
   const PriceSliderFilter = ({ isMobile = false }: { isMobile?: boolean }) => {
-    const [draftPrice, setDraftPrice] = useState(selectedMaxPrice);
+    const panelFilters = isMobile && mobileDraftFilters ? mobileDraftFilters : filters;
+    const panelSelectedMaxPrice = /^\d+$/.test(panelFilters.priceRange)
+      ? Math.min(Number(panelFilters.priceRange), availableMaxPrice)
+      : availableMaxPrice;
+    const [draftPrice, setDraftPrice] = useState(panelSelectedMaxPrice);
     const isDraggingRef = useRef(false);
     const draftProgress = (draftPrice / availableMaxPrice) * 100;
     const hasPriceFilter = draftPrice < availableMaxPrice;
 
     useEffect(() => {
       if (!isDraggingRef.current) {
-        setDraftPrice(selectedMaxPrice);
+        setDraftPrice(panelSelectedMaxPrice);
       }
-    }, [selectedMaxPrice]);
+    }, [panelSelectedMaxPrice]);
 
     const setDraftFromPointer = (clientX: number, track: HTMLDivElement) => {
       const nextPrice = getSliderPriceFromPointer(clientX, track);
@@ -593,7 +664,11 @@ export function ListingPage() {
     const commitDraft = (value: number) => {
       isDraggingRef.current = false;
       setDraftPrice(value);
-      commitMaxPrice(value);
+      if (isMobile) {
+        updateMobileDraftFilter('priceRange', getPriceRangeValue(value));
+      } else {
+        commitMaxPrice(value);
+      }
     };
 
     return (
@@ -620,7 +695,7 @@ export function ListingPage() {
           aria-valuenow={draftPrice}
           aria-valuetext={hasPriceFilter ? `Ate £${draftPrice} por semana` : 'Qualquer valor'}
           aria-labelledby={`price-label-${isMobile ? 'mobile' : 'desktop'}`}
-          className="group relative h-10 cursor-grab touch-none select-none active:cursor-grabbing"
+          className="group relative h-11 cursor-grab touch-none select-none active:cursor-grabbing"
           onPointerDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -679,11 +754,11 @@ export function ListingPage() {
           <span>£{availableMaxPrice}+</span>
         </div>
 
-        {filters.priceRange && (
+        {panelFilters.priceRange && (
           <button
             type="button"
-            onClick={() => updateFilter('priceRange', '')}
-            className="text-sm font-semibold text-gray-600 hover:text-[var(--green-dark)]"
+            onClick={() => (isMobile ? updateMobileDraftFilter('priceRange', '') : updateFilter('priceRange', ''))}
+            className="min-h-11 text-left text-sm font-semibold text-gray-600 hover:text-[var(--green-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
           >
             Limpar valor
           </button>
@@ -692,7 +767,13 @@ export function ListingPage() {
     );
   };
 
-  const renderSearchField = (id: string, className = '') => (
+  const renderSearchField = (
+    id: string,
+    className = '',
+    filterState: MobileFilterState = filters,
+    onSearchChange: (value: string) => void = (value) => updateFilter('search', value, { syncUrl: false }),
+    onClearSearch: () => void = () => updateFilter('search', '')
+  ) => (
     <div className={`relative ${className}`}>
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
       <input
@@ -700,19 +781,17 @@ export function ListingPage() {
         type="search"
         inputMode="search"
         autoComplete="off"
-        value={filters.search}
-        onChange={(event) =>
-          updateFilter('search', event.target.value, { syncUrl: false })
-        }
+        value={filterState.search}
+        onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Bairro, postcode ou estação"
         aria-label="Buscar por bairro, postcode ou estação"
         className="search-field min-h-11 w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-10 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
       />
-      {filters.search && (
+      {filterState.search && (
         <button
           type="button"
-          onClick={() => updateFilter('search', '')}
-          className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-200 hover:text-[var(--green-dark)]"
+          onClick={onClearSearch}
+          className="absolute right-1 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-200 hover:text-[var(--green-dark)]"
           aria-label="Limpar busca"
         >
           <X className="h-4 w-4" />
@@ -733,6 +812,18 @@ export function ListingPage() {
   };
 
   const renderFiltersPanel = (isMobile = false) => (
+    (() => {
+      const panelFilters = isMobile && mobileDraftFilters ? mobileDraftFilters : filters;
+      const updatePanelFilter = <K extends keyof MobileFilterState>(key: K, value: MobileFilterState[K]) => {
+        if (isMobile) {
+          updateMobileDraftFilter(key, value);
+        } else {
+          updateFilter(key, value);
+        }
+      };
+      const clearPanelFilters = isMobile ? clearMobileDraftFilters : clearFilters;
+
+      return (
     <div
       className={`overflow-y-auto overscroll-contain bg-white ${
         isMobile
@@ -740,21 +831,41 @@ export function ListingPage() {
           : 'max-h-[calc(100dvh-8rem)] self-start rounded-2xl border border-[var(--green-dark)]/10 bg-white/95 p-6 shadow-[0_16px_42px_rgba(26,77,46,.10)] lg:sticky lg:top-24'
       }`}
     >
-      <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilters || !isMobile ? 'mb-6' : ''}`}>
+      <div className={`flex items-center ${isMobile ? 'justify-end' : 'justify-between'} ${hasActiveFilterValues(panelFilters) || !isMobile ? 'mb-6' : ''}`}>
         <h3 className={`${isMobile ? 'sr-only' : 'text-xl font-bold text-[var(--green-dark)] flex items-center gap-2'}`}>
           <SlidersHorizontal className="w-5 h-5" />
           Filtros
         </h3>
 
-        {hasActiveFilters && (
+        {hasActiveFilterValues(panelFilters) && (
           <button
-            onClick={clearFilters}
-            className="text-sm text-gray-600 hover:text-[var(--green-dark)] font-semibold"
+            type="button"
+            onClick={clearPanelFilters}
+            className="min-h-11 px-2 text-sm font-semibold text-gray-600 hover:text-[var(--green-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
           >
             Limpar
           </button>
         )}
       </div>
+
+      {isMobile && (
+        <div className="mb-5 rounded-xl border border-[var(--green-dark)]/10 bg-[var(--paper-warm)] px-3 py-2.5" aria-live="polite">
+          <p className="text-[11px] font-black uppercase tracking-[.12em] text-[var(--green-medium)]">
+            Resumo da busca
+          </p>
+          <p className="mt-1 text-xs font-semibold leading-relaxed text-gray-600">
+            {[
+              panelFilters.search && `Busca: ${panelFilters.search}`,
+              panelFilters.region && `Região: ${panelFilters.region}`,
+              panelFilters.type && `Tipo: ${panelFilters.type}`,
+              panelFilters.priceRange && `Valor: ${getPriceFilterLabel(panelFilters.priceRange)}`,
+              panelFilters.people && `Capacidade: ${panelFilters.people}`,
+              panelFilters.availableNow && 'Disponível agora',
+              panelFilters.billsIncluded && 'Bills inclusas',
+            ].filter(Boolean).join(' · ') || 'Nenhum filtro aplicado'}
+          </p>
+        </div>
+      )}
 
       <div className="mb-6">
         <label
@@ -764,7 +875,13 @@ export function ListingPage() {
           <Search className="h-4 w-4" />
           Buscar
         </label>
-        {renderSearchField(`search-${isMobile ? 'mobile-panel' : 'desktop'}`)}
+        {renderSearchField(
+          `search-${isMobile ? 'mobile-panel' : 'desktop'}`,
+          '',
+          panelFilters,
+          (value) => updatePanelFilter('search', value),
+          () => updatePanelFilter('search', '')
+        )}
       </div>
 
       <PriceSliderFilter isMobile={isMobile} />
@@ -779,8 +896,8 @@ export function ListingPage() {
               <button
                 key={region.value || 'all'}
                 type="button"
-                onClick={() => updateFilter('region', region.value)}
-                className={mobileFilterButtonClass(filters.region === region.value)}
+                onClick={() => updatePanelFilter('region', region.value)}
+                className={mobileFilterButtonClass(panelFilters.region === region.value)}
               >
                 {region.value ? `${region.label} London` : region.label}
               </button>
@@ -793,8 +910,8 @@ export function ListingPage() {
                 <input
                   type="radio"
                   name={`region-${isMobile ? 'mobile' : 'desktop'}`}
-                  checked={filters.region === region.value}
-                  onChange={() => updateFilter('region', region.value)}
+                  checked={panelFilters.region === region.value}
+                  onChange={() => updatePanelFilter('region', region.value)}
                 />
                 {region.value ? `${region.label} London` : region.label}
               </label>
@@ -813,8 +930,8 @@ export function ListingPage() {
               <button
                 key={type.value || 'all'}
                 type="button"
-                onClick={() => updateFilter('type', type.value)}
-                className={mobileFilterButtonClass(filters.type === type.value)}
+                onClick={() => updatePanelFilter('type', type.value)}
+                className={mobileFilterButtonClass(panelFilters.type === type.value)}
               >
                 {type.label}
               </button>
@@ -827,8 +944,8 @@ export function ListingPage() {
                 <input
                   type="radio"
                   name={`type-${isMobile ? 'mobile' : 'desktop'}`}
-                  checked={filters.type === type.value}
-                  onChange={() => updateFilter('type', type.value)}
+                  checked={panelFilters.type === type.value}
+                  onChange={() => updatePanelFilter('type', type.value)}
                 />
                 {type.label}
               </label>
@@ -849,8 +966,8 @@ export function ListingPage() {
               <button
                 key={option.value || 'any'}
                 type="button"
-                onClick={() => updateFilter('people', option.value)}
-                className={mobileFilterButtonClass(filters.people === option.value)}
+                onClick={() => updatePanelFilter('people', option.value)}
+                className={mobileFilterButtonClass(panelFilters.people === option.value)}
               >
                 {option.label}
               </button>
@@ -859,8 +976,8 @@ export function ListingPage() {
         ) : (
           <select
             aria-label="Capacidade"
-            value={filters.people}
-            onChange={(event) => updateFilter('people', event.target.value)}
+            value={panelFilters.people}
+            onChange={(event) => updatePanelFilter('people', event.target.value)}
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-semibold outline-none transition focus:border-[var(--green-dark)] focus:bg-white"
           >
             {peopleOptions.map((option) => (
@@ -878,28 +995,28 @@ export function ListingPage() {
           <>
             <button
               type="button"
-              onClick={() => updateFilter('availableNow', !filters.availableNow)}
+              onClick={() => updatePanelFilter('availableNow', !panelFilters.availableNow)}
               className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
-                filters.availableNow
+                panelFilters.availableNow
                   ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
                   : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
             >
               Disponível agora
-              <CheckCircle2 className={`h-5 w-5 ${filters.availableNow ? 'text-black' : 'text-gray-300'}`} />
+              <CheckCircle2 className={`h-5 w-5 ${panelFilters.availableNow ? 'text-black' : 'text-gray-300'}`} />
             </button>
 
             <button
               type="button"
-              onClick={() => updateFilter('billsIncluded', !filters.billsIncluded)}
+              onClick={() => updatePanelFilter('billsIncluded', !panelFilters.billsIncluded)}
               className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
-                filters.billsIncluded
+                panelFilters.billsIncluded
                   ? 'border-[var(--green-dark)] bg-[var(--green-dark)] text-white shadow-sm'
                   : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
             >
               Bills inclusas
-              <Banknote className={`h-5 w-5 ${filters.billsIncluded ? 'text-white' : 'text-gray-300'}`} />
+              <Banknote className={`h-5 w-5 ${panelFilters.billsIncluded ? 'text-white' : 'text-gray-300'}`} />
             </button>
           </>
         ) : (
@@ -907,8 +1024,8 @@ export function ListingPage() {
             <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm font-semibold transition hover:bg-[var(--paper-warm)]">
               <input
                 type="checkbox"
-                checked={filters.availableNow}
-                onChange={(e) => updateFilter('availableNow', e.target.checked)}
+                checked={panelFilters.availableNow}
+                onChange={(e) => updatePanelFilter('availableNow', e.target.checked)}
               />
               Disponível agora
             </label>
@@ -916,8 +1033,8 @@ export function ListingPage() {
             <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm font-semibold transition hover:bg-[var(--paper-warm)]">
               <input
                 type="checkbox"
-                checked={filters.billsIncluded}
-                onChange={(e) => updateFilter('billsIncluded', e.target.checked)}
+                checked={panelFilters.billsIncluded}
+                onChange={(e) => updatePanelFilter('billsIncluded', e.target.checked)}
               />
               Bills inclusas
             </label>
@@ -925,6 +1042,8 @@ export function ListingPage() {
         )}
       </div>
     </div>
+      );
+    })()
   );
 
   const ComparePanel = () => {
@@ -1127,7 +1246,8 @@ export function ListingPage() {
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <button
               type="button"
-              onClick={() => setShowMobileFilters(true)}
+              ref={mobileFilterTriggerRef}
+              onClick={openMobileFilters}
               className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white shadow-sm"
               aria-label="Abrir filtros"
             >
@@ -1351,21 +1471,21 @@ export function ListingPage() {
           className="fixed inset-0 z-[60] flex justify-end bg-black/50 lg:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label="Filtros de imóveis"
+          aria-labelledby="mobile-filters-title"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setShowMobileFilters(false);
+            if (e.target === e.currentTarget) cancelMobileFilters();
           }}
         >
           <div className="flex h-full min-h-0 w-full max-w-sm flex-col bg-white shadow-2xl">
             <div className="z-10 flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
-              <span className="text-lg font-bold text-[var(--green-dark)]">
+              <h2 id="mobile-filters-title" className="text-lg font-bold text-[var(--green-dark)]">
                 Filtros
-              </span>
+              </h2>
               <button
                 ref={mobileFilterCloseRef}
                 type="button"
-                onClick={() => setShowMobileFilters(false)}
-                className="rounded-full bg-gray-100 p-2 text-gray-700"
+                onClick={cancelMobileFilters}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-gray-100 p-2 text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
                 aria-label="Fechar filtros"
               >
                 <X className="h-5 w-5" />
@@ -1373,15 +1493,27 @@ export function ListingPage() {
             </div>
             {renderFiltersPanel(true)}
 
-            {/* Botão aplicar no mobile */}
-            <div className="shrink-0 border-t border-gray-100 bg-white p-4">
+            <div className="shrink-0 border-t border-[var(--green-dark)]/10 bg-white p-4 shadow-[0_-8px_24px_rgba(26,77,46,.08)]">
+              <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold text-gray-500">
+                <span>{hasActiveFilterValues(mobileDraftFilters || filters) ? 'Filtros selecionados' : 'Todos os imóveis'}</span>
+                <span className="text-[var(--green-dark)]">{mobileDraftResults.length} resultado{mobileDraftResults.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={cancelMobileFilters}
+                  className="min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 transition hover:border-[var(--green-dark)] hover:text-[var(--green-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"
+                >
+                  Cancelar
+                </button>
               <button
                 type="button"
-                onClick={() => setShowMobileFilters(false)}
-                className="w-full rounded-xl bg-[var(--green-dark)] py-3 font-bold text-white"
+                onClick={applyMobileFilters}
+                className="min-h-11 rounded-xl bg-[var(--yellow)] px-3 py-2.5 text-sm font-black text-[var(--green-dark)] transition hover:bg-[var(--yellow-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green-dark)] focus-visible:ring-offset-2"
               >
-                Ver {sortedProperties.length} resultado{sortedProperties.length !== 1 ? 's' : ''}
+                Aplicar filtros
               </button>
+              </div>
             </div>
           </div>
         </div>

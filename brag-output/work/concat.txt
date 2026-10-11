@@ -1,0 +1,5 @@
+file 'C:/Users/Wilam/OneDrive/Documentos/STAYBRIDGE CATALOGO.v2.1/brag-output/work/01-single.mp4'
+file 'C:/Users/Wilam/OneDrive/Documentos/STAYBRIDGE CATALOGO.v2.1/brag-output/work/02-ensuite.mp4'
+file 'C:/Users/Wilam/OneDrive/Documentos/STAYBRIDGE CATALOGO.v2.1/brag-output/work/03-studio.mp4'
+file 'C:/Users/Wilam/OneDrive/Documentos/STAYBRIDGE CATALOGO.v2.1/brag-output/work/04-flat.mp4'
+file 'C:/Users/Wilam/OneDrive/Documentos/STAYBRIDGE CATALOGO.v2.1/brag-output/work/05-chatbot.mp4'

@@ -81,6 +81,7 @@ import {
   getPropertyManagementStatus,
   getPropertyStatusLabel,
   isPropertyAvailableNow,
+  matchesPropertyQuality,
 } from './admin/propertyManagement';
 import {
   AMENITY_OPTIONS,
@@ -140,6 +141,9 @@ export function AdminPage() {
   const [adminRegionFilter, setAdminRegionFilter] = useState('');
   const [adminAvailabilityFilter, setAdminAvailabilityFilter] =
     useState<AdminAvailabilityFilter>('all');
+  const [adminQualityFilter, setAdminQualityFilter] = useState<'all' | 'blockers' | 'warnings' | 'clean'>('all');
+  const [adminQualityCategoryFilter, setAdminQualityCategoryFilter] = useState('');
+  const [qualityDetailsId, setQualityDetailsId] = useState<number | null>(null);
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [imageInput, setImageInput] = useState('');
   const [isUploadingLibrary, setIsUploadingLibrary] = useState(false);
@@ -321,6 +325,7 @@ export function AdminPage() {
     if (adminRegionFilter && property.region !== adminRegionFilter) return false;
     if (adminAvailabilityFilter === 'available' && !isPropertyAvailableNow(property)) return false;
     if (adminAvailabilityFilter === 'unavailable' && isPropertyAvailableNow(property)) return false;
+    if (!matchesPropertyQuality(property.quality, adminQualityFilter, adminQualityCategoryFilter)) return false;
 
     if (!normalizedAdminSearch) return true;
 
@@ -778,15 +783,16 @@ export function AdminPage() {
       deletedAt: undefined,
       id: editingId !== null ? editingId : nextId,
     };
+    const adminAccessToken = session?.access_token;
 
     try {
-      if (!hasSupabaseConfig() || !session) {
+      if (!hasSupabaseConfig() || !adminAccessToken) {
         throw new Error('Supabase nao configurado');
       }
 
       const savedProperty = await savePropertyToSupabase(
         propertyToSave,
-        session.access_token
+        adminAccessToken
       );
 
       setProperties((prev) =>
@@ -804,6 +810,39 @@ export function AdminPage() {
       navigate('/admin/properties');
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
+      const qualityError = error as Error & {
+        statusCode?: number;
+        quality?: { warnings?: Array<{ message: string; fix: string }> };
+      };
+      if (qualityError.statusCode === 428 && qualityError.quality?.warnings?.length) {
+        const warnings = qualityError.quality.warnings
+          .map((warning) => `• ${warning.message} ${warning.fix}`)
+          .join('\n');
+        if (window.confirm(`Este imóvel possui avisos de qualidade:\n\n${warnings}\n\nPublicar mesmo assim?`)) {
+          try {
+            const savedProperty = await savePropertyToSupabase(
+              propertyToSave,
+              adminAccessToken,
+              true
+            );
+            setProperties((prev) =>
+              editingId !== null
+                ? prev.map((property) => property.id === editingId ? savedProperty : property)
+                : [...prev, savedProperty]
+            );
+            setSyncMessage('Imóvel salvo com avisos confirmados');
+            setSyncError('');
+            resetForm();
+            navigate('/admin/properties');
+            setTimeout(() => setSyncMessage(''), 3000);
+            return;
+          } catch (retryError) {
+            error = retryError;
+          }
+        } else {
+          return;
+        }
+      }
       const message = error instanceof Error ? error.message : 'Erro ao salvar imóvel';
       setSyncError(message);
       alert(message);
@@ -932,6 +971,32 @@ export function AdminPage() {
       setSyncMessage(`Status alterado para ${getPropertyStatusLabel(savedProperty)}`);
       setTimeout(() => setSyncMessage(''), 3000);
     } catch (error) {
+      const qualityError = error as Error & {
+        statusCode?: number;
+        quality?: { warnings?: Array<{ message: string; fix: string }> };
+      };
+      if (qualityError.statusCode === 428 && qualityError.quality?.warnings?.length) {
+        const warnings = qualityError.quality.warnings
+          .map((warning) => `• ${warning.message} ${warning.fix}`)
+          .join('\n');
+        if (!window.confirm(`Este imóvel possui avisos de qualidade:\n\n${warnings}\n\nAlterar o status mesmo assim?`)) {
+          return;
+        }
+        try {
+          const savedProperty = await savePropertyToSupabase(
+            applyPropertyStatus(property, status),
+            session?.access_token,
+            true
+          );
+          setProperties((prev) => prev.map((item) => item.id === property.id ? savedProperty : item));
+          setSyncError('');
+          setSyncMessage(`Status alterado com avisos confirmados para ${getPropertyStatusLabel(savedProperty)}`);
+          setTimeout(() => setSyncMessage(''), 3000);
+          return;
+        } catch (retryError) {
+          error = retryError;
+        }
+      }
       const message =
         error instanceof Error ? error.message : 'Erro ao atualizar status';
       setSyncError(message);
@@ -1391,6 +1456,32 @@ export function AdminPage() {
                 <option value="all">Todas disponibilidades</option>
                 <option value="available">Disponíveis ({availableCount})</option>
                 <option value="unavailable">Indisponíveis ({unavailableCount})</option>
+              </select>
+
+              <select
+                value={adminQualityFilter}
+                onChange={(event) => setAdminQualityFilter(event.target.value as typeof adminQualityFilter)}
+                className={adminInputClass}
+                aria-label="Filtrar qualidade dos imóveis"
+              >
+                <option value="all">Todas as qualidades</option>
+                <option value="blockers">Com bloqueios</option>
+                <option value="warnings">Somente avisos</option>
+                <option value="clean">Sem problemas</option>
+              </select>
+
+              <select
+                value={adminQualityCategoryFilter}
+                onChange={(event) => setAdminQualityCategoryFilter(event.target.value)}
+                className={adminInputClass}
+                aria-label="Filtrar categoria de qualidade"
+              >
+                <option value="">Todas as categorias</option>
+                {[...new Set(activeProperties.flatMap((property) => property.quality?.categories || []))]
+                  .sort()
+                  .map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
               </select>
             </div>
 
@@ -2398,6 +2489,51 @@ export function AdminPage() {
                   <span className="text-xs bg-gray-100 px-2 py-1 rounded">{property.category}</span>
                 </div>
 
+                {property.quality && (
+                  <div
+                    className={`mb-3 rounded-md border px-3 py-2 text-xs font-bold ${
+                      property.quality.blockerCount > 0
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : property.quality.warningCount > 0
+                          ? 'border-amber-200 bg-amber-50 text-amber-800'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    }`}
+                    role="status"
+                  >
+                    {property.quality.blockerCount > 0
+                      ? `${property.quality.blockerCount} bloqueio(s) · nota ${property.quality.score}`
+                      : property.quality.warningCount > 0
+                        ? `${property.quality.warningCount} aviso(s) · nota ${property.quality.score}`
+                        : `Qualidade aprovada · nota ${property.quality.score}`}
+                  </div>
+                )}
+
+                {property.quality?.issues?.length ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setQualityDetailsId((current) => current === property.id ? null : property.id)}
+                      className="mb-3 text-left text-xs font-extrabold text-[var(--green-dark)] underline underline-offset-2"
+                      aria-expanded={qualityDetailsId === property.id}
+                    >
+                      {qualityDetailsId === property.id ? 'Ocultar detalhes de qualidade' : 'Ver detalhes e correções'}
+                    </button>
+                    {qualityDetailsId === property.id && (
+                      <div className="mb-3 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
+                        {property.quality.issues.map((issue) => (
+                          <div key={issue.id}>
+                            <p className="font-extrabold">
+                              {issue.severity === 'blocker' ? 'Bloqueio' : 'Aviso'} · {issue.categoryLabel}
+                            </p>
+                            <p>{issue.message}</p>
+                            <p className="font-semibold text-gray-600">Correção: {issue.fix}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : null}
+
                 {isInRecovery(property) ? (
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -2463,6 +2599,8 @@ export function AdminPage() {
                 setAdminTypeFilter('');
                 setAdminRegionFilter('');
                 setAdminAvailabilityFilter('all');
+                setAdminQualityFilter('all');
+                setAdminQualityCategoryFilter('');
                 setAdminSearchQuery('');
               }}
               className="rounded-lg bg-[var(--green-dark)] px-6 py-3 font-bold text-white"

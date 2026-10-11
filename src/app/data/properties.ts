@@ -1,6 +1,23 @@
 /** Publication state shown in Admin. Availability comes from moveInDate. */
 export type PropertyStatus = 'available' | 'hidden';
 
+export type PropertyQualitySummary = {
+  score: number;
+  isPublishable: boolean;
+  blockerCount: number;
+  warningCount: number;
+  categories: string[];
+  issues?: Array<{
+    id: string;
+    severity: 'blocker' | 'warning';
+    category: string;
+    categoryLabel: string;
+    fields: string[];
+    message: string;
+    fix: string;
+  }>;
+};
+
 export interface Property {
   id: number;
   company: string;
@@ -38,4 +55,5 @@ export interface Property {
   priceOptions?: import('./propertySchema').PropertyPriceOption[];
   entryConditions?: import('./propertySchema').PropertyEntryConditions;
   sourceText?: string;
+  quality?: PropertyQualitySummary;
 }

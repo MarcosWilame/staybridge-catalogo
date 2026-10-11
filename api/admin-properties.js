@@ -1,13 +1,46 @@
 import { assertSameOrigin, requireAdmin, supabaseRequest } from './_admin.js';
 import { applyApiSecurityHeaders, enforceRateLimit } from './_security.js';
 import { validateAdminProperties, validateAdminProperty } from './_property-validation.js';
+import { evaluatePropertyQuality, summarizePropertyQuality } from './property-quality.js';
+import { logPropertyQualityResult } from './property-quality-log.js';
 
 const TABLE = process.env.SUPABASE_PROPERTIES_TABLE || process.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 
 async function readRows(token) {
   const response = await supabaseRequest(`/rest/v1/${TABLE}?select=id,data&order=id.asc`, { token });
   if (!response.ok) throw new Error('Unable to load properties');
-  return response.json();
+  const rows = await response.json();
+  return rows.map((row) => ({
+    ...row,
+    quality: summarizePropertyQuality(row?.data),
+  }));
+}
+
+function qualityError(status, message, quality) {
+  const error = new Error(message);
+  error.statusCode = status;
+  error.quality = quality;
+  return error;
+}
+
+export function assertPublicationQuality(property, confirmQualityWarnings) {
+  if (property.listed !== true) return;
+
+  const quality = evaluatePropertyQuality(property);
+  logPropertyQualityResult(property, quality, 'publication-check');
+  if (quality.blockers.length) {
+    throw qualityError(422, 'Corrija os bloqueios de qualidade antes de publicar.', quality);
+  }
+  if (quality.warnings.length && confirmQualityWarnings !== true) {
+    throw qualityError(428, 'Confirme os avisos de qualidade antes de publicar.', quality);
+  }
+}
+
+function withQuality(rows) {
+  return rows.map((row) => ({
+    ...row,
+    quality: summarizePropertyQuality(row?.data),
+  }));
 }
 
 export default async function handler(req, res) {
@@ -28,6 +61,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const property = validateAdminProperty(req.body?.property);
+      assertPublicationQuality(property, req.body?.confirmQualityWarnings);
       const response = await supabaseRequest(`/rest/v1/${TABLE}?on_conflict=id`, {
         token: admin.accessToken,
         method: 'POST',
@@ -35,11 +69,13 @@ export default async function handler(req, res) {
         body: [{ id: property.id, data: property }],
       });
       if (!response.ok) throw new Error('Unable to save property');
-      return res.status(200).json(await response.json());
+      return res.status(200).json(withQuality(await response.json()));
     }
 
     if (req.method === 'PUT') {
       const properties = validateAdminProperties(req.body?.properties);
+      const confirmQualityWarnings = req.body?.confirmQualityWarnings === true;
+      properties.forEach((property) => assertPublicationQuality(property, confirmQualityWarnings));
       const existing = await readRows(admin.accessToken);
       const existingById = new Map(existing.map((row) => [Number(row.id), row]));
       for (const property of properties) {
@@ -68,7 +104,7 @@ export default async function handler(req, res) {
         });
         if (!deleteResponse.ok) throw new Error('Unable to remove stale property');
       }
-      return res.status(200).json(await response.json());
+      return res.status(200).json(withQuality(await response.json()));
     }
 
     if (req.method === 'DELETE') {
@@ -86,6 +122,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Admin properties request failed', error instanceof Error ? error.name : 'Unknown');
-    return res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid request' });
+    return res.status(error?.statusCode || 400).json({
+      error: error instanceof Error ? error.message : 'Invalid request',
+      ...(error?.quality ? { quality: error.quality } : {}),
+    });
   }
 }
