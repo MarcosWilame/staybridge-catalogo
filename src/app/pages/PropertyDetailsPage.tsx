@@ -943,19 +943,8 @@ export function PropertyDetailsPage() {
                   className="premium-cta flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] py-3.5 font-bold text-black md:py-4"
                 >
                   <MessageCircle className="w-6 h-6" />
-                  Falar no WhatsApp
+                  Consultar disponibilidade
                 </button>
-
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    onClick={() => openLeadForm('visit', 'property_sidebar')}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-                  >
-                    <Calendar className="h-5 w-5" />
-                    Agendar visita
-                  </button>
-                </div>
 
               </div>
 
@@ -1028,23 +1017,14 @@ export function PropertyDetailsPage() {
             </div>
           </div>
 
-          <div className="grid shrink-0 grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => openLeadForm('visit', 'property_mobile_sticky')}
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--green-dark)] px-3 py-2.5 text-sm font-bold text-[var(--green-dark)]"
-            >
-              <Calendar className="h-4 w-4" />
-              Visita
-            </button>
-
+          <div className="grid shrink-0">
             <button
               type="button"
               onClick={() => openLeadForm('whatsapp', 'property_mobile_primary')}
               className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-[var(--yellow)] px-3 py-2.5 text-sm font-bold text-black shadow-lg"
             >
               <MessageCircle className="h-5 w-5" />
-              WhatsApp
+              Consultar disponibilidade
             </button>
           </div>
         </div>

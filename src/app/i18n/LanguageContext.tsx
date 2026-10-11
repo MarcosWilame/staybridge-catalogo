@@ -106,6 +106,7 @@ const textTranslations: Record<string, string> = {
   'Ajuste os filtros ou fale conosco para encontrar uma opção ideal.':
     'Adjust the filters or talk to us to find the right option.',
   'Falar no WhatsApp': 'Chat on WhatsApp',
+  'Consultar disponibilidade': 'Check availability',
   'Fale conosco no WhatsApp': 'Talk to us on WhatsApp',
   'Falar com a Staybridge London no WhatsApp': 'Talk to Staybridge London on WhatsApp',
   'Não encontrou o ideal?': 'Did not find the right one?',
@@ -249,6 +250,9 @@ const textTranslations: Record<string, string> = {
     'Arrange your move-in with team support.',
   'Open WhatsApp in Portuguese': 'Open WhatsApp in Portuguese',
   'Open WhatsApp in English': 'Open WhatsApp in English',
+  'Enviar pelo WhatsApp': 'Send via WhatsApp',
+  'Send via WhatsApp': 'Send via WhatsApp',
+  'Send your details and receive availability on WhatsApp.': 'Send your details and receive availability on WhatsApp.',
   'Find your home in London': 'Find your home in London',
   'Receive availability and more information via WhatsApp.':
     'Receive availability and more information via WhatsApp.',

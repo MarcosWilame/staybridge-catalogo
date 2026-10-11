@@ -130,7 +130,7 @@ export function LeadCaptureModal({
             </button>
           </div>
           <p className="mt-2.5 text-sm leading-relaxed text-gray-600">
-            Receive availability and more information via WhatsApp.
+            Send your details and receive availability on WhatsApp.
           </p>
         </div>
 
@@ -246,8 +246,8 @@ export function LeadCaptureModal({
           >
             <MessageCircle className="h-5 w-5" />
             {messageLanguage === 'pt'
-              ? 'Open WhatsApp in Portuguese'
-              : 'Open WhatsApp in English'}
+              ? 'Enviar pelo WhatsApp'
+              : 'Send via WhatsApp'}
           </button>
 
           <p className="flex items-start justify-center gap-2 px-2 text-center text-xs leading-relaxed text-gray-500">
