@@ -21,13 +21,13 @@
 
 - [x] 4.1 Priorizar somente as imagens principais do primeiro conjunto visível e manter carregamento lazy progressivo para cards posteriores; verificar em desktop e mobile que texto, controles, dimensões e fallback do card aparecem antes ou junto da imagem.
 - [x] 4.2 Garantir que revelar mais propriedades ou rolar não reinicia imagens já carregadas nem atrasa os cards prontos; verificar navegação por teclado, fallback de imagem e uso do carrossel do card.
-- [ ] 4.3 Exibir o estado de atualização de forma responsiva nos filtros e na busca mobile sem bloquear digitação, abertura do painel ou navegação para um imóvel; verificar manualmente viewport móvel e desktop.
+- [x] 4.3 Exibir o estado de atualização de forma responsiva nos filtros e na busca mobile sem bloquear digitação, abertura do painel ou navegação para um imóvel; verificar manualmente viewport móvel e desktop.
 
 ## 5. Integração e verificação
 
 - [x] 5.1 Executar `npm run check` e corrigir regressões de tipos, testes ou build introduzidas pela mudança; verificar que o comando termina com sucesso.
-- [ ] 5.2 Validar manualmente cache frio, cache quente, revisão atualizada, API lenta, API indisponível, busca sem resultados, filtros combinados e carregamento progressivo de imagens; registrar tempos e comportamento observado para desktop e mobile.
-- [ ] 5.3 Comparar as métricas de linha de base com a implementação e documentar percentis de tempo até dados, resultados e primeiro conjunto de cards; verificar que o resultado atende à meta definida após a medição inicial.
+- [x] 5.2 Validar manualmente cache frio, cache quente, revisão atualizada, API lenta, API indisponível, busca sem resultados, filtros combinados e carregamento progressivo de imagens; registrar tempos e comportamento observado para desktop e mobile.
+- [ ] 5.3 Comparar as métricas de linha de base com a implementação e documentar percentis de tempo até dados, resultados e primeiro conjunto de cards; verificar que o resultado atende à meta definida após a medição inicial. A instrumentação foi entregue; os percentis dependem de tráfego real após publicação.
 
 ## Workflow follow-up
 
