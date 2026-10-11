@@ -2,8 +2,10 @@ export const PUBLIC_PROPERTIES_CACHE_KEY = 'staybridge-public-properties-v3';
 export const PUBLIC_PROPERTIES_UPDATED_EVENT = 'staybridge:properties-updated';
 const PUBLIC_PROPERTIES_REVISION_KEY = 'staybridge-public-properties-revision';
 
-export function getPublicPropertiesRequestPath(timestamp = Date.now()) {
-  return `/api/public-properties?revision=${encodeURIComponent(timestamp)}`;
+export function getPublicPropertiesRequestPath(revision = getPublicPropertiesRevision()) {
+  return revision
+    ? `/api/public-properties?revision=${encodeURIComponent(revision)}`
+    : '/api/public-properties';
 }
 
 export function getPublicPropertiesRevision() {

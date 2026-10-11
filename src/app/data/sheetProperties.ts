@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Property } from './properties';
+import { trackPerformanceMetric } from '../utils/analytics';
 import {
   getPublicPropertiesRevision,
   getPublicPropertiesRequestPath,
@@ -83,8 +84,8 @@ async function fetchPropertiesWithRetry() {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const response = await fetchWithTimeout(getPublicPropertiesRequestPath(), {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
+        cache: 'default',
+        headers: { Accept: 'application/json' },
       });
       if (response.ok || response.status < 500 || attempt === 1) return response;
     } catch (error) {
@@ -148,6 +149,7 @@ async function parsePropertiesResponse(response: Response) {
 }
 
 async function loadPropertiesFromSource(forceRefresh = false) {
+  const startedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const revision = getPublicPropertiesRevision();
   if (!forceRefresh && cachedProperties && cachedRevision === revision) return cachedProperties;
   if (
@@ -193,10 +195,19 @@ async function loadPropertiesFromSource(forceRefresh = false) {
     } catch {
       // Storage can be unavailable in privacy modes; memory cache still works.
     }
+    trackPerformanceMetric('property_catalog_loaded', {
+      duration_ms: Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - startedAt),
+      properties_count: loadedProperties.length,
+      cache_mode: forceRefresh ? 'revalidate' : 'initial',
+    });
     return cachedProperties;
   })().catch((err) => {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
     cachedError = message;
+    trackPerformanceMetric('property_catalog_failed', {
+      duration_ms: Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - startedAt),
+      error_type: err instanceof Error && err.name === 'AbortError' ? 'timeout' : 'request',
+    });
     const staleProperties = readSessionCache(true);
     if (staleProperties) {
       cachedProperties = staleProperties;
@@ -214,12 +225,14 @@ export function useProperties() {
   const sessionCachedProperties = cachedProperties || readSessionCache(true);
   const [items, setItems] = useState<Property[]>(sessionCachedProperties || []);
   const [isLoading, setIsLoading] = useState(!sessionCachedProperties);
+  const [isRefreshing, setIsRefreshing] = useState(Boolean(sessionCachedProperties));
   const [error, setError] = useState<string | null>(cachedError);
 
   useEffect(() => {
     let isMounted = true;
 
     const refresh = (forceRefresh = true) => {
+      setIsRefreshing(true);
       loadPropertiesFromSource(forceRefresh).then((loadedProperties) => {
         if (!isMounted) return;
         setItems(loadedProperties);
@@ -228,11 +241,14 @@ export function useProperties() {
       .catch((err: Error) => {
         cachedError = err.message;
         if (!isMounted) return;
-        setItems([]);
+        setItems((current) => current);
         setError(err.message);
       })
       .finally(() => {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsRefreshing(false);
+        }
       });
     };
 
@@ -262,6 +278,7 @@ export function useProperties() {
   return {
     properties: items,
     isLoading,
+    isRefreshing,
     error,
   };
 }

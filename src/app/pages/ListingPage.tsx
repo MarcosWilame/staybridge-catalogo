@@ -1,15 +1,20 @@
-import { Fragment, useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
 import { PropertyMap } from '../components/PropertyMap';
-import { getAvailabilityInfo, getMoveInTimestamp } from '../utils/availability';
+import { getAvailabilityInfo } from '../utils/availability';
 import { WHATSAPP_URL } from '../config/contact';
 import { SEO } from '../components/SEO';
 import { LeadCaptureModal } from '../components/LeadCaptureModal';
 import type { LeadIntent } from '../utils/leadCapture';
-import { trackEvent } from '../utils/analytics';
+import { trackEvent, trackPerformanceMetric } from '../utils/analytics';
+import {
+  filterAndSortProperties,
+  getPriceValue,
+  type PropertySearchFilters,
+} from '../utils/propertySearch';
 import { getAbsoluteUrl, SITE_NAME } from '../config/site';
 import { getPropertyImageAlt } from '../utils/imageAlt';
 import { formatPropertyType } from '../utils/propertyType';
@@ -94,7 +99,7 @@ function LondonPropertiesLoading() {
 
 export function ListingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { properties, isLoading, error } = useProperties();
+  const { properties, isLoading, isRefreshing, error } = useProperties();
   const friendlyError = error?.toLowerCase().includes('fetch')
     ? 'Não foi possível conectar ao catálogo agora.'
     : error;
@@ -253,25 +258,6 @@ export function ListingPage() {
     setVisibleCount(INITIAL_VISIBLE_COUNT);
   }, [filters, sortBy]);
 
-  const parsePriceRange = (range: string) => {
-    if (!range) return [0, Infinity] as const;
-    if (/^\d+$/.test(range)) {
-      return [0, Number(range)] as const;
-    }
-    if (range.includes('+')) {
-      const min = Number(range.replace('+', ''));
-      return [min, Infinity] as const;
-    }
-    const [minStr, maxStr] = range.split('-');
-    return [Number(minStr), Number(maxStr)] as const;
-  };
-
-  const getPriceValue = (price: string) => {
-    const match = price.match(/\d+(?:[.,]\d+)?/);
-    if (!match) return 0;
-    return Number(match[0].replace(',', '.'));
-  };
-
   const availableMaxPrice = Math.max(
     DEFAULT_MAX_PRICE,
     Math.ceil(Math.max(0, ...properties.map((p) => getPriceValue(p.price))) / PRICE_STEP) *
@@ -312,97 +298,20 @@ export function ListingPage() {
     return `£${range.replace('-', ' - £')}`;
   };
 
-  const matchesSearch = (property: Property, query: string) => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return true;
+  const filteredProperties = useMemo(
+    () => filterAndSortProperties(properties, filters as PropertySearchFilters, sortBy),
+    [properties, filters, sortBy]
+  );
+  const sortedProperties = filteredProperties;
 
-    return [
-      property.title,
-      property.region,
-      property.localArea,
-      property.postcode,
-      property.address,
-      property.type,
-      property.description,
-      ...property.nearbyStations,
-    ]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(normalizedQuery));
-  };
-
-  let filteredProperties = [...properties];
-
-  if (filters.search.trim()) {
-    filteredProperties = filteredProperties.filter((p) => matchesSearch(p, filters.search));
-  }
-
-  if (filters.region) {
-    filteredProperties = filteredProperties.filter((p) =>
-      p.region.toLowerCase().includes(filters.region.toLowerCase())
-    );
-  }
-
-  if (filters.type) {
-    filteredProperties = filteredProperties.filter(
-      (p) => p.category === filters.type
-    );
-  }
-
-  if (filters.priceRange) {
-    const [min, max] = parsePriceRange(filters.priceRange);
-    filteredProperties = filteredProperties.filter((p) => {
-      const price = getPriceValue(p.price);
-      return price >= min && price <= max;
+  useEffect(() => {
+    if (isLoading) return;
+    trackPerformanceMetric('property_search_results_ready', {
+      results_count: sortedProperties.length,
+      visible_count: Math.min(visibleCount, sortedProperties.length),
+      refresh_state: isRefreshing ? 'refreshing' : 'idle',
     });
-  }
-
-  if (filters.availableNow) {
-    filteredProperties = filteredProperties.filter((p) => {
-      return getAvailabilityInfo(p.moveInDate, p.available, new Date(), p.availabilityStatus).isNow;
-    });
-  }
-
-  if (filters.billsIncluded) {
-    filteredProperties = filteredProperties.filter((p) => p.billsIncluded);
-  }
-
-  if (filters.people) {
-    filteredProperties = filteredProperties.filter((p) => {
-      const capacity = Number(p.people || 0);
-      if (filters.people === '4+') return capacity >= 4;
-      return capacity >= Number(filters.people);
-    });
-  }
-
-  if (filters.moveInBy) {
-    const [year, month, day] = filters.moveInBy.split('-').map(Number);
-    const cutoff = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
-    filteredProperties = filteredProperties.filter(
-      (property) => property.available && getMoveInTimestamp(property.moveInDate, property.available, new Date(), property.availabilityStatus) <= cutoff
-    );
-  }
-
-  const sortedProperties = [...filteredProperties].sort((a, b) => {
-    if (sortBy === 'price-asc') {
-      return getPriceValue(a.price) - getPriceValue(b.price);
-    }
-
-    if (sortBy === 'price-desc') {
-      return getPriceValue(b.price) - getPriceValue(a.price);
-    }
-
-    if (sortBy === 'available') {
-      const aNow = getAvailabilityInfo(a.moveInDate, a.available, new Date(), a.availabilityStatus).isNow;
-      const bNow = getAvailabilityInfo(b.moveInDate, b.available, new Date(), b.availabilityStatus).isNow;
-      return Number(bNow) - Number(aNow);
-    }
-
-    if (sortBy === 'type') {
-      return a.type.localeCompare(b.type);
-    }
-
-    return 0;
-  });
+  }, [filters, isLoading, isRefreshing, sortBy, sortedProperties.length, visibleCount]);
 
   const visibleProperties = sortedProperties.slice(0, visibleCount);
   const hasMoreProperties = visibleCount < sortedProperties.length;
@@ -1291,6 +1200,11 @@ export function ListingPage() {
                         ? 'Buscando unidades...'
                         : `${sortedProperties.length} propriedade${sortedProperties.length !== 1 ? 's' : ''}`}
                     </div>
+                    {isRefreshing && !isLoading && (
+                      <div className="mt-1 text-xs font-bold text-[var(--green-medium)]" role="status" aria-live="polite">
+                        Atualizando resultados…
+                      </div>
+                    )}
                   </div>
 
                   <label className="hidden items-center gap-2 text-sm font-semibold text-gray-700 lg:flex">
@@ -1357,7 +1271,7 @@ export function ListingPage() {
                 <LondonPropertiesLoading />
               ) : (
                 <div className="grid content-start gap-5 sm:grid-cols-2">
-                  {visibleProperties.map((p) => (
+                  {visibleProperties.map((p, index) => (
                       <div
                         key={p.id}
                         onMouseEnter={() => setSelectedProperty(p)}
@@ -1365,6 +1279,7 @@ export function ListingPage() {
                       >
                         <PropertyCard
                           property={p}
+                          isPriority={index < 2}
                           isCompareSelected={compareIds.includes(p.id)}
                           isCompareDisabled={compareIds.length >= MAX_COMPARE_ITEMS}
                           onToggleCompare={toggleCompareProperty}

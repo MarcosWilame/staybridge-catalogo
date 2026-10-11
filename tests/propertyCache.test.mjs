@@ -33,4 +33,5 @@ test('public property requests use a cache-busting revision', () => {
     getPublicPropertiesRequestPath(123456),
     '/api/public-properties?revision=123456'
   );
+  assert.equal(getPublicPropertiesRequestPath(), '/api/public-properties');
 });

@@ -24,6 +24,7 @@ import { isIllustrativePropertyImage } from '../utils/propertyMedia';
 
 interface PropertyCardProps {
   property: Property;
+  isPriority?: boolean;
   isCompareSelected?: boolean;
   isCompareDisabled?: boolean;
   onToggleCompare?: (property: Property) => void;
@@ -84,6 +85,7 @@ function getAreaPreview(property: Property) {
 
 export function PropertyCard({
   property,
+  isPriority = false,
   isCompareSelected = false,
   isCompareDisabled = false,
   onToggleCompare,
@@ -173,8 +175,9 @@ export function PropertyCard({
               src={getOptimizedImageUrl(currentImage, 'card')}
               alt={getPropertyImageAlt(property, currentImageIndex)}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              loading="lazy"
+              loading={isPriority ? 'eager' : 'lazy'}
               decoding="async"
+              fetchPriority={isPriority ? 'high' : 'auto'}
               width={720}
               height={520}
               sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"

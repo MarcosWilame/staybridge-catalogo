@@ -60,9 +60,9 @@ export default async function handler(req, res) {
       ? rows.map(toPublicProperty).filter(Boolean)
       : [];
 
-    res.setHeader('Cache-Control', 'no-store, max-age=0');
-    res.setHeader('CDN-Cache-Control', 'no-store');
-    res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=300');
+    res.setHeader('CDN-Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+    res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
 
     return res.status(200).json(properties);
   } catch (error) {

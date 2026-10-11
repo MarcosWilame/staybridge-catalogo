@@ -1,6 +1,7 @@
 type AnalyticsValue = string | number | boolean | null | undefined;
 
 type AnalyticsParams = Record<string, AnalyticsValue>;
+type TrackEventOptions = { includePageContext?: boolean };
 
 declare global {
   interface Window {
@@ -68,11 +69,17 @@ export function loadMarketingScripts() {
   appendAsyncScript('https://connect.facebook.net/en_US/fbevents.js');
 }
 
-export function trackEvent(eventName: string, params: AnalyticsParams = {}) {
+export function trackEvent(
+  eventName: string,
+  params: AnalyticsParams = {},
+  options: TrackEventOptions = {}
+) {
   if (getMarketingConsent() !== true) return;
   prepareMarketingQueues();
   loadMarketingScripts();
-  const pageParams =
+  const pageParams = options.includePageContext === false
+    ? {}
+    :
     typeof window === 'undefined'
       ? {}
       : {
@@ -108,4 +115,11 @@ export function trackEvent(eventName: string, params: AnalyticsParams = {}) {
       window.fbq('track', 'Lead', cleanParams);
     }
   }
+}
+
+export function trackPerformanceMetric(
+  eventName: string,
+  params: AnalyticsParams = {}
+) {
+  trackEvent(eventName, params, { includePageContext: false });
 }
