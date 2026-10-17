@@ -46,5 +46,6 @@ test('reduced public property payload is smaller than the previous representativ
   assert.equal(reduced.billsIncluded, true);
   assert.equal('unknownInternalField' in reduced, false);
   assert.equal('sourceText' in reduced, false);
-  assert.equal('entryConditions' in reduced, false);
+  assert.deepEqual(reduced.entryConditions, { depositWeeks: 2, rentWeeks: 1 });
+  assert.equal('note' in reduced.entryConditions, false);
 });

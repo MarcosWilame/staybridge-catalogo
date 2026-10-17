@@ -37,6 +37,19 @@ test('preserves structured price and entry conditions', () => {
   assert.deepEqual(property.entryConditions, { depositWeeks: 2, rentWeeks: 1 });
 });
 
+test('legacy composite prices become complete occupancy options', () => {
+  const property = validateAdminProperty({
+    ...base,
+    category: 'double',
+    price: '£220/week (2 pessoas) | £200/week (1 pessoa)',
+  });
+
+  assert.deepEqual(property.priceOptions, [
+    { amount: 220, period: 'week', occupancy: 2 },
+    { amount: 200, period: 'week', occupancy: 1 },
+  ]);
+});
+
 test('public normalization exposes future and confirmation states', () => {
   const future = toPublicProperty({ id: 902, data: { ...base, moveInDate: '12/10/2026' } });
   const confirm = toPublicProperty({ id: 903, data: { ...base, moveInDate: 'Consulte com um de nossos agentes' } });

@@ -15,7 +15,7 @@ const steps = [
 
 export function HomeTrustStrip() {
   return (
-    <section id="benefits" className="reveal-section relative overflow-hidden bg-[#113424] py-16 text-white md:py-20">
+    <section id="benefits" className="reveal-section relative scroll-mt-28 overflow-hidden bg-[#113424] py-16 text-white md:py-20">
       <div aria-hidden="true" className="absolute -right-32 -top-32 h-96 w-96 rounded-full border-[70px] border-[var(--yellow)]/5" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">

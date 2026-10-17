@@ -80,9 +80,21 @@ export function normalizePriceOptions(input: unknown, fallback?: unknown): Prope
       ...(typeof record.label === 'string' && record.label.trim() ? { label: record.label.trim().slice(0, 120) } : {}),
     } satisfies PropertyPriceOption;
   }).filter((item): item is PropertyPriceOption => Boolean(item));
-  if (options.length) return options;
-  const amount = parseMoney(fallback);
-  return amount ? [{ amount, period: 'week' }] : [];
+  if (options.length > 1) return options;
+  const fallbackOptions = String(fallback || '')
+    .split('|')
+    .map((part) => {
+      const amount = parseMoney(part);
+      if (!amount) return null;
+      const occupancyMatch = part.match(/\(?\s*(\d+)\s*(?:pessoa|person)/i);
+      return {
+        amount,
+        period: /(?:month|m[eê]s)/i.test(part) ? 'month' as const : 'week' as const,
+        ...(occupancyMatch ? { occupancy: Math.min(20, Number(occupancyMatch[1])) } : {}),
+      };
+    })
+    .filter((item): item is PropertyPriceOption => Boolean(item));
+  return fallbackOptions.length > options.length ? fallbackOptions : options;
 }
 
 export function normalizeEntryConditions(input: unknown, fallback?: unknown): PropertyEntryConditions {

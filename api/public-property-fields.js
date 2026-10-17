@@ -33,10 +33,10 @@ function stringList(value, limit, itemLength = 120) {
     : [];
 }
 
-function mediaUrl(value) {
+function mediaUrl(value, privateMediaReference = '') {
   const candidate = text(value, 2_048);
   if (!candidate) return '';
-  if (candidate.startsWith('/api/property-media?path=')) return candidate;
+  if (candidate.startsWith('/api/property-media?path=')) return privateMediaReference;
 
   try {
     const url = new URL(candidate);
@@ -45,11 +45,15 @@ function mediaUrl(value) {
       (host) => url.hostname === host || url.hostname.endsWith(`.${host}`)
     );
     if (!allowed) return '';
-    const marker = '/storage/v1/object/public/property-images/';
-    const markerIndex = url.pathname.indexOf(marker);
-    if (markerIndex >= 0) {
-      const path = decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
-      return `/api/property-media?path=${encodeURIComponent(path)}`;
+    const storageMarkers = [
+      '/storage/v1/object/public/property-images/',
+      '/storage/v1/object/sign/property-images/',
+      '/storage/v1/object/authenticated/property-images/',
+    ];
+    const marker = storageMarkers.find((entry) => url.pathname.includes(entry));
+    if (marker) {
+      const path = decodeURIComponent(url.pathname.slice(url.pathname.indexOf(marker) + marker.length));
+      return path ? privateMediaReference : '';
     }
     return url.toString();
   } catch {
@@ -95,9 +99,38 @@ function getPriceOptions(value, fallback) {
       ...(text(item?.label, 120) ? { label: text(item.label, 120) } : {}),
     })).filter((item) => item.amount > 0).slice(0, PUBLIC_PAYLOAD_LIMITS.priceOptions)
     : [];
-  if (options.length) return options;
-  const amount = number(String(fallback || '').replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0], 0, 100_000);
-  return amount ? [{ amount, period: 'week' }] : [];
+  if (options.length > 1) return options;
+
+  const fallbackOptions = String(fallback || '')
+    .split('|')
+    .map((part) => {
+      const amount = number(part.replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0], 0, 100_000);
+      if (!amount) return null;
+      const occupancyMatch = part.match(/\(?\s*(\d+)\s*(?:pessoa|person)/i);
+      return {
+        amount,
+        period: /(?:month|m[eê]s)/i.test(part) ? 'month' : 'week',
+        ...(occupancyMatch ? { occupancy: number(occupancyMatch[1], 1, 20) } : {}),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, PUBLIC_PAYLOAD_LIMITS.priceOptions);
+
+  return fallbackOptions.length > options.length ? fallbackOptions : options;
+}
+
+function getEntryConditions(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const result = {};
+  const depositWeeks = Number(source.depositWeeks);
+  const rentWeeks = Number(source.rentWeeks);
+  const rentMonths = Number(source.rentMonths);
+
+  if (Number.isFinite(depositWeeks) && depositWeeks >= 0) result.depositWeeks = number(depositWeeks, 0, 52);
+  if (Number.isFinite(rentWeeks) && rentWeeks >= 0) result.rentWeeks = number(rentWeeks, 0, 52);
+  if (Number.isFinite(rentMonths) && rentMonths >= 0) result.rentMonths = number(rentMonths, 0, 12);
+
+  return result;
 }
 
 function isAvailableFromMoveInDate(value) {
@@ -118,13 +151,25 @@ export function toPublicProperty(row) {
   const id = Number(data.id || row?.id);
   if (!Number.isSafeInteger(id) || id <= 0) return null;
 
-  const images = Array.isArray(data.images)
-    ? [...new Set(data.images.map(mediaUrl).filter(Boolean))].slice(0, PUBLIC_PAYLOAD_LIMITS.images)
+  const rawCover = text(data.image, 2_048);
+  const imageItems = Array.isArray(data.images)
+    ? data.images
+      .map((value, index) => ({ value: text(value, 2_048), index }))
+      .filter((item) => item.value)
+      .filter((item, index, items) => items.findIndex((candidate) => candidate.value === item.value) === index)
     : [];
-  const image = mediaUrl(data.image) || images[0] || '';
-  const publicImages = image && !images.includes(image)
-    ? [image, ...images].slice(0, PUBLIC_PAYLOAD_LIMITS.images)
-    : images.length ? images : image ? [image] : [];
+  const coverReference = `/api/property-media?id=${id}&slot=cover`;
+  const image = mediaUrl(rawCover, coverReference)
+    || (imageItems[0]
+      ? mediaUrl(imageItems[0].value, `/api/property-media?id=${id}&slot=image&index=${imageItems[0].index}`)
+      : '');
+  const images = imageItems
+    .filter((item) => item.value !== rawCover)
+    .map((item) => mediaUrl(item.value, `/api/property-media?id=${id}&slot=image&index=${item.index}`))
+    .filter(Boolean);
+  const publicImages = [...new Set(image ? [image, ...images] : images)]
+    .slice(0, PUBLIC_PAYLOAD_LIMITS.images);
+  const video = mediaUrl(data.video, `/api/property-media?id=${id}&slot=video`);
 
   const category = text(data.category, 60);
 
@@ -132,13 +177,13 @@ export function toPublicProperty(row) {
     id,
     image,
     images: publicImages,
-    video: mediaUrl(data.video),
-    coverMedia: data.coverMedia === 'video' && mediaUrl(data.video) ? 'video' : 'image',
+    video,
+    coverMedia: data.coverMedia === 'video' && video ? 'video' : 'image',
     type: text(data.type, 80),
     title: text(data.title, 140),
     region: text(data.region, 80),
     localArea: text(data.localArea, 100),
-    price: text(data.price, 40),
+    price: text(data.price, 120),
     monthlyPrice: text(data.monthlyPrice, 40),
     entryRent: text(data.entryRent, 80),
     description: text(data.description, PUBLIC_PAYLOAD_LIMITS.description),
@@ -158,5 +203,6 @@ export function toPublicProperty(row) {
     people: getPeopleLimit(category, data.people),
     availabilityStatus: getAvailabilityStatus(data.availabilityStatus, data.moveInDate),
     priceOptions: getPriceOptions(data.priceOptions, data.price),
+    entryConditions: getEntryConditions(data.entryConditions),
   };
 }

@@ -1,7 +1,8 @@
-import { useState, useEffect, type MouseEvent } from 'react';
+import { useState, useEffect, useRef, type MouseEvent } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
+import { useScrollLock } from '../utils/useScrollLock';
 import { BrandLogo } from './BrandLogo';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -11,10 +12,14 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage } = useLanguage();
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuToggleRef = useRef<HTMLButtonElement>(null);
 
   const isHome = location.pathname === '/';
   const isPropertyDetails = location.pathname.startsWith('/property/');
   const isTransparent = isHome && !isScrolled && !isMobileMenuOpen;
+
+  useScrollLock(isMobileMenuOpen);
 
   useEffect(() => {
     if (!isHome) {
@@ -60,9 +65,29 @@ export function Header() {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsMobileMenuOpen(false);
     };
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (mobileMenuRef.current?.contains(target) || mobileMenuToggleRef.current?.contains(target)) return;
+      setIsMobileMenuOpen(false);
+    };
     window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const desktopNavigation = window.matchMedia('(min-width: 768px)');
+    const closeMenuOnDesktop = () => {
+      if (desktopNavigation.matches) setIsMobileMenuOpen(false);
+    };
+
+    desktopNavigation.addEventListener('change', closeMenuOnDesktop);
+    return () => desktopNavigation.removeEventListener('change', closeMenuOnDesktop);
+  }, []);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -159,6 +184,7 @@ export function Header() {
             </NavLink>
 
             <button
+              ref={mobileMenuToggleRef}
               type="button"
               onClick={() => { navigate('/'); setTimeout(() => scrollToSection('benefits'), 300); }}
               className={buttonClass}
@@ -195,7 +221,7 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div id="mobile-navigation" className="border-t border-white/10 bg-[var(--green-medium)] py-4 md:hidden">
+          <div ref={mobileMenuRef} id="mobile-navigation" className="max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-t border-white/10 bg-[var(--green-medium)] py-4 md:hidden">
             <nav aria-label="Navegação mobile" className="flex flex-col gap-2">
               <NavLink
                 to="/"

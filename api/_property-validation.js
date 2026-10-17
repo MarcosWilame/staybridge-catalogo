@@ -4,7 +4,7 @@ const STRING_LIMITS = {
   title: 140,
   region: 80,
   localArea: 100,
-  price: 40,
+  price: 120,
   description: 500,
   longDescription: 5000,
   category: 60,
@@ -94,10 +94,23 @@ function normalizePriceOptions(value, fallback) {
       ...(typeof item.label === 'string' && item.label.trim() ? { label: cleanString(item.label, 120) } : {}),
     };
   }).filter(Boolean).slice(0, 10);
-  if (options.length) return options;
-  const match = String(fallback || '').replace(/,/g, '').match(/\d+(?:\.\d+)?/);
-  const amount = match ? cleanNumber(match[0], 0, 100000) : 0;
-  return amount ? [{ amount, period: 'week' }] : [];
+  if (options.length > 1) return options;
+  const fallbackOptions = String(fallback || '')
+    .split('|')
+    .map((part) => {
+      const match = part.replace(/,/g, '').match(/\d+(?:\.\d+)?/);
+      const amount = match ? cleanNumber(match[0], 0, 100000) : 0;
+      if (!amount) return null;
+      const occupancyMatch = part.match(/\(?\s*(\d+)\s*(?:pessoa|person)/i);
+      return {
+        amount,
+        period: /(?:month|m[eê]s)/i.test(part) ? 'month' : 'week',
+        ...(occupancyMatch ? { occupancy: cleanNumber(occupancyMatch[1], 1, 20) } : {}),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 10);
+  return fallbackOptions.length > options.length ? fallbackOptions : options;
 }
 
 function normalizeEntryConditions(value, fallback) {

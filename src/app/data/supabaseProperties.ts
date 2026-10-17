@@ -128,10 +128,14 @@ function getStoragePublicUrl(objectPath: string) {
 function getPropertyMediaProxyUrl(value: string) {
   try {
     const url = new URL(value);
-    const marker = `/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/`;
-    const index = url.pathname.indexOf(marker);
-    if (index < 0) return '';
-    const path = decodeURIComponent(url.pathname.slice(index + marker.length));
+    const markers = [
+      `/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/`,
+      `/storage/v1/object/sign/${SUPABASE_STORAGE_BUCKET}/`,
+      `/storage/v1/object/authenticated/${SUPABASE_STORAGE_BUCKET}/`,
+    ];
+    const marker = markers.find((entry) => url.pathname.includes(entry));
+    if (!marker) return '';
+    const path = decodeURIComponent(url.pathname.slice(url.pathname.indexOf(marker) + marker.length));
     return getStoragePublicUrl(path);
   } catch {
     return '';
@@ -693,6 +697,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
   const available = getAvailabilityInfo(toStringValue(input.moveInDate), true).isNow;
   const category = normalizeCategory(input.category, input.type);
   const structured = normalizePropertyStructuredFields(input as Record<string, unknown>);
+  const rawPrice = toStringValue(input.price, '', 120);
 
   return {
     id,
@@ -709,7 +714,7 @@ export function normalizeProperty(input: PropertyInput): Property | null {
     region: toStringValue(input.region, '', 80),
     localArea:
       typeof input.localArea === 'string' ? toStringValue(input.localArea, '', 100) : undefined,
-    price: formatEuroPrice(toStringValue(input.price, '', 40)),
+    price: rawPrice.includes('|') ? rawPrice : formatEuroPrice(rawPrice),
     monthlyPrice: toStringValue(input.monthlyPrice, '', 40) || undefined,
     entryRent: toStringValue(input.entryRent, '', 80) || undefined,
     description: toStringValue(input.description, '', 500),

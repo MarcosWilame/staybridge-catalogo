@@ -4,6 +4,7 @@ import { CalendarDays, Check, Languages, MapPin, MessageCircle, ShieldCheck, Use
 import type { Property } from '../data/properties';
 import { openWhatsApp } from '../config/contact';
 import { trackEvent } from '../utils/analytics';
+import { useScrollLock } from '../utils/useScrollLock';
 import {
   buildLeadMessage,
   type LeadDetails,
@@ -42,6 +43,8 @@ export function LeadCaptureModal({
   const [details, setDetails] = useState<LeadDetails>(EMPTY_DETAILS);
   const [messageLanguage, setMessageLanguage] = useState<LeadLanguage>('pt');
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
     if (!isOpen) return;
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -52,7 +55,6 @@ export function LeadCaptureModal({
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
-    document.body.style.overflow = 'hidden';
     appRoot?.setAttribute('inert', '');
     window.addEventListener('keydown', handleEscape);
     trackEvent('lead_form_open', {
@@ -62,10 +64,9 @@ export function LeadCaptureModal({
     });
 
     return () => {
-      document.body.style.overflow = '';
       appRoot?.removeAttribute('inert');
       window.removeEventListener('keydown', handleEscape);
-      previousFocus?.focus();
+      previousFocus?.focus({ preventScroll: true });
     };
   }, [intent, isOpen, onClose, property?.id, source]);
 

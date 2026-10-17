@@ -1,10 +1,13 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { MapPin, Instagram, Search } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 
 export function Footer() {
+  const location = useLocation();
+  const hasListingActionBar = location.pathname === '/properties';
+
   return (
-    <footer className="mb-16 bg-[var(--green-dark)] text-white md:mb-0">
+    <footer className={`${hasListingActionBar ? 'mb-40' : 'mb-16'} bg-[var(--green-dark)] text-white md:mb-0`}>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-12 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand */}

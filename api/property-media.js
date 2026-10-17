@@ -5,7 +5,6 @@ const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL 
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
 const TABLE = process.env.SUPABASE_PROPERTIES_TABLE || process.env.VITE_SUPABASE_PROPERTIES_TABLE || 'properties';
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || process.env.VITE_SUPABASE_STORAGE_BUCKET || 'property-images';
-let publishedPathsCache = { expiresAt: 0, paths: new Set() };
 
 function sanitizePath(value) {
   const decoded = String(value || '').slice(0, 1_200);
@@ -18,8 +17,13 @@ function sanitizePath(value) {
     .join('/');
 }
 
-function encodePath(value) {
-  return value.split('/').map(encodeURIComponent).join('/');
+export function encodeStoragePath(value) {
+  // Supabase signs the literal object key. encodeURIComponent changes commas
+  // into part of the key; encodeURI matches Storage's own URL construction.
+  return value
+    .split('/')
+    .map((part) => encodeURI(part).replace(/\?/g, '%3F').replace(/#/g, '%23'))
+    .join('/');
 }
 
 function extractStoragePath(value) {
@@ -33,37 +37,41 @@ function extractStoragePath(value) {
   }
   try {
     const url = new URL(value);
-    const marker = `/storage/v1/object/public/${BUCKET}/`;
-    const index = url.pathname.indexOf(marker);
-    return index >= 0 ? sanitizePath(decodeURIComponent(url.pathname.slice(index + marker.length))) : '';
+    const markers = [
+      `/storage/v1/object/public/${BUCKET}/`,
+      `/storage/v1/object/sign/${BUCKET}/`,
+      `/storage/v1/object/authenticated/${BUCKET}/`,
+    ];
+    const marker = markers.find((entry) => url.pathname.includes(entry));
+    return marker
+      ? sanitizePath(decodeURIComponent(url.pathname.slice(url.pathname.indexOf(marker) + marker.length)))
+      : '';
   } catch {
     return '';
   }
 }
 
-async function getPublishedPaths() {
-  const now = Date.now();
-  if (publishedPathsCache.expiresAt > now) return publishedPathsCache.paths;
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=data&order=id.asc`, {
+async function getProperty(id) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=id,data&id=eq.${id}&limit=1`, {
     headers: {
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
       Accept: 'application/json',
     },
   });
-  if (!response.ok) throw new Error('Unable to verify media');
+  if (!response.ok) return null;
   const rows = await response.json();
-  const paths = new Set();
-  for (const row of Array.isArray(rows) ? rows : []) {
-    if (row?.data?.listed !== true) continue;
-    const values = [row.data.image, row.data.video, ...(Array.isArray(row.data.images) ? row.data.images : [])];
-    for (const value of values) {
-      const path = extractStoragePath(value);
-      if (path) paths.add(path);
-    }
+  return Array.isArray(rows) ? rows[0] || null : null;
+}
+
+function getReferencedMedia(row, slot, index) {
+  if (!row?.data || typeof row.data !== 'object') return '';
+  if (slot === 'cover') return row.data.image || row.data.images?.[0] || '';
+  if (slot === 'video') return row.data.video || '';
+  if (slot === 'image' && Number.isInteger(index) && index >= 0 && index < 15) {
+    return Array.isArray(row.data.images) ? row.data.images[index] || '' : '';
   }
-  publishedPathsCache = { expiresAt: now + 30_000, paths };
-  return paths;
+  return '';
 }
 
 export default async function handler(req, res) {
@@ -73,20 +81,28 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  const path = sanitizePath(req.query?.path);
-  if (!path || !SUPABASE_URL || !SERVICE_KEY) return res.status(404).end();
+  if (!SUPABASE_URL || !SERVICE_KEY) return res.status(404).end();
 
   const cookies = parseCookies(req);
   const isAdmin = Boolean(
     await verifyAdminToken(cookies[ADMIN_SESSION_COOKIE] || '', { requireAal2: false })
   );
-  if (!isAdmin) {
-    const publishedPaths = await getPublishedPaths().catch(() => new Set());
-    if (!publishedPaths.has(path)) return res.status(404).end();
+  let path = '';
+  const id = Number(req.query?.id);
+  const slot = String(req.query?.slot || '');
+  const index = Number(req.query?.index);
+
+  if (Number.isSafeInteger(id) && id > 0 && ['cover', 'image', 'video'].includes(slot)) {
+    const row = await getProperty(id).catch(() => null);
+    if (!row || (!isAdmin && row.data?.listed !== true)) return res.status(404).end();
+    path = extractStoragePath(getReferencedMedia(row, slot, index));
+  } else if (isAdmin) {
+    path = sanitizePath(req.query?.path);
   }
+  if (!path) return res.status(404).end();
 
   const signedResponse = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/sign/${encodeURIComponent(BUCKET)}/${encodePath(path)}`,
+    `${SUPABASE_URL}/storage/v1/object/sign/${encodeURIComponent(BUCKET)}/${encodeStoragePath(path)}`,
     {
       method: 'POST',
       headers: {
@@ -101,11 +117,22 @@ export default async function handler(req, res) {
   const signed = await signedResponse.json();
   const signedPath = signed.signedURL || signed.signedUrl || '';
   if (!signedPath) return res.status(404).end();
-  const location = signedPath.startsWith('http') ? signedPath : `${SUPABASE_URL}/storage/v1${signedPath}`;
-  res.setHeader(
-    'Cache-Control',
-    isAdmin ? 'private, no-store' : 'public, s-maxage=300, stale-while-revalidate=600'
-  );
+  let location;
+  try {
+    // Keep the exact path bytes returned by Storage. URL normalization can
+    // change signed paths with spaces/parentheses and invalidate the token.
+    const rawLocation = signedPath.startsWith('http')
+      ? signedPath
+      : `${SUPABASE_URL}/storage/v1${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;
+    location = encodeURI(rawLocation);
+    new URL(location);
+  } catch {
+    return res.status(404).end();
+  }
+  // A cached redirect can outlive or invalidate its signed token at the CDN edge.
+  // Cache the image response in the browser/CDN instead; always mint a fresh redirect.
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
   res.setHeader('Location', location);
   return res.status(302).end();
 }

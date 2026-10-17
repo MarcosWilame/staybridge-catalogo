@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Bot, ChevronRight, LoaderCircle, MapPin, MessageCircle, Send, X } from 'lucide-react';
 import type { Property } from '../data/properties';
 import { useProperties } from '../data/sheetProperties';
@@ -64,6 +64,7 @@ function PropertyResult({ property }: { property: Property }) {
 }
 
 export function PropertySearchChat() {
+  const location = useLocation();
   const { properties, isLoading } = useProperties();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -76,6 +77,7 @@ export function PropertySearchChat() {
     },
   ]);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const isListing = location.pathname === '/properties';
 
   const catalogSummary = useMemo(() => {
     if (isLoading) return 'Carregando o catálogo…';
@@ -115,15 +117,15 @@ export function PropertySearchChat() {
   };
 
   return (
-    <div className="fixed bottom-24 right-4 z-[60] md:bottom-6 md:right-6">
+    <div className={`fixed right-4 z-[60] md:bottom-6 md:right-6 ${isListing ? 'bottom-40' : 'bottom-24'}`}>
       {isOpen && (
-        <section aria-label="Busca de imóveis" className="absolute bottom-16 right-0 flex h-[min(680px,calc(100vh-8rem))] w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/15 bg-[#f7f4df] shadow-[0_24px_70px_rgba(26,77,46,.25)]">
+        <section aria-label="Busca de imóveis" className={`absolute bottom-16 right-0 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[1.35rem] border border-[var(--green-dark)]/15 bg-[#f7f4df] shadow-[0_24px_70px_rgba(26,77,46,.25)] ${isListing ? 'h-[min(620px,calc(100dvh-16rem))]' : 'h-[min(680px,calc(100dvh-12rem))]'}`}>
           <header className="flex items-center justify-between bg-[var(--green-dark)] px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--yellow)] text-[var(--green-dark)]"><Bot className="h-5 w-5" /></span>
               <div><h2 className="text-sm font-black">Busca Staybridge</h2><p className="text-[11px] text-white/65">{catalogSummary}</p></div>
             </div>
-            <button type="button" onClick={() => setIsOpen(false)} aria-label="Fechar busca" className="rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"><X className="h-5 w-5" /></button>
+            <button type="button" onClick={() => setIsOpen(false)} aria-label="Fechar busca" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]"><X className="h-5 w-5" /></button>
           </header>
 
           <div ref={messagesRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-4" aria-live="polite">
@@ -139,12 +141,12 @@ export function PropertySearchChat() {
 
           <div className="border-t border-[var(--green-dark)]/10 bg-white px-3 pb-3 pt-2">
             <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => sendMessage(prompt)} className="shrink-0 rounded-full border border-[var(--green-dark)]/15 bg-white px-2.5 py-1.5 text-[11px] font-bold text-[var(--green-dark)] transition hover:border-[var(--yellow-dark)] hover:bg-[var(--yellow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]">{prompt}</button>)}
+              {QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => sendMessage(prompt)} className="min-h-11 shrink-0 rounded-full border border-[var(--green-dark)]/15 bg-white px-3 py-2 text-[11px] font-bold text-[var(--green-dark)] transition hover:border-[var(--yellow-dark)] hover:bg-[var(--yellow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yellow)]">{prompt}</button>)}
             </div>
             <form onSubmit={handleSubmit} className="flex items-center gap-2 rounded-xl border border-[var(--green-dark)]/15 bg-white p-1.5 focus-within:border-[var(--yellow-dark)] focus-within:ring-2 focus-within:ring-[var(--yellow)]/40">
               <label className="sr-only" htmlFor="property-chat-input">Pesquisar imóvel</label>
               <input id="property-chat-input" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ex.: studio até £250 em Harrow" className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-gray-800 outline-none placeholder:text-gray-400" disabled={isLoading} />
-              <button type="submit" disabled={!input.trim() || isLoading} aria-label="Enviar busca" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--yellow)] text-[var(--green-dark)] transition hover:bg-[var(--yellow-dark)] disabled:cursor-not-allowed disabled:opacity-50">{isLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
+              <button type="submit" disabled={!input.trim() || isLoading} aria-label="Enviar busca" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--yellow)] text-[var(--green-dark)] transition hover:bg-[var(--yellow-dark)] disabled:cursor-not-allowed disabled:opacity-50">{isLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
             </form>
             <p className="mt-2 text-center text-[10px] text-gray-500">Consulta apenas dados reais do catálogo.</p>
           </div>

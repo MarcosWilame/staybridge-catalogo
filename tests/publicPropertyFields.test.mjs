@@ -9,7 +9,7 @@ const PUBLIC_PROPERTY_KEYS = [
   'longDescription', 'available', 'listed', 'billsIncluded', 'bedrooms',
   'bathrooms', 'category', 'amenities', 'deposit', 'nearbyStations',
   'furnishing', 'moveInDate', 'postcode', 'people', 'availabilityStatus',
-  'priceOptions',
+  'priceOptions', 'entryConditions',
 ];
 
 test('public property API only returns explicitly allowed fields', () => {
@@ -37,7 +37,7 @@ test('public property API only returns explicitly allowed fields', () => {
   assert.equal('coordinates' in property, false);
   assert.deepEqual(Object.keys(property), PUBLIC_PROPERTY_KEYS);
   assert.equal('sourceText' in property, false);
-  assert.equal('entryConditions' in property, false);
+  assert.deepEqual(property.entryConditions, {});
 });
 
 test('public property payload applies documented collection and text limits', () => {
@@ -69,7 +69,28 @@ test('public property payload applies documented collection and text limits', ()
   assert.equal(property.images.length, PUBLIC_PAYLOAD_LIMITS.images);
   assert.equal(property.nearbyStations.length, PUBLIC_PAYLOAD_LIMITS.nearbyStations);
   assert.equal(property.priceOptions.length, PUBLIC_PAYLOAD_LIMITS.priceOptions);
+  assert.deepEqual(property.entryConditions, {});
   assert.equal(property.images.some((url) => url.includes('javascript:')), false);
+});
+
+test('public property API preserves commercial prices and structured entry conditions', () => {
+  const compositePrice = '£220/week (2 pessoas) | £200/week (1 pessoa)';
+  const property = toPublicProperty({
+    id: 16,
+    data: {
+      id: 16,
+      listed: true,
+      price: compositePrice,
+      entryConditions: { depositWeeks: 2, rentWeeks: 1, note: 'private internal note' },
+    },
+  });
+
+  assert.equal(property.price, compositePrice);
+  assert.deepEqual(property.priceOptions, [
+    { amount: 220, period: 'week', occupancy: 2 },
+    { amount: 200, period: 'week', occupancy: 1 },
+  ]);
+  assert.deepEqual(property.entryConditions, { depositWeeks: 2, rentWeeks: 1 });
 });
 
 test('public property media keeps the cover once and removes duplicate image URLs', () => {
@@ -91,6 +112,20 @@ test('public property media keeps the cover once and removes duplicate image URL
     'https://images.unsplash.com/cover.jpg',
     'https://images.unsplash.com/room.jpg',
   ]);
+});
+
+test('public property media replaces expiring signed storage URLs with the stable proxy', () => {
+  const property = toPublicProperty({
+    id: 17,
+    data: {
+      id: 17,
+      listed: true,
+      image: 'https://example.supabase.co/storage/v1/object/sign/property-images/library/Room%203/photo.jpeg?token=expired',
+    },
+  });
+
+  assert.equal(property.image, '/api/property-media?id=17&slot=cover');
+  assert.deepEqual(property.images, ['/api/property-media?id=17&slot=cover']);
 });
 
 test('public property API excludes hidden properties', () => {

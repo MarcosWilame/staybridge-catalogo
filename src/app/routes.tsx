@@ -72,7 +72,37 @@ function AdminRoute() {
 
 function DeferredRoute({ children }: { children: ReactNode }) {
   return (
-    <Suspense fallback={<div className="min-h-[70vh] bg-white" aria-busy="true" />}>
+    <Suspense
+      fallback={
+        <section
+          className="min-h-[70vh] bg-white px-4 pb-16 pt-28 sm:px-6 sm:pt-32"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <div className="mx-auto max-w-6xl" role="status">
+            <div className="mb-8 max-w-xl">
+              <div className="mb-4 h-3 w-28 animate-pulse rounded-full bg-[var(--green-light)]" />
+              <div className="mb-3 h-9 w-full max-w-md animate-pulse rounded-xl bg-gray-200" />
+              <div className="h-4 w-3/4 animate-pulse rounded-full bg-gray-100" />
+            </div>
+            <p className="mb-5 text-sm font-semibold text-[var(--green-dark)]">
+              Carregando conteúdo…
+            </p>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                  <div className="aspect-[4/3] animate-pulse bg-gray-100" />
+                  <div className="space-y-3 p-5">
+                    <div className="h-5 w-3/4 animate-pulse rounded-full bg-gray-200" />
+                    <div className="h-4 w-1/2 animate-pulse rounded-full bg-gray-100" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      }
+    >
       {children}
     </Suspense>
   );

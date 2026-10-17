@@ -1,4 +1,5 @@
 import { Fragment, useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { PropertyCard } from '../components/PropertyCard';
 import { Property } from '../data/properties';
@@ -18,6 +19,7 @@ import {
 import { getAbsoluteUrl, SITE_NAME } from '../config/site';
 import { getPropertyImageAlt } from '../utils/imageAlt';
 import { formatPropertyType } from '../utils/propertyType';
+import { useScrollLock } from '../utils/useScrollLock';
 import { getOptimizedImageUrl, preloadImage } from '../utils/cloudinary';
 import {
   MAX_COMPARE_ITEMS,
@@ -135,6 +137,8 @@ export function ListingPage() {
   const listRef = useRef<HTMLDivElement>(null);
   const filtersRef = useRef(filters);
 
+  useScrollLock(showMobileFilters);
+
   useEffect(() => {
     filtersRef.current = filters;
   }, [filters]);
@@ -169,16 +173,25 @@ export function ListingPage() {
         first.focus();
       }
     };
-    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
-    window.requestAnimationFrame(() => mobileFilterCloseRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => mobileFilterCloseRef.current?.focus());
 
     return () => {
-      document.body.style.overflow = '';
+      window.cancelAnimationFrame(frame);
       window.removeEventListener('keydown', handleKeyDown);
-      previousFocus?.focus();
+      previousFocus?.focus({ preventScroll: true });
     };
   }, [showMobileFilters]);
+
+  useEffect(() => {
+    const desktopFilters = window.matchMedia('(min-width: 1024px)');
+    const closeFiltersOnDesktop = () => {
+      if (desktopFilters.matches) closeMobileFilters();
+    };
+
+    desktopFilters.addEventListener('change', closeFiltersOnDesktop);
+    return () => desktopFilters.removeEventListener('change', closeFiltersOnDesktop);
+  }, []);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -1476,9 +1489,9 @@ export function ListingPage() {
         )}
       </div>
 
-      {showMobileFilters && (
+      {showMobileFilters && createPortal(
         <div
-          className="fixed inset-0 z-[60] flex justify-end bg-black/50 lg:hidden"
+          className="fixed inset-0 z-[80] flex justify-end bg-black/50 lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="mobile-filters-title"
@@ -1526,10 +1539,11 @@ export function ListingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      <div className="premium-floating-bar fixed bottom-16 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,.10)] backdrop-blur md:hidden">
+      <div className="premium-floating-bar fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,.10)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="text-sm font-extrabold text-gray-900">Não encontrou o ideal?</div>

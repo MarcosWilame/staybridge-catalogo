@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../data/sheetProperties';
 import type { Property } from '../data/properties';
@@ -41,6 +42,7 @@ import {
   ImageOff,
 } from 'lucide-react';
 import { shareProperty } from '../utils/shareProperty';
+import { useScrollLock } from '../utils/useScrollLock';
 
 type MediaItem = GalleryMediaItem;
 
@@ -99,6 +101,23 @@ function formatWeeklyPrice(price: string | number) {
   return amount.startsWith('£') ? amount : `£${amount}`;
 }
 
+function formatPriceOption(option: { amount: number; period: 'week' | 'month'; occupancy?: number; label?: string }) {
+  const period = option.period === 'month' ? 'mês' : 'semana';
+  const occupancy = option.occupancy
+    ? ` · ${option.occupancy} ${option.occupancy === 1 ? 'pessoa' : 'pessoas'}`
+    : '';
+  return `£${option.amount}/${period}${occupancy}`;
+}
+
+function formatDeposit(property: Property) {
+  const depositWeeks = property.entryConditions?.depositWeeks;
+  if (depositWeeks === 0) return 'Sem depósito';
+  if (typeof depositWeeks === 'number') {
+    return `${depositWeeks} ${depositWeeks === 1 ? 'semana' : 'semanas'} de aluguel`;
+  }
+  return 'A confirmar';
+}
+
 function getPriceValue(price: string) {
   const match = price.match(/\d+(?:[.,]\d+)?/);
   if (!match) return 0;
@@ -143,6 +162,8 @@ export function PropertyDetailsPage() {
   );
   const currentMedia = mediaItems[currentImageIndex] || mediaItems[0];
   const videoThumbnail = property ? property.image || property.images[0] : '';
+
+  useScrollLock(isLightboxOpen);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
@@ -190,7 +211,10 @@ export function PropertyDetailsPage() {
     ? getAvailabilityInfo(property.moveInDate, property.available, new Date(), property.availabilityStatus)
     : { label: '', isNow: false };
   const weeklyPrice = property ? formatWeeklyPrice(property.priceOptions?.find((option) => option.period === 'week')?.amount ?? property.price) : '';
-  const availabilityDisplay = 'Consulte a disponibilidade';
+  const availabilityDisplay = availabilityLabel;
+  const billsDisplay = property?.billsIncluded ? 'Inclusas' : 'Não inclusas';
+  const depositDisplay = property ? formatDeposit(property) : 'A confirmar';
+  const priceOptions = property?.priceOptions || [];
   const nearbyPoints = property
     ? property.nearbyStations.filter((point) => point.trim().length > 0)
     : [];
@@ -251,7 +275,7 @@ export function PropertyDetailsPage() {
 
   useEffect(() => {
     if (!isLightboxOpen) {
-      lightboxTriggerRef.current?.focus();
+      lightboxTriggerRef.current?.focus({ preventScroll: true });
       lightboxTriggerRef.current = null;
       return;
     }
@@ -262,13 +286,11 @@ export function PropertyDetailsPage() {
       if (event.key === 'ArrowLeft') prevImage();
     };
 
-    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
     const frame = window.requestAnimationFrame(() => lightboxCloseRef.current?.focus());
 
     return () => {
       window.cancelAnimationFrame(frame);
-      document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isLightboxOpen, mediaItems.length]);
@@ -760,11 +782,11 @@ export function PropertyDetailsPage() {
                     value: property.people ? `Até ${property.people}` : 'Consulte',
                     label: 'moradores',
                   },
-                  { icon: CreditCard, value: 'A confirmar', label: 'bills' },
+                  { icon: CreditCard, value: billsDisplay, label: 'bills' },
                   {
                     icon: Calendar,
-                    value: 'Consulte a disponibilidade',
-                    label: 'com um de nossos agentes',
+                    value: availabilityDisplay,
+                    label: 'disponibilidade',
                   },
                 ].map(({ icon: Icon, value, label }, index) => (
                   <div
@@ -907,14 +929,26 @@ export function PropertyDetailsPage() {
                   </div>
                 )}
 
+                {priceOptions.length > 1 && (
+                  <div className="mb-5 space-y-2 rounded-2xl bg-white/10 px-4 py-3 text-sm">
+                    <div className="font-bold text-white">Opções de aluguel</div>
+                    {priceOptions.map((option, index) => (
+                      <div key={`${option.period}-${option.occupancy || 0}-${index}`} className="flex items-center justify-between gap-3 text-white/80">
+                        <span>{option.label || `Opção ${index + 1}`}</span>
+                        <span className="font-bold text-white">{formatPriceOption(option)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mb-5 grid grid-cols-2 gap-3 border-y border-white/15 py-4 text-sm">
                   <div>
                     <div className="text-white/65">Depósito</div>
-                    <div className="mt-1 font-bold">{property.deposit ? `£${property.deposit}` : 'A confirmar'}</div>
+                    <div className="mt-1 font-bold">{depositDisplay}</div>
                   </div>
                   <div>
                     <div className="text-white/65">Bills</div>
-                    <div className="mt-1 font-bold">A confirmar</div>
+                    <div className="mt-1 font-bold">{billsDisplay}</div>
                   </div>
                 </div>
 
@@ -954,7 +988,7 @@ export function PropertyDetailsPage() {
         </div>
       </div>
 
-      {isLightboxOpen && (
+      {isLightboxOpen && createPortal(
         <div
           className="modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[#061a12]/95 p-3 backdrop-blur-sm sm:p-6"
           role="dialog"
@@ -1003,7 +1037,8 @@ export function PropertyDetailsPage() {
               <span className="truncate">{property.title}</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="premium-floating-bar fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
