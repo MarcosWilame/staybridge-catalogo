@@ -70,7 +70,7 @@ function getVideoEmbedUrl(url: string) {
 }
 
 function isDirectVideoUrl(url: string) {
-  return /\.(?:mp4|webm|mov)(?:[?#].*)?$/i.test(url);
+  return /\.(?:mp4|webm|mov)(?:[?#].*)?$/i.test(url) || /\/api\/property-media\?(?:[^#]*&)?(?:id=\d+[^#]*&slot=video|slot=video[^#]*&id=\d+)/i.test(url);
 }
 
 function getMediaItems(property: Property): MediaItem[] {
