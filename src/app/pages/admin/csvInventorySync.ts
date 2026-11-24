@@ -70,6 +70,15 @@ function extractUnit(value: unknown) {
   return match ? normalize(match[1]) : '';
 }
 
+function extractAddressFromObservations(observations: string, postcode: string) {
+  const normalizedPostcode = normalize(postcode);
+  if (!observations || !normalizedPostcode) return '';
+  return observations
+    .split('|')
+    .map((part) => part.trim())
+    .find((part) => normalize(part).includes(normalizedPostcode)) || '';
+}
+
 export function parseInventoryCsv(text: string): CsvInventoryRow[] {
   const lines = splitLines(text);
   if (lines.length < 2) throw new Error('O CSV precisa ter um cabeçalho e pelo menos uma linha.');
@@ -91,7 +100,10 @@ export function parseInventoryCsv(text: string): CsvInventoryRow[] {
       unit: extractUnit(`${findValue(raw, ['title', 'titulo', 'nome', 'name'])} ${findValue(raw, ['obs', 'observacao', 'notes'])}`),
       raw,
     };
-  }).filter((row) => row.id || row.address || row.postcode || row.title);
+  }).map((row) => ({
+    ...row,
+    address: row.address || extractAddressFromObservations(findValue(row.raw, ['obs', 'observacao', 'notes']), row.postcode),
+  })).filter((row) => row.id || row.address || row.postcode || row.title);
 }
 
 function matches(row: CsvInventoryRow, property: Property) {
