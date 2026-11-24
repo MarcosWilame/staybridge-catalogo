@@ -6,6 +6,7 @@ export type CsvInventoryRow = {
   title: string;
   address: string;
   postcode: string;
+  unit: string;
   raw: Record<string, string>;
 };
 
@@ -55,6 +56,20 @@ function findValue(row: Record<string, string>, names: string[]) {
   return entry?.[1]?.trim() || '';
 }
 
+function normalizeAddress(value: unknown, postcode: unknown) {
+  const address = normalize(value);
+  const normalizedPostcode = normalize(postcode);
+  if (!normalizedPostcode) return address;
+  return address
+    .replace(new RegExp(`\\s*${normalizedPostcode.replace(/\\s+/g, '\\\\s*')}\\s*$`), '')
+    .trim();
+}
+
+function extractUnit(value: unknown) {
+  const match = String(value || '').match(/\\b(?:flat|room)\\s*([a-z]?\\d+[a-z]?)\\b/i);
+  return match ? normalize(match[1]) : '';
+}
+
 export function parseInventoryCsv(text: string): CsvInventoryRow[] {
   const lines = splitLines(text);
   if (lines.length < 2) throw new Error('O CSV precisa ter um cabeçalho e pelo menos uma linha.');
@@ -73,6 +88,7 @@ export function parseInventoryCsv(text: string): CsvInventoryRow[] {
       title: findValue(raw, ['title', 'titulo', 'nome', 'name']),
       address: findValue(raw, ['address', 'endereco', 'endereço', 'street']),
       postcode: findValue(raw, ['postcode', 'post code', 'cep']),
+      unit: extractUnit(`${findValue(raw, ['title', 'titulo', 'nome', 'name'])} ${findValue(raw, ['obs', 'observacao', 'notes'])}`),
       raw,
     };
   }).filter((row) => row.id || row.address || row.postcode || row.title);
@@ -81,8 +97,16 @@ export function parseInventoryCsv(text: string): CsvInventoryRow[] {
 function matches(row: CsvInventoryRow, property: Property) {
   if (row.id && row.id === property.id) return true;
   const postcodeMatches = row.postcode && normalize(row.postcode) === normalize(property.postcode);
-  const addressMatches = row.address && normalize(row.address) === normalize(property.address);
-  return Boolean(postcodeMatches && addressMatches) || Boolean(row.title && normalize(row.title) === normalize(property.title));
+  const csvAddress = normalizeAddress(row.address, row.postcode);
+  const propertyAddress = normalizeAddress(property.address, property.postcode);
+  const addressMatches = csvAddress && propertyAddress && (
+    csvAddress === propertyAddress ||
+    csvAddress.includes(propertyAddress) ||
+    propertyAddress.includes(csvAddress)
+  );
+  const propertyUnit = extractUnit(property.title);
+  const unitMatches = !row.unit || !propertyUnit || row.unit === propertyUnit;
+  return Boolean(postcodeMatches && addressMatches && unitMatches) || Boolean(row.title && normalize(row.title) === normalize(property.title));
 }
 
 export function compareInventoryCsv(text: string, properties: Property[]): InventorySyncResult {
