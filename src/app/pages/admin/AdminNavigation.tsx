@@ -1,4 +1,4 @@
-import { CalendarRange, Building2, FolderOpen, Plus, Trash2 } from 'lucide-react';
+import { CalendarRange, Building2, FolderOpen, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 export function AdminNavigation({ trashCount }: { trashCount: number }) {
@@ -7,6 +7,7 @@ export function AdminNavigation({ trashCount }: { trashCount: number }) {
     { to: '/admin', label: 'Visão geral', icon: CalendarRange, exact: true },
     { to: '/admin/properties', label: 'Imóveis', icon: Building2 },
     { to: '/admin/new', label: 'Novo cadastro', icon: Plus },
+    { to: '/admin/sync', label: 'Sincronizar CSV', icon: RefreshCw },
     { to: '/admin/library', label: 'Biblioteca', icon: FolderOpen },
     { to: '/admin/trash', label: 'Lixeira', icon: Trash2, count: trashCount },
   ];

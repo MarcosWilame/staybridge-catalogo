@@ -69,6 +69,8 @@ import { AdminLibraryPage } from './admin/AdminLibraryPage';
 import { AdminNavigation } from './admin/AdminNavigation';
 import { AvailabilityAgenda } from './admin/AvailabilityAgenda';
 import { CadastroAssistant } from './admin/CadastroAssistant';
+import { InventorySync } from './admin/InventorySync';
+import type { InventorySyncResult } from './admin/csvInventorySync';
 import {
   applyAssistantToProperty,
   createAssistantFormFromProperty,
@@ -118,6 +120,8 @@ export function AdminPage() {
       ? 'registration'
       : location.pathname.startsWith('/admin/library')
         ? 'library'
+          : location.pathname.startsWith('/admin/sync')
+            ? 'sync'
         : location.pathname.startsWith('/admin/trash')
           ? 'trash'
           : 'overview';
@@ -1061,6 +1065,25 @@ export function AdminPage() {
     setTimeout(() => setSyncMessage(''), 3000);
   };
 
+  const handleApplyInventorySync = async (result: InventorySyncResult) => {
+    const changes = [
+      ...result.toShow.map((property) => ({ ...property, listed: true, available: true, status: 'available' as const })),
+      ...result.toHide.map((property) => ({ ...property, listed: false, available: false, status: 'hidden' as const })),
+    ];
+    if (!changes.length) {
+      setSyncMessage('Nenhuma alteração de visibilidade necessária');
+      return;
+    }
+    if (!confirm(`Aplicar ${changes.length} alteração(ões) de visibilidade?`)) return;
+    const saved = new Map<number, Property>();
+    for (const property of changes) {
+      saved.set(property.id, await savePropertyToSupabase(property, session?.access_token));
+    }
+    setProperties((current) => current.map((property) => saved.get(property.id) || property));
+    setSyncMessage(`${changes.length} imóvel(is) atualizado(s) com sucesso`);
+    setTimeout(() => setSyncMessage(''), 4000);
+  };
+
   const handleLoadJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1283,6 +1306,7 @@ export function AdminPage() {
                     properties: 'Gerenciar imóveis',
                     registration: editingId ? 'Editar imóvel' : 'Novo cadastro',
                     library: 'Biblioteca de mídia',
+                    sync: 'Sincronizar disponibilidade',
                     trash: 'Lixeira',
                   }[adminView]}
                 </h1>
@@ -1522,6 +1546,10 @@ export function AdminPage() {
             onBack={handleBackStorageFolder}
             onUpload={handleUploadLibraryFolder}
           />
+        )}
+
+        {adminView === 'sync' && (
+          <InventorySync properties={activeProperties} onApply={handleApplyInventorySync} />
         )}
 
         {/* FORM */}
